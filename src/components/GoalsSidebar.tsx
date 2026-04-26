@@ -154,7 +154,6 @@ function GoalItem({ goal, tasks, onEditGoal, onDeleteGoal, onArchiveGoal, onUnar
               style={{
                 boxShadow: '4px 4px 0 #1a1a1a',
                 backgroundColor: lightenHex(color.bg),
-                color: color.fg,
                 top: menuPos.top !== undefined ? `${menuPos.top}px` : 'auto',
                 bottom: menuPos.bottom !== undefined ? `${menuPos.bottom}px` : 'auto',
                 left: `${menuPos.left}px`,
@@ -166,15 +165,15 @@ function GoalItem({ goal, tasks, onEditGoal, onDeleteGoal, onArchiveGoal, onUnar
                 <button
                   key={item.label}
                   onClick={e => { e.stopPropagation(); item.action(); }}
-                  className="flex items-center gap-3 px-3 py-2 text-xs font-bold text-left transition-colors duration-150 border-b border-ink-black last:border-b-0"
-                  style={{ backgroundColor: lightenHex(color.bg), color: color.fg }}
+                  className="flex items-center gap-3 px-3 py-2 text-xs font-bold text-left text-ink-black transition-colors duration-150 border-b border-ink-black last:border-b-0"
+                  style={{ backgroundColor: lightenHex(color.bg) }}
                   onMouseEnter={e => (e.currentTarget.style.backgroundColor = color.bg)}
                   onMouseLeave={e => (e.currentTarget.style.backgroundColor = lightenHex(color.bg))}
                 >
                   {item.icon}
                   <span className="flex-1">{item.label}</span>
                   {item.badge && (
-                    <span className="font-mono text-[10px] font-bold leading-none">
+                    <span className="font-mono text-[10px] font-bold leading-none text-ink-black">
                       {item.badge}
                     </span>
                   )}

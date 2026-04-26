@@ -17,10 +17,10 @@ const PRIORITY_LABELS: Record<TaskPriority, string> = {
 };
 
 const PRIORITY_COLORS: Record<TaskPriority, { bg: string; text: string }> = {
-  low: { bg: '#22c55e', text: '#f5f5f0' },
-  medium: { bg: '#3b82f6', text: '#f5f5f0' },
-  high: { bg: '#f97316', text: '#1a1a1a' },
-  urgent: { bg: '#ef4444', text: '#f5f5f0' },
+  low: { bg: '#4caf50', text: '#f4e8d1' },
+  medium: { bg: '#457b9d', text: '#f4e8d1' },
+  high: { bg: '#ff9800', text: '#1a1a1a' },
+  urgent: { bg: '#e63946', text: '#f4e8d1' },
 };
 
 const PRIORITIES: TaskPriority[] = ['low', 'medium', 'high', 'urgent'];

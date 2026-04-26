@@ -184,6 +184,7 @@ function CalendarView({ tasks, goals, onEditTask, onNewTask }: Props) {
   }
 
   return (
+    <>
       <div className="border-2 border-ink-black bg-ink-red px-4 py-3 shrink-0 mr-[3px]" style={{ boxShadow: '3px 3px 0 #1a1a1a' }}>
         <div className="grid grid-cols-[auto_1fr_auto] items-center w-full">
           <button onClick={prevMonth} className="retro-btn bg-paper p-2 justify-self-start"><ChevronLeft size={18} /></button>
@@ -191,9 +192,7 @@ function CalendarView({ tasks, goals, onEditTask, onNewTask }: Props) {
           <button onClick={nextMonth} className="retro-btn bg-paper p-2 justify-self-end"><ChevronRight size={18} /></button>
         </div>
       </div>
-      </div>
 
-      {/* Grid */}
       <div className="border-2 border-ink-black flex-1 min-h-0 overflow-hidden flex flex-col mr-[3px]" style={{ boxShadow: '3px 3px 0 #1a1a1a' }}>
         {/* Day headers */}
         <div className="grid grid-cols-7 shrink-0 border-b-2 border-ink-black">
@@ -343,7 +342,7 @@ function CalendarView({ tasks, goals, onEditTask, onNewTask }: Props) {
           />
         );
       })()}
-    </div>
+    </>
   );
 }
 

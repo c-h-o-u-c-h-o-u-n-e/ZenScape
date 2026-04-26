@@ -101,7 +101,7 @@ export default function FilterBar({ filters, goals, tasks, columnLabels, onChang
           </button>
         </div>
 
-        <div className="p-5 flex flex-wrap gap-3">
+        <div className="p-5 flex flex-wrap gap-3" style={{ backgroundColor: 'rgba(220, 38, 38, 0.75)' }}>
           {allTags.map(tag => {
             const isActive = filters.tags?.includes(tag) ?? false;
             return (

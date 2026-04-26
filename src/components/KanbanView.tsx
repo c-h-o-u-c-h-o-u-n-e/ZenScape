@@ -234,7 +234,7 @@ export default function KanbanView({ tasks, goals, columnLabels, onLabelsChange,
 
               {colTasks.length === 0 && !isOver && (
                 <div className="h-24 border-2 border-dashed border-ink-black/70 flex items-center justify-center">
-                  <p className="font-mono text-sm opacity-100">Déposer ici</p>
+                  <p className="font-mono text-sm opacity-70">Déposer ici</p>
                 </div>
               )}
             </div>

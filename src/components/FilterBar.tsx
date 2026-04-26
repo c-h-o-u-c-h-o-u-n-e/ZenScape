@@ -101,7 +101,7 @@ export default function FilterBar({ filters, goals, tasks, columnLabels, onChang
           </button>
         </div>
 
-        <div className="p-5 flex flex-wrap gap-3" style={{ backgroundColor: 'rgba(220, 38, 38, 0.75)' }}>
+        <div className="flex-1 p-5 flex flex-wrap gap-3 content-start" style={{ backgroundColor: 'rgba(220, 38, 38, 0.75)' }}>
           {allTags.map(tag => {
             const isActive = filters.tags?.includes(tag) ?? false;
             return (
@@ -116,7 +116,7 @@ export default function FilterBar({ filters, goals, tasks, columnLabels, onChang
                 }}
                 className="px-3 py-1.5 text-xs font-bold uppercase border-2 border-ink-black transition-all"
                 style={{
-                  backgroundColor: isActive ? '#457b9d' : 'transparent',
+                  backgroundColor: isActive ? '#457b9d' : '#f4e8d1',
                   color: isActive ? '#f4e8d1' : '#1a1a1a',
                   boxShadow: '2px 2px 0 #1a1a1a',
                 }}

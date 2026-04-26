@@ -178,7 +178,7 @@ export default function MedicationModal({ medication, userId, onClose, onSaved }
         style={{ boxShadow: '8px 8px 0 #1a1a1a', maxHeight: '92vh' }}
       >
         <div className="flex items-center justify-between p-5 border-b-4 border-ink-black bg-ink-yellow text-ink-black shrink-0">
-          <h2 className="font-display text-lg uppercase">{medication ? 'Modifier le médicament' : 'Nouveau médicament'}</h2>
+          <h2 className="font-display text-lg uppercase">{medication ? 'Modifier la prescription' : 'Nouvelle prescription'}</h2>
           <button onClick={onClose} className="hover:opacity-70 transition-opacity">
             <X size={24} />
           </button>

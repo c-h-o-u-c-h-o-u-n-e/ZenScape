@@ -18,10 +18,10 @@ interface Props {
   onRefresh: () => void;
 }
 
-const COLUMNS: { status: TaskStatus; color: string; textColor: string }[] = [
-  { status: 'todo', color: 'bg-ink-orange', textColor: 'text-black' },
-  { status: 'in_progress', color: 'bg-ink-blue', textColor: 'text-paper' },
-  { status: 'done', color: 'bg-ink-green', textColor: 'text-paper' },
+const COLUMNS: { status: TaskStatus; headerColor: string; bodyColor: string; textColor: string }[] = [
+  { status: 'todo', headerColor: 'bg-ink-orange', bodyColor: 'bg-ink-orange/60', textColor: 'text-black' },
+  { status: 'in_progress', headerColor: 'bg-ink-blue', bodyColor: 'bg-ink-blue/60', textColor: 'text-paper' },
+  { status: 'done', headerColor: 'bg-ink-green', bodyColor: 'bg-ink-green/60', textColor: 'text-paper' },
 ];
 
 export default function KanbanView({ tasks, goals, columnLabels, onLabelsChange, onEditTask, onDeleteTask, onArchiveTask, onNewTask, onDropGoal, onRefresh }: Props) {
@@ -190,7 +190,7 @@ export default function KanbanView({ tasks, goals, columnLabels, onLabelsChange,
             onDrop={e => onDrop(e, col.status)}
             onDragEnd={onDragEnd}
           >
-            <div className={`${col.color} ${col.textColor} px-4 py-3 border-b-2 border-ink-black flex items-center justify-between gap-2`}>
+            <div className={`${col.headerColor} ${col.textColor} px-4 py-3 border-b-2 border-ink-black flex items-center justify-between gap-2`}>
               {editing === col.status ? (
                 <input
                   ref={inputRef}
@@ -202,22 +202,22 @@ export default function KanbanView({ tasks, goals, columnLabels, onLabelsChange,
                     else if (e.key === 'Escape') cancelEdit();
                   }}
                   maxLength={40}
-                  className="font-display text-base uppercase bg-transparent focus:outline-none flex-1 min-w-0"
+                  className="font-display text-base uppercase text-ink-black bg-transparent focus:outline-none flex-1 min-w-0"
                   style={{ boxShadow: '0 2px 0 rgba(255,255,255,0.6)' }}
                 />
               ) : (
                 <h3
-                  className="font-display text-base uppercase cursor-text flex-1 truncate hover:opacity-80 transition-opacity"
+                  className="font-display text-base uppercase text-ink-black cursor-text flex-1 truncate hover:opacity-80 transition-opacity"
                   onClick={() => startEdit(col.status)}
                   title="Cliquer pour renommer"
                 >
                   {label}
                 </h3>
               )}
-              <span className="font-mono text-xs font-bold opacity-80 shrink-0">{colTasks.length}</span>
+              <span className="font-mono text-xs font-bold text-ink-black opacity-80 shrink-0">{colTasks.length}</span>
             </div>
 
-            <div className={`flex-1 p-3 overflow-y-auto scrollbar-hide ${col.color}`} style={{ minHeight: '0', scrollbarWidth: 'none' }}>
+            <div className={`flex-1 p-3 overflow-y-auto scrollbar-hide ${col.bodyColor}`} style={{ minHeight: '0', scrollbarWidth: 'none' }}>
               {colTasks.map(task => (
                 <TaskCard
                   key={task.id}
@@ -233,8 +233,8 @@ export default function KanbanView({ tasks, goals, columnLabels, onLabelsChange,
               ))}
 
               {colTasks.length === 0 && !isOver && (
-                <div className="h-24 border-2 border-dashed border-ink-black/20 flex items-center justify-center">
-                  <p className="font-mono text-[10px] opacity-30 uppercase">Déposer ici</p>
+                <div className="h-24 border-2 border-dashed border-ink-black/70 flex items-center justify-center">
+                  <p className="font-mono text-sm opacity-70">Déposer ici</p>
                 </div>
               )}
             </div>

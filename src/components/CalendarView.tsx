@@ -12,9 +12,9 @@ interface Props {
 }
 
 const PRIORITY_STYLES: Record<TaskPriority, string> = {
-  low: 'bg-ink-teal text-paper',
+  low: 'bg-ink-green text-paper',
   medium: 'bg-ink-blue text-paper',
-  high: 'bg-ink-yellow text-ink-black',
+  high: 'bg-ink-orange text-ink-black',
   urgent: 'bg-ink-red text-paper',
 };
 
@@ -94,8 +94,7 @@ function DayModal({ date: _date, label, data, goals, isPast, onEditTask, onClose
                         <Check size={12} strokeWidth={3} />
                       </div>
                     ) : (
-                      <div className={`w-5 h-5 flex items-center justify-center border border-ink-black rounded text-[10px] font-black ${PRIORITY_STYLES[task.priority]}`}>
-                        {task.priority[0].toUpperCase()}
+                      <div className={`w-5 h-5 flex items-center justify-center border-2 border-ink-black rounded text-[10px] font-black ${PRIORITY_STYLES[task.priority]}`}>
                       </div>
                     )}
                   </div>
@@ -185,17 +184,17 @@ function CalendarView({ tasks, goals, onEditTask, onNewTask }: Props) {
   }
 
   return (
-    <div className="flex flex-col h-full overflow-hidden gap-4">
-      {/* Header */}
-      <div className="border-2 border-ink-black bg-ink-red px-4 py-3 flex items-center gap-3 shrink-0" style={{ boxShadow: '4px 4px 0 #1a1a1a' }}>
-        <Calendar size={24} className="text-ink-white" />
-        <h3 className="font-display text-xl uppercase font-bold text-ink-black flex-1">{MONTHS[month]} {year}</h3>
-        <button onClick={prevMonth} className="retro-btn bg-paper p-2"><ChevronLeft size={18} /></button>
-        <button onClick={nextMonth} className="retro-btn bg-paper p-2"><ChevronRight size={18} /></button>
+      <div className="border-2 border-ink-black bg-ink-red px-4 py-3 shrink-0 mr-[3px]" style={{ boxShadow: '3px 3px 0 #1a1a1a' }}>
+        <div className="grid grid-cols-[auto_1fr_auto] items-center w-full">
+          <button onClick={prevMonth} className="retro-btn bg-paper p-2 justify-self-start"><ChevronLeft size={18} /></button>
+          <h3 className="font-display text-xl uppercase font-bold text-ink-black text-center">{MONTHS[month]} {year}</h3>
+          <button onClick={nextMonth} className="retro-btn bg-paper p-2 justify-self-end"><ChevronRight size={18} /></button>
+        </div>
+      </div>
       </div>
 
       {/* Grid */}
-      <div className="border-2 border-ink-black flex-1 min-h-0 overflow-hidden flex flex-col" style={{ boxShadow: '4px 4px 0 #1a1a1a' }}>
+      <div className="border-2 border-ink-black flex-1 min-h-0 overflow-hidden flex flex-col mr-[3px]" style={{ boxShadow: '3px 3px 0 #1a1a1a' }}>
         {/* Day headers */}
         <div className="grid grid-cols-7 shrink-0 border-b-2 border-ink-black">
           {DAY_NAMES.map((d, idx) => {
@@ -242,13 +241,13 @@ function CalendarView({ tasks, goals, onEditTask, onNewTask }: Props) {
                   <>
                     {/* Date number */}
                     <div className="flex items-center justify-between mb-2">
-                      <span className={`font-display text-base font-bold leading-none w-7 h-7 flex items-center justify-center border-2 border-ink-black ${
+                      <span className={`font-display text-base font-bold leading-none ${
                         today_
-                          ? 'bg-ink-red text-paper'
+                          ? 'text-ink-red'
                           : isWeekend
-                            ? 'bg-ink-teal text-paper'
-                            : 'bg-paper text-ink-black'
-                      }`} style={{ boxShadow: today_ ? '2px 2px 0 #1a1a1a' : '1px 1px 0 #1a1a1a' }}>
+                            ? 'text-ink-teal'
+                            : 'text-ink-black'
+                      }`}>
                         {day}
                       </span>
                       {total > 0 && (
@@ -268,7 +267,7 @@ function CalendarView({ tasks, goals, onEditTask, onNewTask }: Props) {
                           <button
                             key={task.id}
                             onClick={e => { e.stopPropagation(); onEditTask(task); }}
-                            className="flex items-center gap-1 px-2 py-1 border-2 border-ink-black text-left w-full text-[11px] font-display font-bold transition-all hover:translate-x-0.5"
+                            className="flex items-center gap-1.5 px-2 py-1 border-2 border-ink-black text-left w-full text-[11px] font-display font-bold transition-all hover:translate-x-0.5"
                             style={{
                               backgroundColor: goalColor.bg,
                               color: goalColor.fg,
@@ -277,12 +276,12 @@ function CalendarView({ tasks, goals, onEditTask, onNewTask }: Props) {
                             }}
                             title={task.title}
                           >
-                            <span className={`shrink-0 w-4 h-4 flex items-center justify-center border border-ink-black font-bold text-[8px] ${
+                            <span className={`shrink-0 w-4 h-4 flex items-center justify-center border-[2px] border-ink-black font-bold text-[8px] ${
                               task.status === 'done'
                                 ? 'bg-ink-black text-paper'
                                 : PRIORITY_STYLES[task.priority]
                             }`}>
-                              {task.status === 'done' ? <Check size={8} strokeWidth={3} /> : task.priority[0].toUpperCase()}
+                              {task.status === 'done' ? <Check size={8} strokeWidth={3} /> : null}
                             </span>
                             <span className={`truncate ${task.status === 'done' ? 'line-through' : ''}`}>
                               {task.title}
@@ -313,16 +312,14 @@ function CalendarView({ tasks, goals, onEditTask, onNewTask }: Props) {
       </div>
 
       {/* Legend */}
-      <div className="border-2 border-ink-black bg-paper p-3 flex items-center gap-4 flex-wrap text-sm" style={{ boxShadow: '4px 4px 0 #1a1a1a' }}>
+      <div className="border-2 border-ink-black bg-paper p-3 flex items-center gap-4 flex-wrap text-xs">
         <div className="flex items-center gap-2">
-          <span className="font-display font-bold text-xs uppercase">Priorités:</span>
+          <span className="font-display font-bold text-sm uppercase">Priorités :</span>
         </div>
         {(['low', 'medium', 'high', 'urgent'] as TaskPriority[]).map(p => (
           <div key={p} className="flex items-center gap-1.5">
-            <div className={`w-4 h-4 flex items-center justify-center border border-ink-black font-bold text-[8px] text-paper ${PRIORITY_STYLES[p]}`}>
-              {p[0].toUpperCase()}
-            </div>
-            <span className="font-mono text-xs opacity-70">{PRIORITY_LABELS[p]}</span>
+            <div className={`w-4 h-4 border-2 border-ink-black ${PRIORITY_STYLES[p]}`} />
+            <span className="font-mono text-sm opacity-80">{PRIORITY_LABELS[p]}</span>
           </div>
         ))}
       </div>

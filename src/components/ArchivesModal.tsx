@@ -23,9 +23,9 @@ interface Props {
 }
 
 const PRIORITY_STYLES: Record<TaskPriority, string> = {
-  low: 'bg-ink-teal text-paper',
+  low: 'bg-ink-green text-paper',
   medium: 'bg-ink-blue text-paper',
-  high: 'bg-ink-yellow text-ink-black',
+  high: 'bg-ink-orange text-ink-black',
   urgent: 'bg-ink-red text-paper',
 };
 

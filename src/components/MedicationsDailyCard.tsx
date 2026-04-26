@@ -1,5 +1,5 @@
 import { Medication } from '../types';
-import { Plus, Pill, Trash2 } from 'lucide-react';
+import { Trash2 } from 'lucide-react';
 
 interface MedicationsDailyCardProps {
   medications: Medication[];
@@ -35,26 +35,26 @@ export default function MedicationsDailyCard({
       style={{ boxShadow: '4px 4px 0 #1a1a1a' }}
     >
       {/* Header */}
-      <div className="border-b-2 border-ink-black bg-ink-yellow px-4 py-3 flex items-center gap-2 shrink-0">
-        <Pill size={20} className="text-ink-black" />
-        <h3 className="font-display text-base uppercase font-bold text-ink-black">Posologie</h3>
-        <span className="ml-auto font-mono text-sm font-bold text-ink-black opacity-80 tabular-nums">
+      <div className="border-b-2 border-ink-black bg-ink-pink px-4 py-3 h-[50px] flex items-center gap-2 shrink-0">
+        <span
+          className="w-5 h-5 bg-ink-black shrink-0"
+          style={{
+            WebkitMask: 'url(/icons/capsule.svg) center / contain no-repeat',
+            mask: 'url(/icons/capsule.svg) center / contain no-repeat',
+          }}
+          aria-hidden="true"
+        />
+        <h3 className="font-display text-base uppercase text-ink-black">Posologie</h3>
+        <span className="ml-auto font-mono text-xs font-bold text-ink-black opacity-80 tabular-nums shrink-0">
           {sortedMedications.length}
         </span>
-        <button
-          onClick={onCreateMedication}
-          className="ml-2 p-1.5 hover:bg-ink-black hover:text-ink-yellow rounded transition-colors"
-          title="Ajouter un médicament"
-        >
-          <Plus size={18} />
-        </button>
       </div>
 
       {/* Content - Scrollable */}
-      <div className="flex-1 overflow-y-auto scrollbar-hide p-4 flex flex-col gap-3 min-h-0 bg-ink-yellow" style={{ scrollbarWidth: 'none' }}>
+      <div className="flex-1 overflow-y-auto scrollbar-hide p-4 flex flex-col gap-3 min-h-0 bg-ink-pink/60" style={{ scrollbarWidth: 'none' }}>
         {sortedMedications.length === 0 ? (
-          <div className="flex items-center justify-center py-6 text-ink-black opacity-50">
-            <p className="font-display text-xs uppercase text-center">Aucun médicament</p>
+          <div className="flex items-center justify-center py-6 text-ink-black opacity-70">
+            <p className="font-display text-sm text-center">Aucun médicament à prendre</p>
           </div>
         ) : (
           sortedMedications.map(medication => (
@@ -87,6 +87,17 @@ export default function MedicationsDailyCard({
             </div>
           ))
         )}
+      </div>
+
+      {/* Add button */}
+      <div className="px-3 pb-3 pt-1 flex justify-end bg-ink-pink/60">
+        <button
+          onClick={onCreateMedication}
+          className="retro-btn bg-ink-teal text-paper text-sm font-bold px-3 py-2"
+          title="Nouveau médicament"
+        >
+          Nouvelle prescription
+        </button>
       </div>
     </div>
   );

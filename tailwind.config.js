@@ -10,6 +10,7 @@ export default {
         'ink-blue': '#457b9d',
         'ink-teal': '#2a9d8f',
         'ink-yellow': '#f4a261',
+        'ink-pink': '#f9a8d4',
         'ink-orange': '#ff9800',
         'ink-green': '#4caf50',
         'ink-gold': '#d4a574',

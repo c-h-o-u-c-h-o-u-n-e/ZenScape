@@ -201,7 +201,7 @@ export default function GoalsSidebar({ goals, tasks, onNewGoal, onEditGoal, onDe
   const cardProps = { tasks, onEditGoal, onDeleteGoal, onArchiveGoal, onUnarchiveGoal, onViewArchives };
 
   return (
-    <div className="flex flex-col border-2 border-ink-black h-full bg-ink-red" style={{ boxShadow: '4px 4px 0 #1a1a1a' }}>
+    <div className="flex flex-col border-2 border-ink-black h-full bg-ink-red/75" style={{ boxShadow: '4px 4px 0 #1a1a1a' }}>
       {/* Header */}
       <div className="bg-ink-red text-paper px-4 py-3 border-b-2 border-ink-black flex items-center gap-2 shrink-0">
         <h3 className="font-display text-base uppercase font-bold">Projets</h3>
@@ -209,7 +209,7 @@ export default function GoalsSidebar({ goals, tasks, onNewGoal, onEditGoal, onDe
       </div>
 
       {/* Scrollable content */}
-      <div className="flex-1 overflow-y-auto p-2 flex flex-col gap-1.5 min-h-0 scrollbar-hide bg-ink-red" style={{ overflowX: 'visible' }}>
+      <div className="flex-1 overflow-y-auto p-2 flex flex-col gap-1.5 min-h-0 scrollbar-hide" style={{ overflowX: 'visible' }}>
         {/* Filter buttons */}
         <div className="flex gap-1 mb-1">
           <button

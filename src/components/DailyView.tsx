@@ -22,6 +22,7 @@ export default function DailyView({
   onDeleteTask,
   onArchiveTask,
 }: DailyViewProps) {
+  const todayDate = new Date().toISOString().split('T')[0];
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [medications, setMedications] = useState<Medication[]>([]);
   const [medicationModal, setMedicationModal] = useState<{ open: boolean; medication: Medication | null }>({
@@ -56,8 +57,34 @@ export default function DailyView({
     if (data) setMedications(data as Medication[]);
   }
 
+  function toLocalDateKey(dateValue: string): string {
+    const d = new Date(dateValue);
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
+
   const dayTasks = tasks
-    .filter(task => task.start_date === selectedDate && !task.completed)
+    .filter(task => {
+      if (task.archived) return false;
+      if (task.status === 'done') return false;
+      if (!task.start_date) return false;
+
+      // Pending tasks from past days are carried forward to today's planning
+      // view at midnight, without modifying their stored start_date.
+      if (selectedDate === todayDate) {
+        return task.start_date <= selectedDate;
+      }
+
+      // Once carried forward, they should no longer appear in previous days.
+      if (selectedDate < todayDate) {
+        return false;
+      }
+
+      // Future day: show only tasks explicitly planned for that day.
+      return task.start_date === selectedDate;
+    })
     .sort((a, b) => {
       if (a.start_time && !b.start_time) return -1;
       if (!a.start_time && b.start_time) return 1;
@@ -73,7 +100,14 @@ export default function DailyView({
     });
 
   const completedDayTasks = tasks
-    .filter(task => task.start_date === selectedDate && task.status === 'done')
+    .filter(task => {
+      if (task.status !== 'done') return false;
+
+      // A completed task should remain visible for the day it was completed,
+      // even if it gets archived later.
+      const completedDate = toLocalDateKey(task.updated_at);
+      return completedDate === selectedDate;
+    })
     .sort((a, b) => a.position - b.position);
 
   async function handleDeleteMedication(medicationId: string) {
@@ -82,15 +116,17 @@ export default function DailyView({
   }
 
   return (
-    <div className="h-full overflow-y-auto scrollbar-hide" style={{ scrollbarWidth: 'none' }}>
-      <div className="space-y-6 pb-4">
+    <div className="h-full min-h-0 overflow-hidden flex flex-col">
+      <div className="space-y-6 flex flex-col flex-1 min-h-0">
         {/* Header with date navigation */}
-        <DailyViewHeader date={selectedDate} onDateChange={setSelectedDate} />
+        <div className="shrink-0 pr-1">
+          <DailyViewHeader date={selectedDate} onDateChange={setSelectedDate} />
+        </div>
 
         {/* Main layout: Planning + Completed + Medications */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 flex-1 min-h-0 pr-1 pb-1" style={{ gridTemplateRows: 'minmax(0, 1fr)' }}>
           {/* Planning Card */}
-          <div>
+          <div className="min-h-0">
             <PlanningCard
               tasks={dayTasks}
               goals={goals}
@@ -101,7 +137,7 @@ export default function DailyView({
           </div>
 
           {/* Completed Card */}
-          <div>
+          <div className="min-h-0">
             <CompletedCard
               tasks={completedDayTasks}
               goals={goals}
@@ -112,7 +148,7 @@ export default function DailyView({
           </div>
 
           {/* Medications Card */}
-          <div>
+          <div className="min-h-0">
             <MedicationsDailyCard
               medications={medications}
               onCreateMedication={() => setMedicationModal({ open: true, medication: null })}

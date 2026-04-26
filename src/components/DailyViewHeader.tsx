@@ -9,6 +9,9 @@ export default function DailyViewHeader({ date, onDateChange }: DailyViewHeaderP
   const dateObj = new Date(date + 'T00:00:00');
   const todayObj = new Date();
   todayObj.setHours(0, 0, 0, 0);
+  const currentDateObj = new Date(date + 'T00:00:00');
+  const diff = Math.floor((currentDateObj.getTime() - todayObj.getTime()) / (1000 * 60 * 60 * 24));
+  const isToday = diff === 0;
 
   const dateStr = dateObj.toLocaleDateString('fr-FR', {
     weekday: 'long',
@@ -16,10 +19,9 @@ export default function DailyViewHeader({ date, onDateChange }: DailyViewHeaderP
     day: 'numeric',
     year: 'numeric',
   });
+  const dateStrWithCapitalizedDay = dateStr.charAt(0).toUpperCase() + dateStr.slice(1);
 
   const getDayLabel = () => {
-    const currentDateObj = new Date(date + 'T00:00:00');
-    const diff = Math.floor((currentDateObj.getTime() - todayObj.getTime()) / (1000 * 60 * 60 * 24));
     if (diff === 0) return 'Aujourd\'hui';
     if (diff === -1) return 'Hier';
     if (diff === -2) return 'Avant-hier';
@@ -50,7 +52,7 @@ export default function DailyViewHeader({ date, onDateChange }: DailyViewHeaderP
       <div className="flex items-center justify-between gap-4">
         <button
           onClick={handlePrevDay}
-          className="retro-btn p-3 text-paper bg-ink-blue hover:opacity-75 transition-opacity"
+          className="retro-btn p-3 text-paper bg-ink-blue"
           title="Jour précédent"
         >
           <ChevronLeft size={24} />
@@ -58,24 +60,30 @@ export default function DailyViewHeader({ date, onDateChange }: DailyViewHeaderP
 
         <div className="text-center flex-1">
           <h2 className="font-display text-sm uppercase text-paper leading-none">{getDayLabel()}</h2>
-          <p className="text-lg uppercase text-paper opacity-90 mt-2 capitalize font-bold">{dateStr}</p>
+          <p className="text-lg text-paper opacity-90 mt-2 font-bold">{dateStrWithCapitalizedDay}</p>
         </div>
 
-        <button
-          onClick={handleNextDay}
-          className="retro-btn p-3 text-paper bg-ink-blue hover:opacity-75 transition-opacity"
-          title="Jour suivant"
-        >
-          <ChevronRight size={24} />
-        </button>
+        <div className="flex items-center gap-2 shrink-0">
+          <button
+            onClick={handleToday}
+            className={`retro-btn bg-ink-blue text-paper px-4 py-3 text-xs font-bold uppercase ${
+              isToday ? 'invisible pointer-events-none' : ''
+            }`}
+            title="Revenir à aujourd'hui"
+            aria-hidden={isToday}
+            tabIndex={isToday ? -1 : 0}
+          >
+            Revenir à aujourd'hui
+          </button>
 
-        <button
-          onClick={handleToday}
-          className="retro-btn bg-ink-blue text-paper px-4 py-3 ml-2 text-xs font-bold uppercase hover:opacity-75 transition-opacity"
-          title="Aujourd'hui"
-        >
-          Aujourd'hui
-        </button>
+          <button
+            onClick={handleNextDay}
+            className="retro-btn p-3 text-paper bg-ink-blue"
+            title="Jour suivant"
+          >
+            <ChevronRight size={24} />
+          </button>
+        </div>
       </div>
     </div>
   );

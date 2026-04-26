@@ -42,7 +42,7 @@ export default function App() {
   const [view, setView] = useState<View>('kanban');
   const [columnLabels, setColumnLabels] = useState<Record<TaskStatus, string>>(DEFAULT_LABELS);
 
-  const [filters, setFilters] = useState<Filters>({ goalId: null, status: null, priority: null, tag: null, dateFrom: null, dateTo: null });
+  const [filters, setFilters] = useState<Filters>({ goalId: null, status: null, priority: null, tags: null, dateFrom: null, dateTo: null });
 
   const [goalModal, setGoalModal] = useState<{ open: boolean; goal: Goal | null }>({ open: false, goal: null });
   const [taskModal, setTaskModal] = useState<{ open: boolean; task: Task | null; defaultStatus?: TaskStatus; defaultDate?: string; defaultGoalId?: string | null }>({ open: false, task: null });
@@ -185,7 +185,7 @@ export default function App() {
     if (filters.goalId && task.goal_id !== filters.goalId) return false;
     if (filters.status && task.status !== filters.status) return false;
     if (filters.priority && !filters.priority.includes(task.priority)) return false;
-    if (filters.tag && !task.tags.includes(filters.tag)) return false;
+    if (filters.tags && !filters.tags.some(tag => task.tags.includes(tag))) return false;
     if (filters.dateFrom && task.due_date) {
       const taskDate = task.due_date.split('T')[0];
       if (taskDate < filters.dateFrom) return false;

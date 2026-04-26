@@ -75,7 +75,7 @@ export interface Filters {
   goalId: string | null;
   status: TaskStatus | null;
   priority: TaskPriority[] | null;
-  tag: string | null;
+  tags: string[] | null;
   dateFrom: string | null;
   dateTo: string | null;
 }

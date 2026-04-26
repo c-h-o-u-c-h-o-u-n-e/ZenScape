@@ -186,8 +186,14 @@ export default function App() {
     if (filters.status && task.status !== filters.status) return false;
     if (filters.priority && task.priority !== filters.priority) return false;
     if (filters.tag && !task.tags.includes(filters.tag)) return false;
-    if (filters.dateFrom && task.due_date && task.due_date < filters.dateFrom) return false;
-    if (filters.dateTo && task.due_date && task.due_date > filters.dateTo) return false;
+    if (filters.dateFrom && task.due_date) {
+      const taskDate = task.due_date.split('T')[0];
+      if (taskDate < filters.dateFrom) return false;
+    }
+    if (filters.dateTo && task.due_date) {
+      const taskDate = task.due_date.split('T')[0];
+      if (taskDate > filters.dateTo) return false;
+    }
     return true;
   });
 

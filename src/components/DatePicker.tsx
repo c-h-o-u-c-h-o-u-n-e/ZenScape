@@ -181,4 +181,4 @@ const firstDay = new Date(viewYear, viewMonth, 1).getDay();
 }
 
 
-export default DatePicker
+export default DatePicker;

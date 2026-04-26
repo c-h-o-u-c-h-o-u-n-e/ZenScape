@@ -1,0 +1,114 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@font-face {
+  font-family: 'KGDarkSide';
+  src: url('/fonts/KGDarkSide-Regular.ttf') format('truetype');
+  font-weight: 400 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+@layer base {
+  * {
+    box-sizing: border-box;
+  }
+
+  html {
+    scrollbar-gutter: stable;
+    font-size: 14px;
+  }
+
+  body {
+    background-color: #f4e8d1;
+    font-family: 'KGDarkSide', sans-serif;
+    color: #1a1a1a;
+    background-image:
+      url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.08'/%3E%3C/svg%3E"),
+      radial-gradient(circle, #1a1a1a 0.6px, transparent 0.6px);
+    background-size: 150px 150px, 4px 4px;
+    background-blend-mode: overlay, multiply;
+  }
+}
+
+@layer components {
+  .retro-card {
+    @apply border-2 border-ink-black bg-paper;
+    box-shadow: 4px 4px 0 #1a1a1a;
+  }
+
+  .retro-card-hover {
+    @apply transition-all duration-150;
+  }
+
+  .retro-card-hover:hover {
+    transform: translate(-3px, -3px);
+    box-shadow: 7px 7px 0 #1a1a1a;
+  }
+
+  .retro-btn {
+    @apply font-display uppercase border-2 border-ink-black px-4 py-2 transition-all duration-100;
+    box-shadow: 3px 3px 0 #1a1a1a;
+  }
+
+  .retro-btn:active {
+    transform: translate(3px, 3px);
+    box-shadow: 0 0 0 #1a1a1a;
+  }
+
+  .retro-btn-press {
+    @apply transition-all duration-100;
+    box-shadow: 3px 3px 0 #1a1a1a;
+  }
+
+  .retro-btn-press:active {
+    box-shadow: 0 0 0 #1a1a1a;
+  }
+
+  .retro-input {
+    @apply border-2 border-ink-black bg-transparent px-3 py-2 w-full outline-none text-xs;
+    font-family: 'KGDarkSide', sans-serif;
+    box-shadow: 4px 4px 0 #1a1a1a;
+  }
+
+  .retro-input:focus {
+    box-shadow: 4px 4px 0 #1a1a1a;
+  }
+
+  .progress-fill {
+    background-image: radial-gradient(circle, currentColor 0.8px, transparent 0.8px);
+    background-size: 4px 4px;
+  }
+}
+
+@keyframes inkBleed {
+  0%, 100% { filter: blur(0px); }
+  50% { filter: blur(0.4px); }
+}
+
+.bleed-anim {
+  animation: inkBleed 5s infinite ease-in-out;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: #f4e8d1; border: 1px solid #1a1a1a; }
+::-webkit-scrollbar-thumb { background: #1a1a1a; }
+::-webkit-scrollbar-thumb:hover { background: #457b9d; }
+
+/* Drag over highlight */
+.drag-over {
+  background-color: rgba(69, 123, 157, 0.15) !important;
+  border-color: #457b9d !important;
+}
+
+/* Hide scrollbar while keeping scrolling */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}

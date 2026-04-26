@@ -1,0 +1,15 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node -e \"const fs=require('fs');let d='';process.stdin.on('data',c=>d+=c);process.stdin.on('end',()=>{try{const j=JSON.parse(d);const fp=(j.tool_input&&j.tool_input.file_path)||(j.tool_response&&j.tool_response.filePath)||'';if(!fp.endsWith('TaskCard.tsx'))return;const lines=fs.readFileSync(fp,'utf8').split('\\n');const idxs=lines.reduce((a,l,i)=>(/^export default TaskCard;?$/.test(l.trim())?[...a,i]:a),[]);if(idxs.length>1){const filtered=lines.filter((_,i)=>!idxs.slice(0,-1).includes(i));fs.writeFileSync(fp,filtered.join('\\n'))}}catch(e){}})\" 2>/dev/null || true"
+          }
+        ]
+      }
+    ]
+  }
+}

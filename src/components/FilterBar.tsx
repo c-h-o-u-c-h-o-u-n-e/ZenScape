@@ -73,8 +73,8 @@ export default function FilterBar({ filters, goals, tasks, columnLabels, onChang
             onClick={() => setTagsSidebarOpen(true)}
             className="px-3 py-1.5 text-xs font-bold uppercase border-2 border-ink-black transition-all hover:opacity-80 shrink-0"
             style={{
-              backgroundColor: 'transparent',
-              color: '#1a1a1a',
+              backgroundColor: '#457b9d',
+              color: '#f4e8d1',
               boxShadow: '2px 2px 0 #1a1a1a',
             }}
           >

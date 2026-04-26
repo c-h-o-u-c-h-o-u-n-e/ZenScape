@@ -46,11 +46,17 @@ export default function FilterBar({ filters, goals, tasks, columnLabels, onChang
       <div className="flex items-center gap-2">
         {PRIORITIES.map(p => {
           const colors = PRIORITY_COLORS[p];
-          const isActive = filters.priority === p;
+          const isActive = filters.priority?.includes(p) ?? false;
           return (
             <button
               key={p}
-              onClick={() => onChange({ ...filters, priority: isActive ? null : p })}
+              onClick={() => {
+                const currentPriorities = filters.priority ?? [];
+                const newPriorities = isActive
+                  ? currentPriorities.filter(pr => pr !== p)
+                  : [...currentPriorities, p];
+                onChange({ ...filters, priority: newPriorities.length > 0 ? newPriorities : null });
+              }}
               className="px-3 py-1.5 text-xs font-bold uppercase border-2 border-ink-black transition-all"
               style={{
                 backgroundColor: isActive ? colors.bg : 'transparent',

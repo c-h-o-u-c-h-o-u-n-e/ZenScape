@@ -184,7 +184,7 @@ export default function App() {
     if (task.archived) return false;
     if (filters.goalId && task.goal_id !== filters.goalId) return false;
     if (filters.status && task.status !== filters.status) return false;
-    if (filters.priority && task.priority !== filters.priority) return false;
+    if (filters.priority && !filters.priority.includes(task.priority)) return false;
     if (filters.tag && !task.tags.includes(filters.tag)) return false;
     if (filters.dateFrom && task.due_date) {
       const taskDate = task.due_date.split('T')[0];

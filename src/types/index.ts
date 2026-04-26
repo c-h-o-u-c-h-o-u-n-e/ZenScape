@@ -74,7 +74,7 @@ export interface Medication {
 export interface Filters {
   goalId: string | null;
   status: TaskStatus | null;
-  priority: TaskPriority | null;
+  priority: TaskPriority[] | null;
   tag: string | null;
   dateFrom: string | null;
   dateTo: string | null;

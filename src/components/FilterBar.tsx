@@ -88,7 +88,7 @@ export default function FilterBar({ filters, goals, tasks, columnLabels, onChang
       )}
 
       <div
-        className="fixed right-0 top-0 bottom-0 w-80 bg-paper transform transition-transform duration-300 ease-in-out z-50 flex flex-col overflow-y-auto"
+        className="fixed right-0 top-0 bottom-0 w-80 bg-paper transform transition-transform duration-300 ease-in-out z-50 flex flex-col scrollbar-hide"
         style={{
           transform: tagsSidebarOpen ? 'translateX(0)' : 'translateX(100%)',
           boxShadow: tagsSidebarOpen ? '-8px 0 0 #1a1a1a' : 'none',
@@ -101,7 +101,7 @@ export default function FilterBar({ filters, goals, tasks, columnLabels, onChang
           </button>
         </div>
 
-        <div className="flex-1 p-5 flex flex-wrap gap-3 content-start" style={{ backgroundColor: 'rgba(220, 38, 38, 0.75)' }}>
+        <div className="flex-1 p-5 flex flex-wrap gap-3 content-start overflow-y-auto scrollbar-hide" style={{ backgroundColor: 'rgba(220, 38, 38, 0.75)' }}>
           {allTags.map(tag => {
             const isActive = filters.tags?.includes(tag) ?? false;
             return (

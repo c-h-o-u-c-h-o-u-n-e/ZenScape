@@ -16,6 +16,13 @@ const PRIORITY_LABELS: Record<TaskPriority, string> = {
   urgent: 'Urgent',
 };
 
+const PRIORITY_COLORS: Record<TaskPriority, { bg: string; text: string }> = {
+  low: { bg: '#22c55e', text: '#f5f5f0' },
+  medium: { bg: '#3b82f6', text: '#f5f5f0' },
+  high: { bg: '#f97316', text: '#1a1a1a' },
+  urgent: { bg: '#ef4444', text: '#f5f5f0' },
+};
+
 const PRIORITIES: TaskPriority[] = ['low', 'medium', 'high', 'urgent'];
 
 export default function FilterBar({ filters, goals, tasks, columnLabels, onChange }: Props) {
@@ -37,35 +44,24 @@ export default function FilterBar({ filters, goals, tasks, columnLabels, onChang
       <span className="text-xs font-bold opacity-70 shrink-0">Priorité :</span>
 
       <div className="flex items-center gap-2">
-        <button
-          onClick={() => onChange({ ...filters, priority: null })}
-          className={`px-3 py-1.5 text-xs font-bold uppercase border-2 border-ink-black transition-all ${
-            filters.priority === null
-              ? 'bg-ink-blue text-paper'
-              : 'bg-paper text-ink-black hover:bg-ink-yellow/20'
-          }`}
-          style={{
-            boxShadow: filters.priority === null ? '2px 2px 0 #1a1a1a' : 'none'
-          }}
-        >
-          Tous
-        </button>
-        {PRIORITIES.map(p => (
-          <button
-            key={p}
-            onClick={() => onChange({ ...filters, priority: p })}
-            className={`px-3 py-1.5 text-xs font-bold uppercase border-2 border-ink-black transition-all ${
-              filters.priority === p
-                ? 'bg-ink-blue text-paper'
-                : 'bg-paper text-ink-black hover:bg-ink-yellow/20'
-            }`}
-            style={{
-              boxShadow: filters.priority === p ? '2px 2px 0 #1a1a1a' : 'none'
-            }}
-          >
-            {PRIORITY_LABELS[p]}
-          </button>
-        ))}
+        {PRIORITIES.map(p => {
+          const colors = PRIORITY_COLORS[p];
+          const isActive = filters.priority === p;
+          return (
+            <button
+              key={p}
+              onClick={() => onChange({ ...filters, priority: isActive ? null : p })}
+              className="px-3 py-1.5 text-xs font-bold uppercase border-2 border-ink-black transition-all"
+              style={{
+                backgroundColor: isActive ? colors.bg : `${colors.bg}33`,
+                color: isActive ? colors.text : colors.text,
+                boxShadow: '2px 2px 0 #1a1a1a',
+              }}
+            >
+              {PRIORITY_LABELS[p]}
+            </button>
+          );
+        })}
       </div>
 
       {allTags.length > 0 && (

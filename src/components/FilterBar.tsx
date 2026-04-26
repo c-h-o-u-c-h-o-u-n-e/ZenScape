@@ -1,6 +1,5 @@
 import { Goal, Task, Filters, TaskStatus, TaskPriority } from '../types';
 import Dropdown, { DropdownOption } from './Dropdown';
-import DatePicker from './DatePicker';
 
 interface Props {
   filters: Filters;
@@ -10,18 +9,19 @@ interface Props {
   onChange: (f: Filters) => void;
 }
 
-const PRIORITY_OPTIONS: DropdownOption[] = [
-  { value: '', label: 'Toutes les priorités' },
-  { value: 'low', label: 'Faible' },
-  { value: 'medium', label: 'Moyen' },
-  { value: 'high', label: 'Élevé' },
-  { value: 'urgent', label: 'Urgent' },
-];
+const PRIORITY_LABELS: Record<TaskPriority, string> = {
+  low: 'Faible',
+  medium: 'Moyen',
+  high: 'Élevé',
+  urgent: 'Urgent',
+};
+
+const PRIORITIES: TaskPriority[] = ['low', 'medium', 'high', 'urgent'];
 
 export default function FilterBar({ filters, goals, tasks, columnLabels, onChange }: Props) {
   const allTags = [...new Set(tasks.flatMap(t => t.tags))].sort();
 
-  const hasFilters = filters.status || filters.priority || filters.tag || filters.dateFrom || filters.dateTo;
+  const hasFilters = filters.status || filters.priority || filters.tag;
 
   const tagOptions: DropdownOption[] = [
     { value: '', label: 'Tous les tags' },
@@ -34,14 +34,38 @@ export default function FilterBar({ filters, goals, tasks, columnLabels, onChang
 
   return (
     <div className="flex flex-wrap items-center justify-center gap-3">
-      <span className="text-xs font-bold opacity-70 shrink-0">Filtrer :</span>
+      <span className="text-xs font-bold opacity-70 shrink-0">Priorité :</span>
 
-      <div className="w-60">
-        <Dropdown
-          value={filters.priority ?? ''}
-          onChange={v => onChange({ ...filters, priority: (v as TaskPriority) || null })}
-          options={PRIORITY_OPTIONS}
-        />
+      <div className="flex items-center gap-2">
+        <button
+          onClick={() => onChange({ ...filters, priority: null })}
+          className={`px-3 py-1.5 text-xs font-bold uppercase border-2 border-ink-black transition-all ${
+            filters.priority === null
+              ? 'bg-ink-blue text-paper'
+              : 'bg-paper text-ink-black hover:bg-ink-yellow/20'
+          }`}
+          style={{
+            boxShadow: filters.priority === null ? '2px 2px 0 #1a1a1a' : 'none'
+          }}
+        >
+          Tous
+        </button>
+        {PRIORITIES.map(p => (
+          <button
+            key={p}
+            onClick={() => onChange({ ...filters, priority: p })}
+            className={`px-3 py-1.5 text-xs font-bold uppercase border-2 border-ink-black transition-all ${
+              filters.priority === p
+                ? 'bg-ink-blue text-paper'
+                : 'bg-paper text-ink-black hover:bg-ink-yellow/20'
+            }`}
+            style={{
+              boxShadow: filters.priority === p ? '2px 2px 0 #1a1a1a' : 'none'
+            }}
+          >
+            {PRIORITY_LABELS[p]}
+          </button>
+        ))}
       </div>
 
       {allTags.length > 0 && (
@@ -53,28 +77,6 @@ export default function FilterBar({ filters, goals, tasks, columnLabels, onChang
           />
         </div>
       )}
-
-      <div className="flex items-center gap-12">
-        <span className="text-xs font-bold opacity-50 shrink-0"></span>
-        <div className="w-[240px]">
-          <DatePicker
-            value={filters.dateFrom ?? ''}
-            onChange={v => onChange({ ...filters, dateFrom: v || null })}
-            placeholder="Date de début"
-          />
-        </div>
-      </div>
-
-      <div className="flex items-center gap-2">
-        <span className="text-xs font-bold opacity-50 shrink-0"></span>
-        <div className="w-[240px]">
-          <DatePicker
-            value={filters.dateTo ?? ''}
-            onChange={v => onChange({ ...filters, dateTo: v || null })}
-            placeholder="Date de fin"
-          />
-        </div>
-      </div>
 
       <button
         onClick={clear}

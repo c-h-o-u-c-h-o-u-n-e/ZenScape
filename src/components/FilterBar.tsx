@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { X } from 'lucide-react';
 import { Goal, Task, Filters, TaskStatus, TaskPriority } from '../types';
 
 interface Props {
@@ -98,16 +99,13 @@ export default function FilterBar({ filters, goals, tasks, columnLabels, onChang
         style={{
           transform: tagsSidebarOpen ? 'translateX(0)' : 'translateX(100%)',
           boxShadow: tagsSidebarOpen ? '-8px 0 0 #1a1a1a' : 'none',
-          borderLeft: '3px solid #1a1a1a',
+          borderLeft: '2px solid #1a1a1a',
         }}
       >
-        <div className="flex items-center justify-between p-5 border-b-4 border-ink-black bg-ink-teal text-paper sticky top-0">
-          <h2 className="font-display text-lg uppercase">Tags</h2>
-          <button
-            onClick={() => setTagsSidebarOpen(false)}
-            className="text-2xl font-bold hover:text-ink-red transition-colors"
-          >
-            ×
+        <div className="flex items-center justify-between p-5 border-b-4 border-ink-black bg-ink-red text-paper sticky top-0">
+          <h2 className="font-display text-lg uppercase">Filtrer par tags</h2>
+          <button onClick={() => setTagsSidebarOpen(false)} className="hover:text-ink-red transition-colors">
+            <X size={24} />
           </button>
         </div>
 

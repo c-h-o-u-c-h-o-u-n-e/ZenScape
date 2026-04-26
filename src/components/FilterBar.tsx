@@ -54,7 +54,7 @@ export default function FilterBar({ filters, goals, tasks, columnLabels, onChang
               className="px-3 py-1.5 text-xs font-bold uppercase border-2 border-ink-black transition-all"
               style={{
                 backgroundColor: isActive ? colors.bg : 'transparent',
-                color: isActive ? colors.text : colors.bg,
+                color: isActive ? colors.text : '#1a1a1a',
                 boxShadow: '2px 2px 0 #1a1a1a',
               }}
             >

@@ -92,7 +92,7 @@ export default function FilterBar({ filters, goals, tasks, columnLabels, onChang
         style={{
           transform: tagsSidebarOpen ? 'translateX(0)' : 'translateX(100%)',
           boxShadow: tagsSidebarOpen ? '-8px 0 0 #1a1a1a' : 'none',
-          borderLeft: '2px solid #1a1a1a',
+          borderLeft: '1px solid #1a1a1a',
         }}
       >
         <div className="flex items-center justify-between p-5 border-b-4 border-ink-black bg-ink-red text-paper sticky top-0">

@@ -81,13 +81,6 @@ export default function FilterBar({ filters, goals, tasks, columnLabels, onChang
             Répertoire des tags
           </button>
         )}
-
-        <button
-          onClick={clear}
-          className={`flex items-center gap-1 text-xs font-bold text-ink-red hover:opacity-70 transition-opacity uppercase shrink-0 ${!hasFilters ? 'invisible' : ''}`}
-        >
-          Effacer
-        </button>
       </div>
 
       {tagsSidebarOpen && (
@@ -104,6 +97,9 @@ export default function FilterBar({ filters, goals, tasks, columnLabels, onChang
       >
         <div className="flex items-center justify-between p-5 border-b-4 border-ink-black bg-ink-red text-paper sticky top-0">
           <h2 className="font-display text-lg uppercase">Filtrer par tags</h2>
+          <button onClick={() => setTagsSidebarOpen(false)} className="hover:text-ink-red transition-colors">
+            <X size={24} />
+          </button>
         </div>
 
         <div className="p-5 flex flex-wrap gap-3">

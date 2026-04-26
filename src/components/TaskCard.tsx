@@ -60,7 +60,7 @@ function TaskCard({ task, goalColor, goalName, onEdit, onDelete, onArchive, drag
       <div className="absolute top-1 right-1 flex items-center gap-2">
         <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
           <button onClick={() => onEdit(task)} className="hover:opacity-70 transition-opacity" title="Modifier">
-            <img src="/icons/pen.svg" alt="Modifier" className="w-4 h-4" style={{ filter: `invert(${goalColor.fg === 'white' ? 1 : 0})` }} />
+            <img src="/icons/pen.svg" alt="Modifier" className="w-4 h-4" style={{ color: goalColor.fg }} />
           </button>
           {onArchive && (
             <button
@@ -68,16 +68,16 @@ function TaskCard({ task, goalColor, goalName, onEdit, onDelete, onArchive, drag
               className="hover:opacity-70 transition-opacity"
               title="Archiver"
             >
-              <img src="/icons/box-archive.svg" alt="Archiver" className="w-4 h-4" style={{ filter: `invert(${goalColor.fg === 'white' ? 1 : 0})` }} />
+              <img src="/icons/box-archive.svg" alt="Archiver" className="w-4 h-4" style={{ color: goalColor.fg }} />
             </button>
           )}
           <button onClick={() => onDelete(task.id)} className="hover:opacity-70 transition-opacity" title="Supprimer">
-            <img src="/icons/trash-can.svg" alt="Supprimer" className="w-4 h-4" style={{ filter: `invert(${goalColor.fg === 'white' ? 1 : 0})` }} />
+            <img src="/icons/trash-can.svg" alt="Supprimer" className="w-4 h-4" style={{ color: goalColor.fg }} />
           </button>
         </div>
         {draggable && (
           <div className="opacity-30 group-hover:opacity-70 cursor-grab" title="Déplacer">
-            <img src="/icons/grip-vertical.svg" alt="Déplacer" className="w-4 h-4" style={{ filter: `invert(${goalColor.fg === 'white' ? 1 : 0})` }} />
+            <img src="/icons/grip-vertical.svg" alt="Déplacer" className="w-4 h-4" style={{ color: goalColor.fg }} />
           </div>
         )}
       </div>

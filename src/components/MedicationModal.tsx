@@ -61,11 +61,10 @@ function unitToInterval(unit: RecurrenceUnit, interval: number): number {
 
 export default function MedicationModal({ medication, userId, onClose, onSaved }: Props) {
   const [name, setName] = useState('');
-  const [dosage, setDosage] = useState('');
   const [format, setFormat] = useState('Comprimé');
+  const [dosage, setDosage] = useState('');
   const [timeOfDay, setTimeOfDay] = useState('morning');
   const [startDate, setStartDate] = useState('');
-  const [endDate, setEndDate] = useState('');
   const [notes, setNotes] = useState('');
   const [takeWithFood, setTakeWithFood] = useState(false);
 
@@ -85,11 +84,10 @@ export default function MedicationModal({ medication, userId, onClose, onSaved }
   useEffect(() => {
     if (medication) {
       setName(medication.name);
-      setDosage(medication.dosage);
       setFormat(medication.format);
+      setDosage(medication.dosage);
       setTimeOfDay(medication.time_of_day);
       setStartDate(medication.start_date);
-      setEndDate(medication.end_date || '');
       setNotes(medication.notes || '');
       setTakeWithFood(medication.take_with_food);
       setRecurrenceEndDate(medication.recurrence_end_date || '');
@@ -215,6 +213,15 @@ export default function MedicationModal({ medication, userId, onClose, onSaved }
             />
           </div>
 
+          <div>
+            <label className="font-bold text-xs uppercase block mb-2 tracking-wide">Format *</label>
+            <Dropdown
+              value={format}
+              onChange={setFormat}
+              options={FORMAT_OPTIONS}
+            />
+          </div>
+
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="font-bold text-xs uppercase block mb-2 tracking-wide">Dosage *</label>
@@ -228,17 +235,6 @@ export default function MedicationModal({ medication, userId, onClose, onSaved }
               />
             </div>
             <div>
-              <label className="font-bold text-xs uppercase block mb-2 tracking-wide">Format</label>
-              <Dropdown
-                value={format}
-                onChange={setFormat}
-                options={FORMAT_OPTIONS}
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div>
               <label className="font-bold text-xs uppercase block mb-2 tracking-wide">Moment de la journée</label>
               <Dropdown
                 value={timeOfDay}
@@ -248,15 +244,9 @@ export default function MedicationModal({ medication, userId, onClose, onSaved }
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="font-bold text-xs uppercase block mb-2 tracking-wide">Date de début</label>
-              <DatePicker value={startDate} onChange={setStartDate} placeholder="Date de début" />
-            </div>
-            <div>
-              <label className="font-bold text-xs uppercase block mb-2 tracking-wide">Date de fin</label>
-              <DatePicker value={endDate} onChange={setEndDate} placeholder="Date de fin" />
-            </div>
+          <div>
+            <label className="font-bold text-xs uppercase block mb-2 tracking-wide">Date de début</label>
+            <DatePicker value={startDate} onChange={setStartDate} placeholder="Date de début" />
           </div>
 
           <div>

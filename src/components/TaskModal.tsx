@@ -77,24 +77,42 @@ export default function TaskModal({ task, goals, columnLabels, defaultGoalId, de
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [locationSuggestions, setLocationSuggestions] = useState<string[]>([]);
+  const [allTags, setAllTags] = useState<string[]>([]);
+  const [tagSuggestions, setTagSuggestions] = useState<string[]>([]);
+  const [showTagSuggestions, setShowTagSuggestions] = useState(false);
 
   const recurrenceInterval = parseInt(recurrenceIntervalInput) || 0;
   const recurrenceActive = recurrenceInterval > 0;
 
   useEffect(() => {
-    async function loadLocations() {
-      const { data } = await supabase
+    async function loadLocationsAndTags() {
+      const { data: locData } = await supabase
         .from('tasks')
         .select('location')
         .eq('user_id', userId)
         .not('location', 'is', null);
 
-      if (data) {
-        const unique = [...new Set(data.map(t => t.location).filter(Boolean))].sort();
+      if (locData) {
+        const unique = [...new Set(locData.map(t => t.location).filter(Boolean))].sort();
         setLocationSuggestions(unique);
       }
+
+      const { data: taskData } = await supabase
+        .from('tasks')
+        .select('tags')
+        .eq('user_id', userId);
+
+      if (taskData) {
+        const allTagsSet = new Set<string>();
+        taskData.forEach(t => {
+          if (t.tags && Array.isArray(t.tags)) {
+            t.tags.forEach((tag: string) => allTagsSet.add(tag));
+          }
+        });
+        setAllTags(Array.from(allTagsSet).sort());
+      }
     }
-    loadLocations();
+    loadLocationsAndTags();
   }, [userId]);
 
   useEffect(() => {
@@ -218,6 +236,40 @@ export default function TaskModal({ task, goals, columnLabels, defaultGoalId, de
     ...goals.filter(g => g.status !== 'archived').sort((a, b) => a.title.localeCompare(b.title)).map(g => ({ value: g.id, label: g.title })),
   ];
 
+  const handleTagsInputChange = (value: string) => {
+    setTagsInput(value);
+
+    const lastCommaIndex = value.lastIndexOf(',');
+    const currentTagInput = lastCommaIndex === -1
+      ? value.trim()
+      : value.substring(lastCommaIndex + 1).trim();
+
+    if (currentTagInput.length > 0) {
+      const filtered = allTags.filter(tag =>
+        tag.toLowerCase().startsWith(currentTagInput.toLowerCase()) &&
+        !tagsInput.split(',').map(t => t.trim()).includes(tag)
+      );
+      setTagSuggestions(filtered);
+      setShowTagSuggestions(filtered.length > 0);
+    } else {
+      setShowTagSuggestions(false);
+    }
+  };
+
+  const handleTagSelect = (tag: string) => {
+    const lastCommaIndex = tagsInput.lastIndexOf(',');
+    let newTagsInput: string;
+
+    if (lastCommaIndex === -1) {
+      newTagsInput = tag + ', ';
+    } else {
+      newTagsInput = tagsInput.substring(0, lastCommaIndex + 1) + ' ' + tag + ', ';
+    }
+
+    setTagsInput(newTagsInput);
+    setShowTagSuggestions(false);
+  };
+
   return (
     <div className="fixed inset-0 bg-ink-black/60 flex items-center justify-center z-50 p-4">
       <div
@@ -309,14 +361,45 @@ export default function TaskModal({ task, goals, columnLabels, defaultGoalId, de
             </div>
           </div>
 
-          <div>
+          <div className="relative">
             <label className="font-bold text-xs uppercase block mb-2 tracking-wide">Tags (séparés par des virgules)</label>
-            <input
-              type="text"
-              value={tagsInput}
-              onChange={e => setTagsInput(e.target.value)}
-              className="retro-input !bg-transparent"
-            />
+            <div className="relative">
+              <input
+                type="text"
+                value={tagsInput}
+                onChange={e => handleTagsInputChange(e.target.value)}
+                onFocus={() => {
+                  const lastCommaIndex = tagsInput.lastIndexOf(',');
+                  const currentTagInput = lastCommaIndex === -1
+                    ? tagsInput.trim()
+                    : tagsInput.substring(lastCommaIndex + 1).trim();
+                  if (currentTagInput.length > 0) {
+                    const filtered = allTags.filter(tag =>
+                      tag.toLowerCase().startsWith(currentTagInput.toLowerCase()) &&
+                      !tagsInput.split(',').map(t => t.trim()).includes(tag)
+                    );
+                    setTagSuggestions(filtered);
+                    setShowTagSuggestions(filtered.length > 0);
+                  }
+                }}
+                onBlur={() => setTimeout(() => setShowTagSuggestions(false), 150)}
+                className="retro-input !bg-transparent w-full"
+              />
+              {showTagSuggestions && tagSuggestions.length > 0 && (
+                <div className="absolute top-full left-0 right-0 mt-1 bg-paper border-2 border-ink-black z-10 max-h-32 overflow-y-auto">
+                  {tagSuggestions.map((tag, idx) => (
+                    <button
+                      key={idx}
+                      type="button"
+                      onClick={() => handleTagSelect(tag)}
+                      className="w-full text-left px-3 py-2 hover:bg-ink-blue/20 text-sm transition-colors border-b border-ink-black/10 last:border-b-0"
+                    >
+                      {tag}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Recurrence */}

@@ -1,5 +1,5 @@
 import { Medication } from '../types';
-import { Trash2 } from 'lucide-react';
+import { Trash2, CreditCard as Edit } from 'lucide-react';
 import { getMedicationFormatColor, shouldUseDarkText } from '../lib/medicationColors';
 
 interface MedicationsDailyCardProps {
@@ -86,14 +86,24 @@ export default function MedicationsDailyCard({
                       <p className="text-xs mt-1 italic" style={{ color: secondaryTextColor }}>{medication.notes}</p>
                     )}
                   </div>
-                  <button
-                    onClick={() => onDeleteMedication(medication.id)}
-                    className="p-1.5 rounded transition-colors flex-shrink-0 hover:opacity-80"
-                    style={{ color: textColor }}
-                    title="Supprimer"
-                  >
-                    <Trash2 size={16} />
-                  </button>
+                  <div className="flex gap-1 flex-shrink-0">
+                    <button
+                      onClick={() => onEditMedication(medication)}
+                      className="p-1.5 rounded transition-colors hover:opacity-80"
+                      style={{ color: textColor }}
+                      title="Éditer"
+                    >
+                      <Edit size={16} />
+                    </button>
+                    <button
+                      onClick={() => onDeleteMedication(medication.id)}
+                      className="p-1.5 rounded transition-colors hover:opacity-80"
+                      style={{ color: textColor }}
+                      title="Supprimer"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
                 </div>
               </div>
             );

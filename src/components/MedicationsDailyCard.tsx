@@ -70,7 +70,7 @@ export default function MedicationsDailyCard({
                     {medication.dosage} • {timeLabels[medication.time_of_day as keyof typeof timeLabels] || medication.time_of_day}
                   </p>
                   {medication.take_with_food && (
-                    <p className="text-xs text-ink-red font-bold mt-1">À prendre en mangeant</p>
+                    <p className="text-xs text-ink-red font-bold mt-1">Prendre avec de la nourriture</p>
                   )}
                   {medication.notes && (
                     <p className="text-xs text-ink-black opacity-50 mt-1 italic">{medication.notes}</p>

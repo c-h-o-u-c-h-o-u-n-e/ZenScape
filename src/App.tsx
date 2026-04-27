@@ -238,7 +238,7 @@ export default function App() {
             onClick={() => setView('kanban')}
             className={`retro-btn flex items-center gap-2 text-xs ${view === 'kanban' ? 'bg-ink-red text-paper' : 'bg-paper'}`}
           >
-            <img src="/icons/kanban.svg" alt="Tableau" className="w-4 h-4" style={{ filter: view === 'kanban' ? 'brightness(0) invert(1)' : 'none' }} /> Tableau
+           Tableau
           </button>
           <button
             onClick={() => setView('calendar')}

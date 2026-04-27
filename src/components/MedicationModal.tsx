@@ -213,16 +213,15 @@ export default function MedicationModal({ medication, userId, onClose, onSaved }
             />
           </div>
 
-          <div>
-            <label className="font-bold text-xs uppercase block mb-2 tracking-wide">Format *</label>
-            <Dropdown
-              value={format}
-              onChange={setFormat}
-              options={FORMAT_OPTIONS}
-            />
-          </div>
-
           <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="font-bold text-xs uppercase block mb-2 tracking-wide">Format *</label>
+              <Dropdown
+                value={format}
+                onChange={setFormat}
+                options={FORMAT_OPTIONS}
+              />
+            </div>
             <div>
               <label className="font-bold text-xs uppercase block mb-2 tracking-wide">Dosage *</label>
               <input
@@ -234,6 +233,13 @@ export default function MedicationModal({ medication, userId, onClose, onSaved }
                 placeholder="Ex: 200mg"
               />
             </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="font-bold text-xs uppercase block mb-2 tracking-wide">Date de début</label>
+              <DatePicker value={startDate} onChange={setStartDate} placeholder="Date de début" />
+            </div>
             <div>
               <label className="font-bold text-xs uppercase block mb-2 tracking-wide">Moment de la journée</label>
               <Dropdown
@@ -242,11 +248,6 @@ export default function MedicationModal({ medication, userId, onClose, onSaved }
                 options={TIME_OF_DAY_OPTIONS}
               />
             </div>
-          </div>
-
-          <div>
-            <label className="font-bold text-xs uppercase block mb-2 tracking-wide">Date de début</label>
-            <DatePicker value={startDate} onChange={setStartDate} placeholder="Date de début" />
           </div>
 
           <div>

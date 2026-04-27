@@ -20,7 +20,7 @@ export default function MedicationCard({
   return (
     <div className="bg-ink-blue rounded-lg border border-neutral-200 p-6 shadow-sm">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold text-neutral-900">Prescriptions</h3>
+        <h3 className="text-lg font-semibold text-neutral-900">Posologie</h3>
         <button
           onClick={onCreateMedication}
           className="p-2 hover:bg-neutral-100 rounded-lg transition-colors"

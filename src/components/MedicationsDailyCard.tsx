@@ -44,7 +44,7 @@ export default function MedicationsDailyCard({
           }}
           aria-hidden="true"
         />
-        <h3 className="font-display text-base uppercase text-ink-black">Prescriptions</h3>
+        <h3 className="font-display text-base uppercase text-ink-black">Posologie</h3>
         <span className="ml-auto font-mono text-xs font-bold text-ink-black opacity-80 tabular-nums shrink-0">
           {sortedMedications.length}
         </span>

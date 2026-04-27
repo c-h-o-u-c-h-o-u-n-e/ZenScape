@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { User } from '@supabase/supabase-js';
-import { Plus } from 'lucide-react';
+import { Plus, LayoutGrid, Calendar, Clock } from 'lucide-react';
 import { supabase } from './lib/supabase';
 import { getEstDate } from './lib/timezone';
 import { Goal, Task, Filters, TaskStatus } from './types';
@@ -230,21 +230,21 @@ export default function App() {
         <div className="flex gap-3 shrink-0">
           <button
             onClick={() => setView('daily')}
-            className={`retro-btn flex items-center gap-2 text-sm ${view === 'daily' ? 'bg-ink-red text-paper' : 'bg-paper'}`}
+            className={`retro-btn flex items-center gap-2 text-xs ${view === 'daily' ? 'bg-ink-red text-paper' : 'bg-paper'}`}
           >
-          Aujourd'hui
+            <Clock size={15} /> Aujourd'hui
           </button>
           <button
             onClick={() => setView('kanban')}
-            className={`retro-btn flex items-center gap-2 text-sm ${view === 'kanban' ? 'bg-ink-red text-paper' : 'bg-paper'}`}
+            className={`retro-btn flex items-center gap-2 text-xs ${view === 'kanban' ? 'bg-ink-red text-paper' : 'bg-paper'}`}
           >
-           Tableau
+            <LayoutGrid size={15} /> Tableau
           </button>
           <button
             onClick={() => setView('calendar')}
-            className={`retro-btn flex items-center gap-2 text-sm ${view === 'calendar' ? 'bg-ink-red text-paper' : 'bg-paper'}`}
+            className={`retro-btn flex items-center gap-2 text-xs ${view === 'calendar' ? 'bg-ink-red text-paper' : 'bg-paper'}`}
           >
-           Calendrier
+            <Calendar size={15} /> Calendrier
           </button>
         </div>
 

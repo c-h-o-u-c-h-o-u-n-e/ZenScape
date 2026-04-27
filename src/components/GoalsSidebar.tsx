@@ -108,7 +108,7 @@ function GoalItem({ goal, tasks, onEditGoal, onDeleteGoal, onArchiveGoal, onUnar
 
   const menuItems = [
     ...(!isArchived ? [{ label: 'Modifier', icon: <MenuIcon src="/icons/pen.svg" size={11} />, danger: false, action: () => { setMenuOpen(false); onEditGoal(goal); } }] : []),
-    { label: 'Tâches complétées', icon: <MenuIcon src="/icons/box-archive.svg" size={11} />, badge: archivedCount > 0 ? String(archivedCount) : null, danger: false, action: () => { setMenuOpen(false); onViewArchives(goal); } },
+    { label: 'Tâches complétées', icon: <MenuIcon src="/icons/box-archive.svg" size={11} />, badge: archivedCount > 0 ? (archivedCount > 9 ? '9+' : String(archivedCount)) : null, danger: false, action: () => { setMenuOpen(false); onViewArchives(goal); } },
     ...(!isArchived
       ? [{ label: 'Archiver', icon: <MenuIcon src="/icons/folder-arrow-down.svg" size={11} />, danger: false, action: () => { setMenuOpen(false); onArchiveGoal(goal.id); } }]
       : [{ label: 'Désarchiver', icon: <MenuIcon src="/icons/folder-arrow-down.svg" size={11} />, danger: false, action: () => { setMenuOpen(false); onUnarchiveGoal(goal.id); } }]

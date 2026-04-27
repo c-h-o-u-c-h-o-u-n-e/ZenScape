@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { X, ArchiveRestore, Trash2, Archive, CalendarDays, RefreshCw, ChevronDown } from 'lucide-react';
+import { X, ArchiveRestore, Trash2, Archive, RefreshCw, ChevronDown } from 'lucide-react';
 import { Task, Goal, TaskPriority } from '../types';
 import { getGoalColor } from '../lib/goalColors';
 
@@ -236,10 +236,7 @@ export default function ArchivesModal({ goal, archivedTasks, onUnarchive, onDele
                       <p className="font-mono font-bold text-sm leading-tight">{task.title}</p>
                       {calDate && (
                         <p className="font-mono text-[10px] opacity-70 flex items-center gap-1 mt-1">
-                          {calDate.recurring
-                            ? <RefreshCw size={10} className="shrink-0" />
-                            : <CalendarDays size={10} className="shrink-0" />
-                          }
+                          {calDate.recurring && <RefreshCw size={10} className="shrink-0" />}
                           Complété le {formatDate(calDate.date)}
                           {calDate.recurring && ' (récurrent)'}
                         </p>

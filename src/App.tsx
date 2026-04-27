@@ -232,7 +232,7 @@ export default function App() {
             onClick={() => setView('daily')}
             className={`retro-btn flex items-center gap-2 text-xs ${view === 'daily' ? 'bg-ink-red text-paper' : 'bg-paper'}`}
           >
-            <img src="/icons/clipboard-check.svg" alt="Aujourd'hui" className="w-4 h-4" style={{ filter: view === 'daily' ? 'brightness(0) invert(1)' : 'none' }} /> Aujourd'hui
+            <img src="/icons/clock.svg" alt="Aujourd'hui" className="w-4 h-4" style={{ filter: view === 'daily' ? 'brightness(0) invert(1)' : 'none' }} /> Aujourd'hui
           </button>
           <button
             onClick={() => setView('kanban')}

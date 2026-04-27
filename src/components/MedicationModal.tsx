@@ -230,7 +230,6 @@ export default function MedicationModal({ medication, userId, onClose, onSaved }
                 onChange={e => setDosage(e.target.value)}
                 className="retro-input !bg-transparent"
                 required
-                placeholder="Ex: 200mg"
               />
             </div>
           </div>

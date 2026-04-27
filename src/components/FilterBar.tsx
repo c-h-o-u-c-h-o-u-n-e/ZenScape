@@ -88,9 +88,10 @@ export default function FilterBar({ filters, goals, tasks, columnLabels, onChang
       )}
 
       <div
-        className="fixed right-0 top-0 bottom-0 w-80 bg-paper transform transition-transform duration-300 ease-in-out z-50 flex flex-col scrollbar-hide border-l-2 border-ink-black"
+        className="fixed right-0 top-0 bottom-0 w-80 bg-paper transform transition-transform duration-300 ease-in-out z-50 flex flex-col scrollbar-hide"
         style={{
           transform: tagsSidebarOpen ? 'translateX(0)' : 'translateX(100%)',
+          borderLeft: '3px solid #1a1a1a',
         }}
       >
         <div className="flex items-center justify-between p-5 border-b-4 border-ink-black bg-ink-red text-paper sticky top-0">

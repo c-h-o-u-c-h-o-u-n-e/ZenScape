@@ -39,7 +39,7 @@ export default function FilterBar({ filters, goals, tasks, columnLabels, onChang
   return (
     <>
       <div className="flex flex-wrap items-center justify-center gap-3">
-        <span className="text-xs font-bold opacity-70 shrink-0">Priorité :</span>
+        <span className="text-xs font-bold opacity-70 shrink-0">Filtrer par priorité :</span>
 
         <div className="flex items-center gap-2">
           {PRIORITIES.map(p => {

@@ -21,6 +21,21 @@ const TIME_OF_DAY_OPTIONS: DropdownOption[] = [
   { value: 'bedtime', label: 'Coucher' },
 ];
 
+const FORMAT_OPTIONS: DropdownOption[] = [
+  { value: 'Capsule', label: 'Capsule' },
+  { value: 'Comprimé', label: 'Comprimé' },
+  { value: 'Crème', label: 'Crème' },
+  { value: 'Gel', label: 'Gel' },
+  { value: 'Gouttes', label: 'Gouttes' },
+  { value: 'Inhalateur', label: 'Inhalateur' },
+  { value: 'Injection', label: 'Injection' },
+  { value: 'Patch', label: 'Patch' },
+  { value: 'Pommade', label: 'Pommade' },
+  { value: 'Sirop', label: 'Sirop' },
+  { value: 'Suppositoire', label: 'Suppositoire' },
+  { value: 'Suspension orale', label: 'Suspension orale' },
+];
+
 const UNIT_OPTIONS: DropdownOption[] = [
   { value: 'days', label: 'jours' },
   { value: 'weeks', label: 'semaines' },
@@ -47,6 +62,7 @@ function unitToInterval(unit: RecurrenceUnit, interval: number): number {
 export default function MedicationModal({ medication, userId, onClose, onSaved }: Props) {
   const [name, setName] = useState('');
   const [dosage, setDosage] = useState('');
+  const [format, setFormat] = useState('Comprimé');
   const [timeOfDay, setTimeOfDay] = useState('morning');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
@@ -70,6 +86,7 @@ export default function MedicationModal({ medication, userId, onClose, onSaved }
     if (medication) {
       setName(medication.name);
       setDosage(medication.dosage);
+      setFormat(medication.format);
       setTimeOfDay(medication.time_of_day);
       setStartDate(medication.start_date);
       setEndDate(medication.end_date || '');
@@ -130,6 +147,7 @@ export default function MedicationModal({ medication, userId, onClose, onSaved }
     const payload = {
       name,
       dosage,
+      format,
       frequency,
       time_of_day: timeOfDay,
       start_date: startDate,
@@ -209,6 +227,17 @@ export default function MedicationModal({ medication, userId, onClose, onSaved }
                 placeholder="Ex: 200mg"
               />
             </div>
+            <div>
+              <label className="font-bold text-xs uppercase block mb-2 tracking-wide">Format</label>
+              <Dropdown
+                value={format}
+                onChange={setFormat}
+                options={FORMAT_OPTIONS}
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="font-bold text-xs uppercase block mb-2 tracking-wide">Moment de la journée</label>
               <Dropdown

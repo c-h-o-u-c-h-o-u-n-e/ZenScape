@@ -59,6 +59,7 @@ export interface Medication {
   dosage: string;
   frequency: string;
   time_of_day: string;
+  format: string;
   start_date: string;
   end_date: string | null;
   notes: string | null;

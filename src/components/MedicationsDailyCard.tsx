@@ -138,7 +138,7 @@ export default function MedicationsDailyCard({
                         opacity: 0.6,
                       }}
                     >
-                      <p className="text-xs" style={{ color: textColor }}>{medication.notes}</p>
+                      <p className="font-mono font-bold text-xs" style={{ color: textColor }}>{medication.notes}</p>
                     </div>
                   </>
                 )}

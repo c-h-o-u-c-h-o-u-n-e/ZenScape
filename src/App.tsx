@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { User } from '@supabase/supabase-js';
-import { Plus, LayoutGrid, Calendar, Clock } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { supabase } from './lib/supabase';
 import { getEstDate } from './lib/timezone';
 import { Goal, Task, Filters, TaskStatus } from './types';
@@ -232,19 +232,19 @@ export default function App() {
             onClick={() => setView('daily')}
             className={`retro-btn flex items-center gap-2 text-xs ${view === 'daily' ? 'bg-ink-red text-paper' : 'bg-paper'}`}
           >
-            <Clock size={15} /> Aujourd'hui
+            <img src="/icons/clipboard-check.svg" alt="Aujourd'hui" className="w-4 h-4" style={{ filter: view === 'daily' ? 'brightness(0) invert(1)' : 'none' }} /> Aujourd'hui
           </button>
           <button
             onClick={() => setView('kanban')}
             className={`retro-btn flex items-center gap-2 text-xs ${view === 'kanban' ? 'bg-ink-red text-paper' : 'bg-paper'}`}
           >
-            <LayoutGrid size={15} /> Tableau
+            <img src="/icons/kanban.svg" alt="Tableau" className="w-4 h-4" style={{ filter: view === 'kanban' ? 'brightness(0) invert(1)' : 'none' }} /> Tableau
           </button>
           <button
             onClick={() => setView('calendar')}
             className={`retro-btn flex items-center gap-2 text-xs ${view === 'calendar' ? 'bg-ink-red text-paper' : 'bg-paper'}`}
           >
-            <Calendar size={15} /> Calendrier
+            <img src="/icons/calendar.svg" alt="Calendrier" className="w-4 h-4" style={{ filter: view === 'calendar' ? 'brightness(0) invert(1)' : 'none' }} /> Calendrier
           </button>
         </div>
 

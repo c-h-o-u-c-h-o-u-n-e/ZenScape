@@ -24,7 +24,7 @@ export default function Checkbox({ checked, onChange, label, id, className = '' 
       </button>
       <label
         htmlFor={id}
-        className="font-bold text-xs uppercase tracking-wide cursor-pointer select-none pt-1.5"
+        className="font-bold text-xs uppercase tracking-wide cursor-pointer select-none pt-2.5"
       >
         {label}
       </label>

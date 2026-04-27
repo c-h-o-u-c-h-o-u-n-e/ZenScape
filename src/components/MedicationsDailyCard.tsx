@@ -1,5 +1,6 @@
+import { useState } from 'react';
 import { Medication } from '../types';
-import { Trash2, CreditCard as Edit } from 'lucide-react';
+import { Trash2, CreditCard as Edit, ChevronDown } from 'lucide-react';
 import { getMedicationFormatColor, shouldUseDarkText } from '../lib/medicationColors';
 
 interface MedicationsDailyCardProps {
@@ -15,6 +16,17 @@ export default function MedicationsDailyCard({
   onEditMedication,
   onDeleteMedication,
 }: MedicationsDailyCardProps) {
+  const [expandedMeds, setExpandedMeds] = useState<Set<string>>(new Set());
+
+  const toggleExpanded = (medId: string) => {
+    const newSet = new Set(expandedMeds);
+    if (newSet.has(medId)) {
+      newSet.delete(medId);
+    } else {
+      newSet.add(medId);
+    }
+    setExpandedMeds(newSet);
+  };
   // Sort medications by time_of_day
   const timeOrder = { morning: 0, afternoon: 1, evening: 2, bedtime: 3 };
   const sortedMedications = medications.sort((a, b) => {
@@ -63,11 +75,12 @@ export default function MedicationsDailyCard({
             const isDarkText = shouldUseDarkText(bgColor);
             const textColor = isDarkText ? '#1a1a1a' : '#FFFFFF';
             const secondaryTextColor = isDarkText ? 'rgba(26, 26, 26, 0.7)' : 'rgba(255, 255, 255, 0.7)';
+            const isExpanded = expandedMeds.has(medication.id);
 
             return (
               <div
                 key={medication.id}
-                className="border-2 border-ink-black"
+                className="border-2 border-ink-black overflow-hidden"
                 style={{
                   boxShadow: '2px 2px 0 #1a1a1a',
                   backgroundColor: bgColor
@@ -85,6 +98,16 @@ export default function MedicationsDailyCard({
                       )}
                     </div>
                     <div className="flex gap-1 flex-shrink-0">
+                      {medication.notes && (
+                        <button
+                          onClick={() => toggleExpanded(medication.id)}
+                          className="p-1.5 rounded transition-all hover:opacity-80"
+                          style={{ color: textColor }}
+                          title={isExpanded ? 'Masquer notes' : 'Voir notes'}
+                        >
+                          <ChevronDown size={16} style={{ transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s' }} />
+                        </button>
+                      )}
                       <button
                         onClick={() => onEditMedication(medication)}
                         className="p-1.5 rounded transition-colors hover:opacity-80"
@@ -104,14 +127,31 @@ export default function MedicationsDailyCard({
                     </div>
                   </div>
                 </div>
-                {medication.notes && (
+                {medication.notes && isExpanded && (
                   <>
                     <div style={{ height: '1px', backgroundColor: textColor, opacity: 0.3 }} />
-                    <div className="p-3">
+                    <div
+                      className="p-3 overflow-hidden"
+                      style={{
+                        animation: 'slideDown 0.3s ease-out',
+                      }}
+                    >
                       <p className="text-xs" style={{ color: secondaryTextColor }}>{medication.notes}</p>
                     </div>
                   </>
                 )}
+                <style>{`
+                  @keyframes slideDown {
+                    from {
+                      opacity: 0;
+                      transform: translateY(-10px);
+                    }
+                    to {
+                      opacity: 1;
+                      transform: translateY(0);
+                    }
+                  }
+                `}</style>
               </div>
             );
           })

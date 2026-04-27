@@ -99,21 +99,26 @@ export default function MedicationModal({ medication, userId, onClose, onSaved }
         setRecurrenceTimesInput('');
         setRecurrenceIntervalInput('');
         setRecurrenceUnit('days');
-      } else if (medication.recurrence_type === 'daily' || (iv % 1 === 0 && iv < 7)) {
-        setRecurrenceIntervalInput(String(iv));
-        setRecurrenceUnit('days');
-      } else if (iv % 365 === 0) {
-        setRecurrenceIntervalInput(String(iv / 365));
-        setRecurrenceUnit('years');
-      } else if (iv % 30 === 0) {
-        setRecurrenceIntervalInput(String(iv / 30));
-        setRecurrenceUnit('months');
-      } else if (iv % 7 === 0) {
-        setRecurrenceIntervalInput(String(iv / 7));
-        setRecurrenceUnit('weeks');
       } else {
-        setRecurrenceIntervalInput(String(iv));
-        setRecurrenceUnit('days');
+        if (medication.recurrence_times && medication.recurrence_times > 0) {
+          setRecurrenceTimesInput(String(medication.recurrence_times));
+        }
+        if (medication.recurrence_type === 'daily' || (iv % 1 === 0 && iv < 7)) {
+          setRecurrenceIntervalInput(String(iv));
+          setRecurrenceUnit('days');
+        } else if (iv % 365 === 0) {
+          setRecurrenceIntervalInput(String(iv / 365));
+          setRecurrenceUnit('years');
+        } else if (iv % 30 === 0) {
+          setRecurrenceIntervalInput(String(iv / 30));
+          setRecurrenceUnit('months');
+        } else if (iv % 7 === 0) {
+          setRecurrenceIntervalInput(String(iv / 7));
+          setRecurrenceUnit('weeks');
+        } else {
+          setRecurrenceIntervalInput(String(iv));
+          setRecurrenceUnit('days');
+        }
       }
     } else {
       setStartDate(getEstDateString());
@@ -133,13 +138,18 @@ export default function MedicationModal({ medication, userId, onClose, onSaved }
       resolvedType = unitToType(recurrenceUnit, recurrenceInterval);
       resolvedInterval = unitToInterval(recurrenceUnit, recurrenceInterval);
 
-      // Generate human-readable frequency string
+      // Generate human-readable frequency string with times and dosage
+      const timesText = recurrenceTimes === 1 ? 'fois' : 'fois';
+      const dosageText = recurrenceTimes > 0 ? ` ${dosage}` : dosage;
+
       if (resolvedType === 'daily') {
-        frequency = recurrenceInterval === 1 ? 'Une fois par jour' : `${recurrenceTimes}x par jour`;
+        frequency = recurrenceInterval === 1
+          ? `${recurrenceTimes}${timesText} ${dosageText}`
+          : `${recurrenceTimes}${timesText} ${dosageText}`;
       } else if (resolvedType === 'weekly') {
-        frequency = recurrenceInterval === 7 ? 'Une fois par semaine' : `Tous les ${recurrenceInterval} jours`;
+        frequency = `${recurrenceTimes}${timesText} ${dosageText} tous les ${recurrenceInterval} jours`;
       } else {
-        frequency = `Tous les ${recurrenceInterval} jours`;
+        frequency = `${recurrenceTimes}${timesText} ${dosageText} tous les ${recurrenceInterval} jours`;
       }
     }
 
@@ -154,6 +164,7 @@ export default function MedicationModal({ medication, userId, onClose, onSaved }
       take_with_food: takeWithFood,
       recurrence_type: resolvedType,
       recurrence_interval: resolvedInterval,
+      recurrence_times: recurrenceActive ? recurrenceTimes : null,
       recurrence_end_date: (recurrenceActive && recurrenceEndDate) ? recurrenceEndDate : null,
       updated_at: getEstDate().toISOString(),
     };

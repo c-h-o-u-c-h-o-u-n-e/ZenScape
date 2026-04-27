@@ -66,6 +66,7 @@ export interface Medication {
   take_with_food: boolean;
   recurrence_type: RecurrenceType;
   recurrence_interval: number | null;
+  recurrence_times: number | null;
   recurrence_end_date: string | null;
   recurrence: RecurrenceRule | null;
   created_at: string;

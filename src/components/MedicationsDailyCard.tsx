@@ -91,7 +91,7 @@ export default function MedicationsDailyCard({
                     <div className="flex-1 min-w-0">
                       <p className="font-mono font-bold text-sm" style={{ color: textColor }}>{medication.name}</p>
                       <p className="text-xs mt-0.5" style={{ color: secondaryTextColor }}>
-                        {medication.dosage}{medication.time_of_day !== 'any' ? ` • ${timeLabels[medication.time_of_day as keyof typeof timeLabels] || medication.time_of_day}` : ''}
+                        {medication.recurrence_times && medication.recurrence_times > 0 ? `${medication.recurrence_times} x ${medication.dosage}` : medication.dosage}{medication.time_of_day !== 'any' ? ` • ${timeLabels[medication.time_of_day as keyof typeof timeLabels] || medication.time_of_day}` : ''}
                       </p>
                       {medication.take_with_food && (
                         <p className="text-xs font-bold mt-1" style={{ color: textColor }}>Prendre avec de la nourriture</p>
@@ -129,11 +129,13 @@ export default function MedicationsDailyCard({
                 </div>
                 {medication.notes && isExpanded && (
                   <>
-                    <div style={{ height: '1px', backgroundColor: textColor, opacity: 0.3 }} />
+                    <div style={{ height: '2px', backgroundColor: textColor, opacity: 0.3 }} />
                     <div
                       className="p-3 overflow-hidden"
                       style={{
-                        animation: 'slideDown 0.3s ease-out',
+                        animation: 'fadeIn 0.6s ease-in-out',
+                        backgroundColor: bgColor,
+                        opacity: 0.6,
                       }}
                     >
                       <p className="text-xs" style={{ color: secondaryTextColor }}>{medication.notes}</p>
@@ -141,14 +143,12 @@ export default function MedicationsDailyCard({
                   </>
                 )}
                 <style>{`
-                  @keyframes slideDown {
+                  @keyframes fadeIn {
                     from {
                       opacity: 0;
-                      transform: translateY(-10px);
                     }
                     to {
-                      opacity: 1;
-                      transform: translateY(0);
+                      opacity: 0.6;
                     }
                   }
                 `}</style>

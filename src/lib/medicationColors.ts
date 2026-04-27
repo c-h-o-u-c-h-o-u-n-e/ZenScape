@@ -1,17 +1,17 @@
 export function getMedicationFormatColor(format: string): string {
   const colorMap: Record<string, string> = {
-    'Capsule': '#FF6B6B',
-    'Comprimé': '#4ECDC4',
-    'Crème': '#FFE66D',
-    'Gel': '#95E1D3',
-    'Gouttes': '#88D8FB',
-    'Inhalateur': '#A8E6CF',
-    'Injection': '#FF8B94',
-    'Patch': '#C7CEEA',
-    'Pommade': '#FFC0CB',
-    'Sirop': '#FFCCCC',
-    'Suppositoire': '#DDA0DD',
-    'Suspension orale': '#B0E0E6',
+    'Capsule': '#FF3333',
+    'Comprimé': '#00D9A3',
+    'Crème': '#FFD700',
+    'Gel': '#00D9A3',
+    'Gouttes': '#0099FF',
+    'Inhalateur': '#00CC66',
+    'Injection': '#FF0066',
+    'Patch': '#9933FF',
+    'Pommade': '#FF6699',
+    'Sirop': '#FF9933',
+    'Suppositoire': '#DD00FF',
+    'Suspension orale': '#00CCFF',
   };
   return colorMap[format] || '#E8E8E8';
 }

@@ -67,44 +67,51 @@ export default function MedicationsDailyCard({
             return (
               <div
                 key={medication.id}
-                className="border-2 border-ink-black p-3"
+                className="border-2 border-ink-black"
                 style={{
                   boxShadow: '2px 2px 0 #1a1a1a',
                   backgroundColor: bgColor
                 }}
               >
-                <div className="flex items-start justify-between gap-2">
-                  <div className="flex-1 min-w-0">
-                    <p className="font-mono font-bold text-sm" style={{ color: textColor }}>{medication.name}</p>
-                    <p className="text-xs mt-0.5" style={{ color: secondaryTextColor }}>
-                      {medication.dosage}{medication.time_of_day !== 'any' ? ` • ${timeLabels[medication.time_of_day as keyof typeof timeLabels] || medication.time_of_day}` : ''}
-                    </p>
-                    {medication.take_with_food && (
-                      <p className="text-xs font-bold mt-1" style={{ color: textColor }}>Prendre avec de la nourriture</p>
-                    )}
-                    {medication.notes && (
-                      <p className="text-xs mt-1 italic" style={{ color: secondaryTextColor }}>{medication.notes}</p>
-                    )}
-                  </div>
-                  <div className="flex gap-1 flex-shrink-0">
-                    <button
-                      onClick={() => onEditMedication(medication)}
-                      className="p-1.5 rounded transition-colors hover:opacity-80"
-                      style={{ color: textColor }}
-                      title="Éditer"
-                    >
-                      <Edit size={16} />
-                    </button>
-                    <button
-                      onClick={() => onDeleteMedication(medication.id)}
-                      className="p-1.5 rounded transition-colors hover:opacity-80"
-                      style={{ color: textColor }}
-                      title="Supprimer"
-                    >
-                      <Trash2 size={16} />
-                    </button>
+                <div className="p-3">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex-1 min-w-0">
+                      <p className="font-mono font-bold text-sm" style={{ color: textColor }}>{medication.name}</p>
+                      <p className="text-xs mt-0.5" style={{ color: secondaryTextColor }}>
+                        {medication.dosage}{medication.time_of_day !== 'any' ? ` • ${timeLabels[medication.time_of_day as keyof typeof timeLabels] || medication.time_of_day}` : ''}
+                      </p>
+                      {medication.take_with_food && (
+                        <p className="text-xs font-bold mt-1" style={{ color: textColor }}>Prendre avec de la nourriture</p>
+                      )}
+                    </div>
+                    <div className="flex gap-1 flex-shrink-0">
+                      <button
+                        onClick={() => onEditMedication(medication)}
+                        className="p-1.5 rounded transition-colors hover:opacity-80"
+                        style={{ color: textColor }}
+                        title="Éditer"
+                      >
+                        <Edit size={16} />
+                      </button>
+                      <button
+                        onClick={() => onDeleteMedication(medication.id)}
+                        className="p-1.5 rounded transition-colors hover:opacity-80"
+                        style={{ color: textColor }}
+                        title="Supprimer"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
                   </div>
                 </div>
+                {medication.notes && (
+                  <>
+                    <div style={{ height: '1px', backgroundColor: textColor, opacity: 0.3 }} />
+                    <div className="p-3">
+                      <p className="text-xs italic" style={{ color: secondaryTextColor }}>{medication.notes}</p>
+                    </div>
+                  </>
+                )}
               </div>
             );
           })

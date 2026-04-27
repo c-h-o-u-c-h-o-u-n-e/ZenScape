@@ -135,12 +135,12 @@ const firstDay = new Date(viewYear, viewMonth, 1).getDay();
           {/* Day cells */}
           <div className="grid grid-cols-7 gap-y-0.5">
             {cells.map((day, i) => {
-              if (!day) return <div key={i} />;
+              if (!day) return <div key={`empty-${i}`} />;
               const isSel = isSelectedDay(day);
               const isTod = isTodayDay(day);
               return (
                 <button
-                  key={i}
+                  key={`day-${day}`}
                   type="button"
                   onClick={() => selectDay(day)}
                   className={`aspect-square flex items-center justify-center text-xs font-medium transition-colors duration-75 rounded-full ${

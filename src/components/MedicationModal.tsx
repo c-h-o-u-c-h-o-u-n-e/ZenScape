@@ -235,7 +235,7 @@ export default function MedicationModal({ medication, userId, onClose, onSaved }
             <textarea
               value={notes}
               onChange={e => setNotes(e.target.value)}
-              className="retro-input !bg-transparent resize-none mt-2"
+              className="retro-input !bg-transparent resize-none mt-6"
               rows={2}
             />
           </div>

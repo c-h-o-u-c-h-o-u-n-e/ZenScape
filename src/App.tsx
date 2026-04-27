@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { User } from '@supabase/supabase-js';
 import { Plus, LayoutGrid, Calendar, Clock } from 'lucide-react';
 import { supabase } from './lib/supabase';
+import { getEstDate } from './lib/timezone';
 import { Goal, Task, Filters, TaskStatus } from './types';
 
 const DEFAULT_LABELS: Record<TaskStatus, string> = {
@@ -176,7 +177,7 @@ export default function App() {
   }
 
   async function handleArchiveTask(taskId: string, archived: boolean) {
-    await supabase.from('tasks').update({ archived, updated_at: new Date().toISOString() }).eq('id', taskId);
+    await supabase.from('tasks').update({ archived, updated_at: getEstDate().toISOString() }).eq('id', taskId);
     fetchTasks();
   }
 

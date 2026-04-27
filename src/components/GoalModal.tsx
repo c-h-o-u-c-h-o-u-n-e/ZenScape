@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { X, Check } from 'lucide-react';
 import { supabase } from '../lib/supabase';
+import { getEstDate } from '../lib/timezone';
 import { Goal } from '../types';
 import DatePicker from './DatePicker';
 import { fgForBg } from '../lib/goalColors';
@@ -51,7 +52,7 @@ export default function GoalModal({ goal, userId, onClose, onSaved }: Props) {
       start_date: startDate || null,
       end_date: endDate || null,
       color: color || null,
-      updated_at: new Date().toISOString(),
+      updated_at: getEstDate().toISOString(),
     };
 
     if (goal) {

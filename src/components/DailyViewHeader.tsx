@@ -1,4 +1,5 @@
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { getEstDate, getEstDateString } from '../lib/timezone';
 
 interface DailyViewHeaderProps {
   date: string;
@@ -7,7 +8,7 @@ interface DailyViewHeaderProps {
 
 export default function DailyViewHeader({ date, onDateChange }: DailyViewHeaderProps) {
   const dateObj = new Date(date + 'T00:00:00');
-  const todayObj = new Date();
+  const todayObj = new Date(getEstDateString() + 'T00:00:00');
   todayObj.setHours(0, 0, 0, 0);
   const currentDateObj = new Date(date + 'T00:00:00');
   const diff = Math.floor((currentDateObj.getTime() - todayObj.getTime()) / (1000 * 60 * 60 * 24));
@@ -44,7 +45,7 @@ export default function DailyViewHeader({ date, onDateChange }: DailyViewHeaderP
   };
 
   const handleToday = () => {
-    onDateChange(new Date().toISOString().split('T')[0]);
+    onDateChange(getEstDateString());
   };
 
   return (

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Task, Goal, Medication } from '../types';
 import { supabase } from '../lib/supabase';
+import { getEstDateString } from '../lib/timezone';
 import DailyViewHeader from './DailyViewHeader';
 import PlanningCard from './PlanningCard';
 import CompletedCard from './CompletedCard';
@@ -22,8 +23,8 @@ export default function DailyView({
   onDeleteTask,
   onArchiveTask,
 }: DailyViewProps) {
-  const todayDate = new Date().toISOString().split('T')[0];
-  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+  const todayDate = getEstDateString();
+  const [selectedDate, setSelectedDate] = useState(getEstDateString());
   const [medications, setMedications] = useState<Medication[]>([]);
   const [medicationModal, setMedicationModal] = useState<{ open: boolean; medication: Medication | null }>({
     open: false,

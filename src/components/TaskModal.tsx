@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import { supabase } from '../lib/supabase';
+import { getEstDate } from '../lib/timezone';
 import { Task, Goal, TaskStatus, TaskPriority, RecurrenceType } from '../types';
 import { getNextRecurrenceDate } from '../lib/recurrence';
 import Dropdown, { DropdownOption } from './Dropdown';
@@ -168,7 +169,7 @@ export default function TaskModal({ task, goals, columnLabels, defaultGoalId, de
       recurrence_type: resolvedType,
       recurrence_interval: resolvedInterval,
       recurrence_end_date: (recurrenceActive && recurrenceEndDate) ? recurrenceEndDate : null,
-      updated_at: new Date().toISOString(),
+      updated_at: getEstDate().toISOString(),
     };
 
     if (task) {

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import { supabase } from '../lib/supabase';
+import { getEstDate, getEstDateString } from '../lib/timezone';
 import { Medication, RecurrenceType } from '../types';
 import Dropdown, { DropdownOption } from './Dropdown';
 import DatePicker from './DatePicker';
@@ -99,7 +100,7 @@ export default function MedicationModal({ medication, userId, onClose, onSaved }
         setRecurrenceUnit('days');
       }
     } else {
-      setStartDate(new Date().toISOString().split('T')[0]);
+      setStartDate(getEstDateString());
     }
   }, [medication]);
 
@@ -138,7 +139,7 @@ export default function MedicationModal({ medication, userId, onClose, onSaved }
       recurrence_type: resolvedType,
       recurrence_interval: resolvedInterval,
       recurrence_end_date: (recurrenceActive && recurrenceEndDate) ? recurrenceEndDate : null,
-      updated_at: new Date().toISOString(),
+      updated_at: getEstDate().toISOString(),
     };
 
     try {

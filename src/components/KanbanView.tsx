@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Task, TaskStatus, Goal } from '../types';
 import TaskCard from './TaskCard';
 import { supabase } from '../lib/supabase';
+import { getEstDate } from '../lib/timezone';
 import { getGoalColor } from '../lib/goalColors';
 import { getNextRecurrenceDate } from '../lib/recurrence';
 
@@ -67,7 +68,7 @@ export default function KanbanView({ tasks, goals, columnLabels, onLabelsChange,
     const task = tasks.find(t => t.id === draggedId);
     if (!task || task.status === status) { setDraggedId(null); return; }
 
-    await supabase.from('tasks').update({ status, updated_at: new Date().toISOString() }).eq('id', draggedId);
+    await supabase.from('tasks').update({ status, updated_at: getEstDate().toISOString() }).eq('id', draggedId);
 
     if (status === 'done' && task.recurrence) {
       const baseDate = task.due_date || task.start_date;
@@ -125,7 +126,7 @@ export default function KanbanView({ tasks, goals, columnLabels, onLabelsChange,
       user_id: user.id,
       status,
       label: value,
-      updated_at: new Date().toISOString(),
+      updated_at: getEstDate().toISOString(),
     }, { onConflict: 'user_id,status' });
   }
 

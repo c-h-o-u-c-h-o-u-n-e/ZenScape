@@ -3,6 +3,7 @@ import { ChevronLeft, ChevronRight, Calendar, Check, X } from 'lucide-react';
 import { Task, TaskPriority, Goal } from '../types';
 import { getGoalColor } from '../lib/goalColors';
 import { isRecurrenceMatch } from '../lib/recurrence';
+import { getEstDate } from '../lib/timezone';
 
 interface Props {
   tasks: Task[];
@@ -126,7 +127,7 @@ function DayModal({ date: _date, label, data, goals, isPast, onEditTask, onClose
 }
 
 function CalendarView({ tasks, goals, onEditTask, onNewTask }: Props) {
-  const today = new Date();
+  const today = getEstDate();
   const [year, setYear] = useState(today.getFullYear());
   const [month, setMonth] = useState(today.getMonth());
   const [dayModal, setDayModal] = useState<{ day: number } | null>(null);
@@ -153,7 +154,7 @@ function CalendarView({ tasks, goals, onEditTask, onNewTask }: Props) {
   function isPast(day: number) {
     const d = new Date(year, month, day);
     d.setHours(0, 0, 0, 0);
-    const t = new Date(); t.setHours(0, 0, 0, 0);
+    const t = getEstDate(); t.setHours(0, 0, 0, 0);
     return d < t;
   }
 

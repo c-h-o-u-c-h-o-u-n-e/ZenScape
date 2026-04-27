@@ -15,6 +15,7 @@ interface Props {
 }
 
 const TIME_OF_DAY_OPTIONS: DropdownOption[] = [
+  { value: 'any', label: 'Peu importe' },
   { value: 'morning', label: 'Matin' },
   { value: 'afternoon', label: 'Après-midi' },
   { value: 'evening', label: 'Soir' },
@@ -63,7 +64,7 @@ export default function MedicationModal({ medication, userId, onClose, onSaved }
   const [name, setName] = useState('');
   const [format, setFormat] = useState('Comprimé');
   const [dosage, setDosage] = useState('');
-  const [timeOfDay, setTimeOfDay] = useState('morning');
+  const [timeOfDay, setTimeOfDay] = useState('any');
   const [startDate, setStartDate] = useState('');
   const [notes, setNotes] = useState('');
   const [takeWithFood, setTakeWithFood] = useState(false);
@@ -149,7 +150,6 @@ export default function MedicationModal({ medication, userId, onClose, onSaved }
       frequency,
       time_of_day: timeOfDay,
       start_date: startDate,
-      end_date: endDate || null,
       notes: notes || null,
       take_with_food: takeWithFood,
       recurrence_type: resolvedType,

@@ -94,7 +94,7 @@ export default function MedicationsDailyCard({
                         {medication.recurrence_times && medication.recurrence_times > 0 ? `${medication.recurrence_times} x ${medication.dosage}` : medication.dosage}{medication.time_of_day !== 'any' ? ` • ${timeLabels[medication.time_of_day as keyof typeof timeLabels] || medication.time_of_day}` : ''}
                       </p>
                       {medication.take_with_food && (
-                        <p className="text-xs font-bold mt-1" style={{ color: textColor }}>Prendre avec de la nourriture</p>
+                        <p className="text-xs font-bold mt-1" style={{ color: secondaryTextColor }}>Prendre avec de la nourriture</p>
                       )}
                     </div>
                     <div className="flex gap-1 flex-shrink-0">
@@ -129,7 +129,7 @@ export default function MedicationsDailyCard({
                 </div>
                 {medication.notes && isExpanded && (
                   <>
-                    <div style={{ height: '2px', backgroundColor: textColor, opacity: 0.3 }} />
+                    <div style={{ height: '2px', backgroundColor: '#1a1a1a' }} />
                     <div
                       className="p-3 overflow-hidden"
                       style={{
@@ -138,7 +138,7 @@ export default function MedicationsDailyCard({
                         opacity: 0.6,
                       }}
                     >
-                      <p className="text-xs" style={{ color: secondaryTextColor }}>{medication.notes}</p>
+                      <p className="text-xs" style={{ color: textColor }}>{medication.notes}</p>
                     </div>
                   </>
                 )}

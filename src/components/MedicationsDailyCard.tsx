@@ -77,7 +77,7 @@ export default function MedicationsDailyCard({
                   <div className="flex-1 min-w-0">
                     <p className="font-mono font-bold text-sm" style={{ color: textColor }}>{medication.name}</p>
                     <p className="text-xs mt-0.5" style={{ color: secondaryTextColor }}>
-                      {medication.dosage} • {timeLabels[medication.time_of_day as keyof typeof timeLabels] || medication.time_of_day}
+                      {medication.dosage}{medication.time_of_day !== 'any' ? ` • ${timeLabels[medication.time_of_day as keyof typeof timeLabels] || medication.time_of_day}` : ''}
                     </p>
                     {medication.take_with_food && (
                       <p className="text-xs font-bold mt-1" style={{ color: textColor }}>Prendre avec de la nourriture</p>

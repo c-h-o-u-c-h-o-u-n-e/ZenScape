@@ -244,7 +244,7 @@ export default function MedicationModal({ medication, userId, onClose, onSaved }
             id="takeWithFood"
             checked={takeWithFood}
             onChange={setTakeWithFood}
-            label="À prendre en mangeant"
+            label="Prendre avec de la nourriture"
           />
 
           {/* Recurrence */}

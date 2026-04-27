@@ -231,7 +231,7 @@ export default function MedicationModal({ medication, userId, onClose, onSaved }
           </div>
 
           <div>
-            <label className="font-bold text-xs uppercase block mb-4 tracking-wide">Notes</label>
+            <label className="font-bold text-xs uppercase block mb-2 tracking-wide">Notes</label>
             <textarea
               value={notes}
               onChange={e => setNotes(e.target.value)}

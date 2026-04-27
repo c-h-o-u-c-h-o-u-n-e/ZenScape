@@ -232,7 +232,7 @@ export default function App() {
             onClick={() => setView('daily')}
             className={`retro-btn flex items-center gap-2 text-xs ${view === 'daily' ? 'bg-ink-red text-paper' : 'bg-paper'}`}
           >
-            <img src="/icons/clock.svg" alt="Aujourd'hui" className="w-4 h-4" style={{ filter: view === 'daily' ? 'brightness(0) invert(1)' : 'none' }} /> Aujourd'hui
+          Aujourd'hui
           </button>
           <button
             onClick={() => setView('kanban')}
@@ -244,7 +244,7 @@ export default function App() {
             onClick={() => setView('calendar')}
             className={`retro-btn flex items-center gap-2 text-xs ${view === 'calendar' ? 'bg-ink-red text-paper' : 'bg-paper'}`}
           >
-            <img src="/icons/calendar.svg" alt="Calendrier" className="w-4 h-4" style={{ filter: view === 'calendar' ? 'brightness(0) invert(1)' : 'none' }} /> Calendrier
+           Calendrier
           </button>
         </div>
 

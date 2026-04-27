@@ -78,9 +78,9 @@ export default function MedicationModal({ medication, userId, onClose, onSaved }
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const recurrenceTimes = parseInt(recurrenceTimesInput) || 0;
+  const recurrenceTimes = recurrenceTimesInput ? (isNaN(parseInt(recurrenceTimesInput)) ? recurrenceTimesInput : parseInt(recurrenceTimesInput)) : 0;
   const recurrenceInterval = parseInt(recurrenceIntervalInput) || 0;
-  const recurrenceActive = recurrenceTimes > 0 && recurrenceInterval > 0;
+  const recurrenceActive = recurrenceTimesInput !== '' && recurrenceInterval > 0;
 
   useEffect(() => {
     if (medication) {
@@ -139,8 +139,8 @@ export default function MedicationModal({ medication, userId, onClose, onSaved }
       resolvedInterval = unitToInterval(recurrenceUnit, recurrenceInterval);
 
       // Generate human-readable frequency string with times and dosage
-      const timesText = recurrenceTimes === 1 ? 'fois' : 'fois';
-      const dosageText = recurrenceTimes > 0 ? ` ${dosage}` : dosage;
+      const timesText = 'fois';
+      const dosageText = ` ${dosage}`;
 
       if (resolvedType === 'daily') {
         frequency = recurrenceInterval === 1
@@ -234,12 +234,13 @@ export default function MedicationModal({ medication, userId, onClose, onSaved }
               />
             </div>
             <div>
-              <label className="font-bold text-xs uppercase block mb-2 tracking-wide">Dosage *</label>
+              <label className="font-bold text-xs uppercase block mb-2 tracking-wide">Combien prendre *</label>
               <input
                 type="text"
                 value={dosage}
                 onChange={e => setDosage(e.target.value)}
                 className="retro-input !bg-transparent"
+                placeholder="ex: ¼, ½, ¾, 1, 2..."
                 required
               />
             </div>
@@ -284,16 +285,14 @@ export default function MedicationModal({ medication, userId, onClose, onSaved }
             <div className="flex items-center gap-2">
               <span className="text-sm font-bold shrink-0">Prendre</span>
               <input
-                type="number"
-                min="1"
-                max="999"
+                type="text"
                 value={recurrenceTimesInput}
                 onChange={e => {
                   const v = e.target.value;
-                  if (v === '' || (parseInt(v) > 0 && parseInt(v) <= 999)) setRecurrenceTimesInput(v);
+                  if (v === '' || /^[0-9½⅓⅔¼¾⅛⅜⅝⅞]+$/.test(v)) setRecurrenceTimesInput(v);
                 }}
                 placeholder="—"
-                className="retro-input !bg-transparent w-[40px] text-center [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                className="retro-input !bg-transparent w-[40px] text-center"
               />
               <span className="text-sm font-bold shrink-0">fois tous les</span>
               <input

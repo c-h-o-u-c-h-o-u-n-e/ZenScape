@@ -78,7 +78,7 @@ export default function MedicationModal({ medication, userId, onClose, onSaved }
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const recurrenceTimes = recurrenceTimesInput ? (isNaN(parseInt(recurrenceTimesInput)) ? recurrenceTimesInput : parseInt(recurrenceTimesInput)) : 0;
+  const recurrenceTimes = recurrenceTimesInput;
   const recurrenceInterval = parseInt(recurrenceIntervalInput) || 0;
   const recurrenceActive = recurrenceTimesInput !== '' && recurrenceInterval > 0;
 

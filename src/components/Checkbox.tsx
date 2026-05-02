@@ -1,4 +1,4 @@
-import { Check } from 'lucide-react';
+import { Check } from '../lib/icons';
 
 interface CheckboxProps {
   checked: boolean;
@@ -6,9 +6,12 @@ interface CheckboxProps {
   label: string;
   id?: string;
   className?: string;
+  labelClassName?: string;
 }
 
-export default function Checkbox({ checked, onChange, label, id, className = '' }: CheckboxProps) {
+export default function Checkbox({ checked, onChange, label, id, className = '', labelClassName = '' }: CheckboxProps) {
+  const labelSizeClass = labelClassName.includes('text-') ? '' : 'text-xs';
+
   return (
     <div className={`flex items-center gap-3 cursor-pointer ${className}`}>
       <button
@@ -20,11 +23,11 @@ export default function Checkbox({ checked, onChange, label, id, className = '' 
         }`}
         style={{ boxShadow: '2px 2px 0 #1a1a1a' }}
       >
-        {checked && <Check size={16} className="text-paper" />}
+        {checked && <Check size={12} className="text-paper" />}
       </button>
       <label
         htmlFor={id}
-        className="font-bold text-xs uppercase tracking-wide cursor-pointer select-none pt-1.5"
+        className={`font-bold ${labelSizeClass} uppercase tracking-wide cursor-pointer select-none pt-1.5 ${labelClassName}`}
       >
         {label}
       </label>

@@ -228,6 +228,10 @@ export default function KanbanView({ tasks, goals, columnLabels, onLabelsChange,
                   onEdit={onEditTask}
                   onDelete={onDeleteTask}
                   onArchive={isDoneCol ? onArchiveTask : undefined}
+                  onChangeStatus={async (taskId, status) => {
+                    await supabase.from('tasks').update({ status, updated_at: getEstDate().toISOString() }).eq('id', taskId);
+                    onRefresh();
+                  }}
                   draggable
                   onDragStart={onDragStart}
                 />

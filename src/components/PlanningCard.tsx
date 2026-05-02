@@ -1,6 +1,7 @@
-import { Task, Goal } from '../types';
+import { Task, Goal, TaskStatus } from '../types';
 import { getGoalColor } from '../lib/goalColors';
 import TaskCard from './TaskCard';
+import { List } from '../lib/icons';
 
 interface PlanningCardProps {
   tasks: Task[];
@@ -8,6 +9,7 @@ interface PlanningCardProps {
   onEditTask: (task: Task) => void;
   onDeleteTask: (taskId: string) => void;
   onArchiveTask: (taskId: string, archived: boolean) => void;
+  onChangeTaskStatus: (taskId: string, status: TaskStatus) => void;
 }
 
 export default function PlanningCard({
@@ -16,6 +18,7 @@ export default function PlanningCard({
   onEditTask,
   onDeleteTask,
   onArchiveTask,
+  onChangeTaskStatus,
 }: PlanningCardProps) {
   // Separate scheduled and unscheduled tasks
   const scheduledTasks = tasks
@@ -62,6 +65,7 @@ export default function PlanningCard({
           onEdit={onEditTask}
           onDelete={onDeleteTask}
           onArchive={onArchiveTask}
+          onChangeStatus={onChangeTaskStatus}
         />
       </div>
     );
@@ -74,14 +78,7 @@ export default function PlanningCard({
     >
       {/* Header */}
       <div className="border-b-2 border-ink-black bg-ink-orange px-4 py-3 h-[50px] flex items-center gap-2 shrink-0">
-        <span
-          className="w-5 h-5 bg-ink-black shrink-0"
-          style={{
-            WebkitMask: 'url(/icons/list-check.svg) center / contain no-repeat',
-            mask: 'url(/icons/list-check.svg) center / contain no-repeat',
-          }}
-          aria-hidden="true"
-        />
+        <List size={16} />
         <h3 className="font-display text-base uppercase text-ink-black">Planification</h3>
         <span className="ml-auto font-mono text-xs font-bold text-ink-black opacity-80 tabular-nums shrink-0">
           {allTasks.length}

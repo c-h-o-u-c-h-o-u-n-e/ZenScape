@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
-import { Task, Goal, Medication } from '../types';
+import { Task, Goal, Medication, TaskStatus } from '../types';
 import { supabase } from '../lib/supabase';
-import { getEstDateString } from '../lib/timezone';
+import { getEstDate, getEstDateString } from '../lib/timezone';
+import { getNextMedicationOccurrenceDate, isMedicationDueOnDate } from '../lib/medicationSchedule';
 import DailyViewHeader from './DailyViewHeader';
 import PlanningCard from './PlanningCard';
 import CompletedCard from './CompletedCard';
@@ -14,6 +15,7 @@ interface DailyViewProps {
   onEditTask: (task: Task) => void;
   onDeleteTask: (taskId: string) => void;
   onArchiveTask: (taskId: string, archived: boolean) => void;
+  onChangeTaskStatus: (taskId: string, status: TaskStatus) => void;
 }
 
 export default function DailyView({
@@ -22,10 +24,12 @@ export default function DailyView({
   onEditTask,
   onDeleteTask,
   onArchiveTask,
+  onChangeTaskStatus,
 }: DailyViewProps) {
   const todayDate = getEstDateString();
   const [selectedDate, setSelectedDate] = useState(getEstDateString());
   const [medications, setMedications] = useState<Medication[]>([]);
+  const [medicationStatuses, setMedicationStatuses] = useState<Record<string, 'taken' | 'missed' | null>>({});
   const [medicationModal, setMedicationModal] = useState<{ open: boolean; medication: Medication | null }>({
     open: false,
     medication: null,
@@ -55,7 +59,10 @@ export default function DailyView({
       .or(`end_date.is.null,end_date.gte.${selectedDate}`)
       .order('time_of_day', { ascending: true });
 
-    if (data) setMedications(data as Medication[]);
+    if (data) {
+      const dueOnly = (data as Medication[]).filter(med => isMedicationDueOnDate(med, selectedDate));
+      setMedications(dueOnly);
+    }
   }
 
   function toLocalDateKey(dateValue: string): string {
@@ -116,6 +123,33 @@ export default function DailyView({
     fetchMedications();
   }
 
+  async function handleMarkMedicationTaken(medicationId: string) {
+    const medication = medications.find(m => m.id === medicationId);
+    if (!medication) return;
+
+    const nextDate = getNextMedicationOccurrenceDate(medication, selectedDate);
+
+    const payload = nextDate
+      ? { start_date: nextDate, updated_at: getEstDate().toISOString() }
+      : { end_date: selectedDate, updated_at: getEstDate().toISOString() };
+
+    await supabase.from('medications').update(payload).eq('id', medicationId);
+
+    setMedicationStatuses(prev => ({
+      ...prev,
+      [medicationId]: 'taken'
+    }));
+
+    await fetchMedications();
+  }
+
+  function handleMarkMedicationMissed(medicationId: string) {
+    setMedicationStatuses(prev => ({
+      ...prev,
+      [medicationId]: prev[medicationId] === 'missed' ? null : 'missed'
+    }));
+  }
+
   return (
     <div className="h-full min-h-0 overflow-hidden flex flex-col">
       <div className="space-y-6 flex flex-col flex-1 min-h-0">
@@ -134,6 +168,7 @@ export default function DailyView({
               onEditTask={onEditTask}
               onDeleteTask={onDeleteTask}
               onArchiveTask={onArchiveTask}
+              onChangeTaskStatus={onChangeTaskStatus}
             />
           </div>
 
@@ -145,6 +180,7 @@ export default function DailyView({
               onEditTask={onEditTask}
               onDeleteTask={onDeleteTask}
               onArchiveTask={onArchiveTask}
+              onChangeTaskStatus={onChangeTaskStatus}
             />
           </div>
 
@@ -152,9 +188,11 @@ export default function DailyView({
           <div className="min-h-0">
             <MedicationsDailyCard
               medications={medications}
+              medicationStatuses={medicationStatuses}
               onCreateMedication={() => setMedicationModal({ open: true, medication: null })}
               onEditMedication={med => setMedicationModal({ open: true, medication: med })}
               onDeleteMedication={handleDeleteMedication}
+              onMarkTaken={handleMarkMedicationTaken}
             />
           </div>
         </div>

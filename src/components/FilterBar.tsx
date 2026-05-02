@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { X } from 'lucide-react';
+import { X } from '../lib/icons';
 import { Goal, Task, Filters, TaskStatus, TaskPriority } from '../types';
 
 interface Props {
@@ -30,16 +30,10 @@ export default function FilterBar({ filters, goals, tasks, columnLabels, onChang
   const [tagsSidebarOpen, setTagsSidebarOpen] = useState(false);
   const allTags = [...new Set(tasks.flatMap(t => t.tags))].sort();
 
-  const hasFilters = filters.status || filters.priority || filters.tags;
-
-  function clear() {
-    onChange({ goalId: filters.goalId, status: null, priority: null, tags: null, dateFrom: null, dateTo: null });
-  }
-
   return (
     <>
       <div className="flex flex-wrap items-center justify-center gap-3">
-        <span className="text-xs font-bold opacity-90 shrink-0">Filtrer par priorité :</span>
+        <span className="text-xs font-bold uppercase opacity-90 shrink-0">Filtrer par priorité :</span>
 
         <div className="flex items-center gap-2">
           {PRIORITIES.map(p => {
@@ -55,11 +49,10 @@ export default function FilterBar({ filters, goals, tasks, columnLabels, onChang
                     : [...currentPriorities, p];
                   onChange({ ...filters, priority: newPriorities.length > 0 ? newPriorities : null });
                 }}
-                className="px-3 py-1.5 text-xs font-bold uppercase border-2 border-ink-black transition-all"
+                className="retro-btn h-[34px] px-3 py-0 text-sm font-bold uppercase inline-flex items-center"
                 style={{
-                  backgroundColor: isActive ? colors.bg : 'transparent',
+                  backgroundColor: isActive ? colors.bg : 'rgba(26, 26, 26, 0.15)',
                   color: isActive ? colors.text : '#1a1a1a',
-                  boxShadow: '2px 2px 0 #1a1a1a',
                 }}
               >
                 {PRIORITY_LABELS[p]}
@@ -71,16 +64,16 @@ export default function FilterBar({ filters, goals, tasks, columnLabels, onChang
         {allTags.length > 0 && (
           <button
             onClick={() => setTagsSidebarOpen(true)}
-            className="px-3 py-1.5 text-xs font-bold uppercase border-2 border-ink-black transition-all hover:opacity-80 shrink-0"
+            className="retro-btn ml-4 h-[34px] px-3 py-0 text-sm font-bold uppercase hover:opacity-80 shrink-0 inline-flex items-center"
             style={{
               backgroundColor: '#457b9d',
               color: '#f4e8d1',
-              boxShadow: '2px 2px 0 #1a1a1a',
             }}
           >
             Répertoire des tags
           </button>
         )}
+
       </div>
 
       {tagsSidebarOpen && (

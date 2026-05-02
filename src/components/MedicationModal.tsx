@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { X } from 'lucide-react';
+import { X } from '../lib/icons';
 import { supabase } from '../lib/supabase';
 import { getEstDate, getEstDateString } from '../lib/timezone';
 import { Medication, RecurrenceType } from '../types';
@@ -289,7 +289,7 @@ export default function MedicationModal({ medication, userId, onClose, onSaved }
                 value={recurrenceTimesInput}
                 onChange={e => {
                   const v = e.target.value;
-                  if (v === '' || /^[0-9½⅓⅔¼¾⅛⅜⅝⅞]+$/.test(v)) setRecurrenceTimesInput(v);
+                  if (v === '' || /^[0-9½⅓⅔¼¾⅛⅜⅝⅞/]+$/.test(v)) setRecurrenceTimesInput(v);
                 }}
                 placeholder="—"
                 className="retro-input !bg-transparent w-[40px] text-center"

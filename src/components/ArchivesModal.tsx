@@ -1,10 +1,31 @@
 import { useState, useRef, useEffect } from 'react';
-import { X, ArchiveRestore, Trash2, Archive, CalendarDays, RefreshCw, ChevronDown } from 'lucide-react';
+import { X, Archive, ChevronDown, MoreVertical, Pen, FolderUp, Trash } from '../lib/icons';
 import { Task, Goal, TaskPriority } from '../types';
 import { getGoalColor } from '../lib/goalColors';
+import { createPortal } from 'react-dom';
 
-function formatDate(dateStr: string) {
-  return new Date(dateStr + 'T00:00:00').toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' });
+function formatCompletedAt(dateStr: string) {
+  const date = new Date(dateStr);
+  return date.toLocaleDateString('fr-FR', {
+    day: '2-digit',
+    month: 'long',
+    year: 'numeric',
+  }) + ' à ' + date.toLocaleTimeString('fr-FR', {
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+}
+
+function getCompletionDateTime(task: Task): Date {
+  if (task.due_date) {
+    const dateTime = task.end_time ? `${task.due_date}T${task.end_time}` : `${task.due_date}T23:59:00`;
+    return new Date(dateTime);
+  }
+  if (task.start_date) {
+    const dateTime = task.end_time ? `${task.start_date}T${task.end_time}` : `${task.start_date}T23:59:00`;
+    return new Date(dateTime);
+  }
+  return new Date(task.updated_at);
 }
 
 function getCalendarDate(task: Task): { date: string; recurring: boolean } | null {
@@ -17,6 +38,7 @@ function getCalendarDate(task: Task): { date: string; recurring: boolean } | nul
 interface Props {
   goal: Goal;
   archivedTasks: Task[];
+  onEdit: (task: Task) => void;
   onUnarchive: (taskId: string) => void;
   onDelete: (taskId: string) => void;
   onClose: () => void;
@@ -40,33 +62,42 @@ const PRIORITY_LABELS: Record<TaskPriority, string> = {
 type SortOrder = 'newest' | 'oldest' | 'name';
 type TimeRange = 'all' | 'week' | 'month' | 'year';
 
-export default function ArchivesModal({ goal, archivedTasks, onUnarchive, onDelete, onClose }: Props) {
+export default function ArchivesModal({ goal, archivedTasks, onEdit, onUnarchive, onDelete, onClose }: Props) {
   const [sortOrder, setSortOrder] = useState<SortOrder>('newest');
   const [timeRange, setTimeRange] = useState<TimeRange>('all');
   const [sortOpen, setSortOpen] = useState(false);
   const [timeOpen, setTimeOpen] = useState(false);
+  const [menuOpenTaskId, setMenuOpenTaskId] = useState<string | null>(null);
+  const [menuPosition, setMenuPosition] = useState<{ top?: number; bottom?: number; left: number } | null>(null);
   const color = getGoalColor(goal.id, goal.color);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const menuPortalRef = useRef<HTMLDivElement>(null);
+  const bodyRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (!sortOpen && !timeOpen) return;
+    if (!sortOpen && !timeOpen && !menuOpenTaskId) return;
     function handleClick(e: MouseEvent) {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+      const target = e.target as Node;
+      const inDropdown = dropdownRef.current?.contains(target);
+      const inPortal = menuPortalRef.current?.contains(target);
+      if (!inDropdown && !inPortal) {
         setSortOpen(false);
         setTimeOpen(false);
+        setMenuOpenTaskId(null);
+        setMenuPosition(null);
       }
     }
     document.addEventListener('mousedown', handleClick);
     return () => document.removeEventListener('mousedown', handleClick);
-  }, [sortOpen, timeOpen]);
+  }, [sortOpen, timeOpen, menuOpenTaskId]);
 
   const filterByTimeRange = (tasks: Task[]) => {
     const now = new Date();
     return tasks.filter(task => {
       if (timeRange === 'all') return true;
 
-      const updatedDate = new Date(task.updated_at);
-      const daysAgo = Math.floor((now.getTime() - updatedDate.getTime()) / (1000 * 60 * 60 * 24));
+      const completedDate = getCompletionDateTime(task);
+      const daysAgo = Math.floor((now.getTime() - completedDate.getTime()) / (1000 * 60 * 60 * 24));
 
       if (timeRange === 'week') return daysAgo <= 7;
       if (timeRange === 'month') return daysAgo <= 30;
@@ -80,15 +111,15 @@ export default function ArchivesModal({ goal, archivedTasks, onUnarchive, onDele
     const sorted = [...tasks];
     if (sortOrder === 'newest') {
       return sorted.sort((a, b) => {
-        const dateA = new Date(a.updated_at).getTime();
-        const dateB = new Date(b.updated_at).getTime();
+        const dateA = getCompletionDateTime(a).getTime();
+        const dateB = getCompletionDateTime(b).getTime();
         return dateB - dateA;
       });
     }
     if (sortOrder === 'oldest') {
       return sorted.sort((a, b) => {
-        const dateA = new Date(a.updated_at).getTime();
-        const dateB = new Date(b.updated_at).getTime();
+        const dateA = getCompletionDateTime(a).getTime();
+        const dateB = getCompletionDateTime(b).getTime();
         return dateA - dateB;
       });
     }
@@ -99,6 +130,7 @@ export default function ArchivesModal({ goal, archivedTasks, onUnarchive, onDele
   };
 
   const filteredAndSorted = sortTasks(filterByTimeRange(archivedTasks));
+  const menuTask = filteredAndSorted.find(t => t.id === menuOpenTaskId) ?? null;
 
   return (
     <div className="fixed inset-0 bg-ink-black/70 flex items-center justify-center z-50 p-4">
@@ -216,7 +248,7 @@ export default function ArchivesModal({ goal, archivedTasks, onUnarchive, onDele
         </div>
 
         {/* Body */}
-        <div className="flex-1 overflow-y-auto p-5">
+        <div ref={bodyRef} className="flex-1 overflow-y-auto scrollbar-hide p-5" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
           {filteredAndSorted.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-16 gap-3 opacity-40">
               <Archive size={40} />
@@ -229,18 +261,14 @@ export default function ArchivesModal({ goal, archivedTasks, onUnarchive, onDele
                 return (
                   <div
                     key={task.id}
-                    className="border-2 border-ink-black p-4 flex items-start justify-between gap-4 group"
+                    className="relative border-2 border-ink-black p-4 flex items-start justify-between gap-4"
                     style={{ boxShadow: '3px 3px 0 #1a1a1a', backgroundColor: color.bg, color: color.fg, opacity: 0.75 }}
                   >
-                    <div className="flex-1 min-w-0">
+                    <div className="flex-1 min-w-0 pr-8">
                       <p className="font-mono font-bold text-sm leading-tight">{task.title}</p>
                       {calDate && (
-                        <p className="font-mono text-[10px] opacity-70 flex items-center gap-1 mt-1">
-                          {calDate.recurring
-                            ? <RefreshCw size={10} className="shrink-0" />
-                            : <CalendarDays size={10} className="shrink-0" />
-                          }
-                          Complété le {formatDate(calDate.date)}
+                        <p className="font-mono text-[10px] opacity-70 mt-1">
+                          Complété le {formatCompletedAt(getCompletionDateTime(task).toISOString())}
                           {calDate.recurring && ' (récurrent)'}
                         </p>
                       )}
@@ -263,20 +291,32 @@ export default function ArchivesModal({ goal, archivedTasks, onUnarchive, onDele
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-1 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div className="absolute top-2 right-2 shrink-0">
                       <button
-                        onClick={() => onUnarchive(task.id)}
-                        className="retro-btn-press p-2 border-2 border-ink-black hover:bg-ink-black hover:text-paper transition-colors"
-                        title="Désarchiver"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (menuOpenTaskId === task.id) {
+                            setMenuOpenTaskId(null);
+                            setMenuPosition(null);
+                            return;
+                          }
+                          const rect = (e.currentTarget as HTMLButtonElement).getBoundingClientRect();
+                          const estimatedMenuHeight = 116;
+                          const bodyRect = bodyRef.current?.getBoundingClientRect();
+                          const spaceBelowViewport = window.innerHeight - rect.bottom;
+                          const spaceBelowBody = bodyRect ? (bodyRect.bottom - rect.bottom) : spaceBelowViewport;
+                          const openUp = spaceBelowViewport < estimatedMenuHeight || spaceBelowBody < estimatedMenuHeight;
+                          setMenuPosition({
+                            top: openUp ? undefined : rect.bottom + 6,
+                            bottom: openUp ? window.innerHeight - rect.top + 6 : undefined,
+                            left: rect.right - 150,
+                          });
+                          setMenuOpenTaskId(task.id);
+                        }}
+                        className="p-1 text-current/80 hover:text-current transition-colors"
+                        title="Menu"
                       >
-                        <ArchiveRestore size={14} />
-                      </button>
-                      <button
-                        onClick={() => onDelete(task.id)}
-                        className="retro-btn-press p-2 border-2 border-ink-red text-ink-red hover:bg-ink-red hover:text-paper transition-colors"
-                        title="Supprimer définitivement"
-                      >
-                        <Trash2 size={14} />
+                        <MoreVertical size={14} />
                       </button>
                     </div>
                   </div>
@@ -296,6 +336,55 @@ export default function ArchivesModal({ goal, archivedTasks, onUnarchive, onDele
           </button>
         </div>
       </div>
+
+      {menuOpenTaskId && menuTask && menuPosition && createPortal(
+        <div
+          ref={menuPortalRef}
+          className="fixed min-w-[150px] border-2 border-ink-black bg-paper z-[9999]"
+          style={{
+            boxShadow: '3px 3px 0 #1a1a1a',
+            color: '#1a1a1a',
+            top: menuPosition.top !== undefined ? `${menuPosition.top}px` : 'auto',
+            bottom: menuPosition.bottom !== undefined ? `${menuPosition.bottom}px` : 'auto',
+            left: `${menuPosition.left}px`,
+          }}
+        >
+          <button
+            onClick={() => {
+              setMenuOpenTaskId(null);
+              setMenuPosition(null);
+              onEdit(menuTask);
+            }}
+            className="w-full px-3 py-2 text-left text-xs font-bold border-b-2 border-ink-black hover:bg-ink-black hover:text-paper transition-colors flex items-center gap-2"
+          >
+            <Pen size={14} />
+            Modifier
+          </button>
+          <button
+            onClick={() => {
+              setMenuOpenTaskId(null);
+              setMenuPosition(null);
+              onUnarchive(menuTask.id);
+            }}
+            className="w-full px-3 py-2 text-left text-xs font-bold border-b-2 border-ink-black hover:bg-ink-black hover:text-paper transition-colors flex items-center gap-2"
+          >
+            <FolderUp size={14} />
+            Désarchiver
+          </button>
+          <button
+            onClick={() => {
+              setMenuOpenTaskId(null);
+              setMenuPosition(null);
+              onDelete(menuTask.id);
+            }}
+            className="w-full px-3 py-2 text-left text-xs font-bold text-ink-red hover:bg-ink-red hover:text-paper transition-colors flex items-center gap-2"
+          >
+            <Trash size={14} />
+            Supprimer
+          </button>
+        </div>,
+        document.body
+      )}
     </div>
   );
 }

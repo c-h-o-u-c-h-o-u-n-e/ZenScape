@@ -1,6 +1,7 @@
-import { Task, Goal } from '../types';
+import { Task, Goal, TaskStatus } from '../types';
 import { getGoalColor } from '../lib/goalColors';
 import TaskCard from './TaskCard';
+import { Check } from '../lib/icons';
 
 interface CompletedCardProps {
   tasks: Task[];
@@ -8,6 +9,7 @@ interface CompletedCardProps {
   onEditTask: (task: Task) => void;
   onDeleteTask: (taskId: string) => void;
   onArchiveTask: (taskId: string, archived: boolean) => void;
+  onChangeTaskStatus: (taskId: string, status: TaskStatus) => void;
 }
 
 export default function CompletedCard({
@@ -16,6 +18,7 @@ export default function CompletedCard({
   onEditTask,
   onDeleteTask,
   onArchiveTask,
+  onChangeTaskStatus,
 }: CompletedCardProps) {
   const completedTasks = tasks.filter(t => t.status === 'done');
 
@@ -26,15 +29,8 @@ export default function CompletedCard({
     >
       {/* Header */}
       <div className="border-b-2 border-ink-black bg-ink-green px-4 py-3 h-[50px] flex items-center gap-2 shrink-0">
-        <span
-          className="w-5 h-5 bg-ink-black shrink-0"
-          style={{
-            WebkitMask: 'url(/icons/clipboard-check.svg) center / contain no-repeat',
-            mask: 'url(/icons/clipboard-check.svg) center / contain no-repeat',
-          }}
-          aria-hidden="true"
-        />
-        <h3 className="font-display text-base uppercase text-ink-black">Complété</h3>
+        <Check size={16} />
+        <h3 className="font-display text-base uppercase text-ink-black">Terminé</h3>
         <span className="ml-auto font-mono text-xs font-bold text-ink-black opacity-80 tabular-nums shrink-0">
           {completedTasks.length}
         </span>
@@ -60,6 +56,7 @@ export default function CompletedCard({
                 onEdit={onEditTask}
                 onDelete={onDeleteTask}
                 onArchive={onArchiveTask}
+                onChangeStatus={onChangeTaskStatus}
               />
             );
           })

@@ -1,6 +1,6 @@
 import { Task, Goal } from '../types';
 import { getGoalColor } from '../lib/goalColors';
-import { Plus } from 'lucide-react';
+import { Plus } from '../lib/icons';
 
 interface MedicationCardProps {
   medications: Task[];

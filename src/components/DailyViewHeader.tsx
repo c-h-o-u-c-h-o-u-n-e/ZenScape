@@ -1,4 +1,4 @@
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight } from '../lib/icons';
 import { getEstDate, getEstDateString } from '../lib/timezone';
 
 interface DailyViewHeaderProps {

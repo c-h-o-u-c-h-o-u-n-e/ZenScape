@@ -1,8 +1,10 @@
+
 import { useState, useEffect, useCallback } from 'react';
 import { User } from '@supabase/supabase-js';
-import { Plus, LayoutGrid, Calendar, Clock } from 'lucide-react';
+import { Search } from './lib/icons';
 import { supabase } from './lib/supabase';
 import { getEstDate } from './lib/timezone';
+import { getNextRecurrenceDate } from './lib/recurrence';
 import { Goal, Task, Filters, TaskStatus } from './types';
 
 const DEFAULT_LABELS: Record<TaskStatus, string> = {
@@ -43,7 +45,7 @@ export default function App() {
   const [view, setView] = useState<View>('kanban');
   const [columnLabels, setColumnLabels] = useState<Record<TaskStatus, string>>(DEFAULT_LABELS);
 
-  const [filters, setFilters] = useState<Filters>({ goalId: null, status: null, priority: null, tags: null, dateFrom: null, dateTo: null });
+  const [filters, setFilters] = useState<Filters>({ goalId: null, search: '', status: null, priority: null, tags: null, dateFrom: null, dateTo: null });
 
   const [goalModal, setGoalModal] = useState<{ open: boolean; goal: Goal | null }>({ open: false, goal: null });
   const [taskModal, setTaskModal] = useState<{ open: boolean; task: Task | null; defaultStatus?: TaskStatus; defaultDate?: string; defaultGoalId?: string | null }>({ open: false, task: null });
@@ -181,9 +183,56 @@ export default function App() {
     fetchTasks();
   }
 
+  async function handleChangeTaskStatus(taskId: string, status: TaskStatus) {
+    const task = tasks.find(t => t.id === taskId);
+
+    await supabase.from('tasks').update({ status, updated_at: getEstDate().toISOString() }).eq('id', taskId);
+
+    // Centralized recurrence behavior:
+    // whenever a recurring task is transitioned to "done",
+    // create its next occurrence automatically.
+    if (task && status === 'done' && task.status !== 'done' && task.recurrence) {
+      const baseDate = task.due_date || task.start_date;
+      if (baseDate) {
+        const nextDate = getNextRecurrenceDate(baseDate, task.recurrence);
+        if (nextDate) {
+          const newTask: Omit<Task, 'id' | 'created_at' | 'updated_at'> = {
+            goal_id: task.goal_id,
+            user_id: task.user_id,
+            title: task.title,
+            location: task.location,
+            status: 'todo',
+            priority: task.priority,
+            tags: task.tags,
+            start_date: task.start_date ? nextDate : null,
+            due_date: task.due_date ? nextDate : null,
+            start_time: task.start_time,
+            end_time: task.end_time,
+            position: Date.now(),
+            archived: false,
+            recurrence_type: task.recurrence_type,
+            recurrence_interval: task.recurrence_interval,
+            recurrence_end_date: task.recurrence_end_date,
+            recurrence: task.recurrence,
+          };
+
+          await supabase.from('tasks').insert([newTask]);
+        }
+      }
+    }
+
+    fetchTasks();
+  }
+
   const filteredTasks = tasks.filter(task => {
     if (task.archived) return false;
-    if (filters.goalId && task.goal_id !== filters.goalId) return false;
+    if (filters.search.trim()) {
+      const search = filters.search.trim().toLowerCase();
+      const inTitle = task.title.toLowerCase().includes(search);
+      const inLocation = task.location?.toLowerCase().includes(search) ?? false;
+      const inTags = task.tags.some(tag => tag.toLowerCase().includes(search));
+      if (!inTitle && !inLocation && !inTags) return false;
+    }
     if (filters.status && task.status !== filters.status) return false;
     if (filters.priority && !filters.priority.includes(task.priority)) return false;
     if (filters.tags && !filters.tags.some(tag => task.tags.includes(tag))) return false;
@@ -230,26 +279,38 @@ export default function App() {
         <div className="flex gap-3 shrink-0">
           <button
             onClick={() => setView('daily')}
-            className={`retro-btn flex items-center gap-2 text-xs ${view === 'daily' ? 'bg-ink-red text-paper' : 'bg-paper'}`}
+            className={`retro-btn flex items-center gap-2 text-sm ${view === 'daily' ? 'bg-ink-red text-paper' : 'bg-ink-black/15'}`}
           >
-            <Clock size={15} /> Aujourd'hui
+            Aujourd'hui
           </button>
           <button
             onClick={() => setView('kanban')}
-            className={`retro-btn flex items-center gap-2 text-xs ${view === 'kanban' ? 'bg-ink-red text-paper' : 'bg-paper'}`}
+            className={`retro-btn flex items-center gap-2 text-sm ${view === 'kanban' ? 'bg-ink-red text-paper' : 'bg-ink-black/15'}`}
           >
-            <LayoutGrid size={15} /> Tableau
+            Tableau
           </button>
           <button
             onClick={() => setView('calendar')}
-            className={`retro-btn flex items-center gap-2 text-xs ${view === 'calendar' ? 'bg-ink-red text-paper' : 'bg-paper'}`}
+            className={`retro-btn flex items-center gap-2 text-sm ${view === 'calendar' ? 'bg-ink-red text-paper' : 'bg-ink-black/15'}`}
           >
-            <Calendar size={15} /> Calendrier
+            Calendrier
           </button>
         </div>
 
         <div className="flex-1 min-w-0">
           <FilterBar filters={filters} goals={goals} tasks={tasks} columnLabels={columnLabels} onChange={setFilters} />
+        </div>
+
+        <div className="search-field relative w-full max-w-[320px] min-w-[220px] shrink-0">
+          <Search size={14} className="search-icon absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+          <input
+            type="text"
+            value={filters.search}
+            onChange={e => setFilters({ ...filters, search: e.target.value })}
+            placeholder="Rechercher une tâche..."
+            className="search-input h-[36px] w-full pl-9 pr-3 py-0 text-sm border-2 border-ink-black bg-ink-black/15 placeholder:text-ink-black/70 focus:outline-none"
+            style={{ boxShadow: '2px 2px 0 #1a1a1a' }}
+          />
         </div>
 
         <button
@@ -268,6 +329,7 @@ export default function App() {
             goals={goals}
             tasks={tasks}
             onNewGoal={() => setGoalModal({ open: true, goal: null })}
+            onCreateTaskForGoal={(goalId) => setTaskModal({ open: true, task: null, defaultGoalId: goalId, defaultStatus: 'todo' })}
             onEditGoal={goal => setGoalModal({ open: true, goal })}
             onDeleteGoal={handleDeleteGoal}
             onArchiveGoal={handleArchiveGoal}
@@ -285,6 +347,7 @@ export default function App() {
               onEditTask={task => setTaskModal({ open: true, task })}
               onDeleteTask={handleDeleteTask}
               onArchiveTask={handleArchiveTask}
+              onChangeTaskStatus={handleChangeTaskStatus}
             />
           ) : view === 'kanban' ? (
             <KanbanView
@@ -317,10 +380,14 @@ export default function App() {
             />
           ) : (
             <CalendarView
-              tasks={tasks}
+              tasks={filteredTasks}
+              allTasks={tasks}
               goals={goals}
               onEditTask={task => setTaskModal({ open: true, task })}
               onNewTask={date => setTaskModal({ open: true, task: null, defaultDate: date })}
+              onDeleteTask={handleDeleteTask}
+              onArchiveTask={handleArchiveTask}
+              onChangeTaskStatus={handleChangeTaskStatus}
             />
           )}
         </div>
@@ -354,6 +421,10 @@ export default function App() {
         <ArchivesModal
           goal={archivesModal.goal}
           archivedTasks={tasks.filter(t => t.goal_id === archivesModal.goal!.id && t.archived)}
+          onEdit={(task) => {
+            setArchivesModal({ open: false, goal: null });
+            setTaskModal({ open: true, task });
+          }}
           onUnarchive={async (taskId) => {
             await handleArchiveTask(taskId, false);
           }}

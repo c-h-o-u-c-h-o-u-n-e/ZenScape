@@ -112,3 +112,21 @@
 .scrollbar-hide::-webkit-scrollbar {
   display: none;
 }
+
+.search-input::placeholder {
+  opacity: 0.7;
+  transition: opacity 300ms ease;
+}
+
+.search-input:focus::placeholder {
+  opacity: 0;
+}
+
+.search-field .search-icon {
+  color: rgba(26, 26, 26, 0.7);
+  transition: color 300ms ease;
+}
+
+.search-field:focus-within .search-icon {
+  color: #1a1a1a;
+}

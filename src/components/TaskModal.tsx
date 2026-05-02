@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { X } from 'lucide-react';
+import { X } from '../lib/icons';
 import { supabase } from '../lib/supabase';
 import { getEstDate } from '../lib/timezone';
 import { Task, Goal, TaskStatus, TaskPriority, RecurrenceType } from '../types';
@@ -154,7 +154,10 @@ export default function TaskModal({ task, goals, columnLabels, defaultGoalId, de
       if (defaultGoalId) setGoalId(defaultGoalId);
       else if (goals.length > 0) setGoalId(goals[0].id);
       if (defaultStatus) setStatus(defaultStatus);
-      if (defaultDate) setDueDate(defaultDate);
+      if (defaultDate) {
+        setStartDate(defaultDate);
+        setDueDate('');
+      }
     }
   }, [task, defaultGoalId, defaultStatus, defaultDate, goals]);
 

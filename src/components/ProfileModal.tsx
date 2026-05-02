@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { User } from '@supabase/supabase-js';
-import { X, Mail, Calendar, User as UserIcon } from 'lucide-react';
+import { X, Mail, Calendar, User as UserIcon } from '../lib/icons';
 
 interface Props {
   user: User;

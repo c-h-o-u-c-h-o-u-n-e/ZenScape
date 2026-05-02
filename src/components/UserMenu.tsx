@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { User } from '@supabase/supabase-js';
-import { LogOut, User as UserIcon, ChevronDown } from 'lucide-react';
+import { LogOut, User as UserIcon, ChevronDown } from '../lib/icons';
 import { supabase } from '../lib/supabase';
 
 interface Props {
@@ -39,8 +39,8 @@ export default function UserMenu({ user, onProfileClick }: Props) {
     <div className="relative" ref={menuRef}>
       <button
         onClick={() => setOpen(!open)}
-        className="bg-ink-black text-paper px-4 py-2 font-mono font-bold text-xs flex items-center gap-2 transition-all duration-150 hover:opacity-80 active:opacity-70"
-        style={{ boxShadow: '3px 3px 0 #457b9d' }}
+        className="px-4 py-2 border-2 border-ink-black bg-ink-red text-paper font-bold text-sm uppercase flex items-center gap-2 transition-all duration-100 active:translate-x-[1px] active:translate-y-[1px]"
+        style={{ boxShadow: open ? '1px 1px 0 #1a1a1a' : '3px 3px 0 #1a1a1a', transform: open ? 'translate(1px, 1px)' : 'translate(0, 0)' }}
         title="User menu"
       >
         {user.email?.toUpperCase()}

@@ -5,7 +5,6 @@ import { supabase } from '../lib/supabase';
 import { getEstDate } from '../lib/timezone';
 import { getGoalColor } from '../lib/goalColors';
 import { getNextRecurrenceDate } from '../lib/recurrence';
-import { ListTodo, CircleDashed, CheckCircle2 } from '../lib/icons';
 
 interface Props {
   tasks: Task[];
@@ -20,10 +19,10 @@ interface Props {
   onRefresh: () => void;
 }
 
-const COLUMNS: { status: TaskStatus; headerColor: string; bodyColor: string; textColor: string; label: string; icon: React.ReactNode }[] = [
-  { status: 'todo', headerColor: 'bg-ink-orange', bodyColor: 'bg-ink-orange/60', textColor: 'text-black', label: 'Planification', icon: <ListTodo size={20} /> },
-  { status: 'in_progress', headerColor: 'bg-ink-blue', bodyColor: 'bg-ink-blue/60', textColor: 'text-paper', label: 'En cours', icon: <CircleDashed size={20} /> },
-  { status: 'done', headerColor: 'bg-ink-green', bodyColor: 'bg-ink-green/60', textColor: 'text-paper', label: 'Terminé', icon: <CheckCircle2 size={20} /> },
+const COLUMNS: { status: TaskStatus; headerColor: string; bodyColor: string; textColor: string }[] = [
+  { status: 'todo', headerColor: 'bg-ink-orange', bodyColor: 'bg-ink-orange/60', textColor: 'text-black' },
+  { status: 'in_progress', headerColor: 'bg-ink-blue', bodyColor: 'bg-ink-blue/60', textColor: 'text-paper' },
+  { status: 'done', headerColor: 'bg-ink-green', bodyColor: 'bg-ink-green/60', textColor: 'text-paper' },
 ];
 
 export default function KanbanView({ tasks, goals, columnLabels, onLabelsChange, onEditTask, onDeleteTask, onArchiveTask, onNewTask, onDropGoal, onRefresh }: Props) {
@@ -109,6 +108,31 @@ export default function KanbanView({ tasks, goals, columnLabels, onLabelsChange,
     setDragOverCol(null);
   }
 
+  function startEdit(status: TaskStatus) {
+    setDraft(columnLabels[status]);
+    setEditing(status);
+  }
+
+  async function commitEdit() {
+    if (!editing) return;
+    const status = editing;
+    const value = draft.trim() || columnLabels[status];
+    onLabelsChange({ ...columnLabels, [status]: value });
+    setEditing(null);
+
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+    await supabase.from('kanban_column_labels').upsert({
+      user_id: user.id,
+      status,
+      label: value,
+      updated_at: getEstDate().toISOString(),
+    }, { onConflict: 'user_id,status' });
+  }
+
+  function cancelEdit() {
+    setEditing(null);
+  }
 
   const activeTasks = tasks.filter(t => !t.archived);
 
@@ -154,6 +178,7 @@ export default function KanbanView({ tasks, goals, columnLabels, onLabelsChange,
       {COLUMNS.map(col => {
         const colTasks = sortTasks(activeTasks.filter(t => t.status === col.status), col.status);
         const isOver = dragOverCol === col.status;
+        const label = columnLabels[col.status];
         const isDoneCol = col.status === 'done';
 
         return (
@@ -166,14 +191,31 @@ export default function KanbanView({ tasks, goals, columnLabels, onLabelsChange,
             onDrop={e => onDrop(e, col.status)}
             onDragEnd={onDragEnd}
           >
-            <div className={`${col.headerColor} ${col.textColor} px-6 py-6 border-b-4 border-ink-black flex items-center justify-between gap-3`}>
-              <div className="flex items-center gap-3">
-                {col.icon}
-                <h3 className="font-display text-sm uppercase">
-                  {col.label}
+            <div className={`${col.headerColor} ${col.textColor} px-4 py-3 border-b-2 border-ink-black flex items-center justify-between gap-2`}>
+              {editing === col.status ? (
+                <input
+                  ref={inputRef}
+                  value={draft}
+                  onChange={e => setDraft(e.target.value)}
+                  onBlur={commitEdit}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter') commitEdit();
+                    else if (e.key === 'Escape') cancelEdit();
+                  }}
+                  maxLength={40}
+                  className="font-display text-base uppercase text-ink-black bg-transparent focus:outline-none flex-1 min-w-0"
+                  style={{ boxShadow: '0 2px 0 rgba(255,255,255,0.6)' }}
+                />
+              ) : (
+                <h3
+                  className="font-display text-base uppercase text-ink-black cursor-text flex-1 truncate hover:opacity-80 transition-opacity"
+                  onClick={() => startEdit(col.status)}
+                  title="Cliquer pour renommer"
+                >
+                  {label}
                 </h3>
-              </div>
-              <span className="font-mono text-xs font-bold opacity-80 shrink-0">{colTasks.length}</span>
+              )}
+              <span className="font-mono text-xs font-bold text-ink-black opacity-80 shrink-0">{colTasks.length}</span>
             </div>
 
             <div className={`flex-1 p-3 overflow-y-auto scrollbar-hide ${col.bodyColor}`} style={{ minHeight: '0', scrollbarWidth: 'none' }}>

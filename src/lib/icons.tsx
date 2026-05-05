@@ -35,4 +35,7 @@ export {
   Droplet as Syrup,
   Pill as Suppository,
   Droplet as OralSuspension,
+  ListTodo,
+  CircleDashed,
+  CheckCircle2,
 } from 'lucide-react';

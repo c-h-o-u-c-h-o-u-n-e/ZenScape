@@ -345,7 +345,7 @@ export default function App() {
   return (
     <div className="h-screen bg-paper p-5 flex flex-col" style={{ maxWidth: '100vw', overflowX: 'hidden', overflowY: 'hidden' }}>
       {activeFilterChips.length > 0 && (
-        <div className="fixed top-0 left-1/2 -translate-x-1/2 z-[100] w-[min(980px,calc(100vw-2rem))]">
+        <div className="fixed top-0 left-1/2 -translate-x-1/2 z-[100] w-[min(980px,calc(100vw-2rem))] toast-enter">
           <div className="border-l-2 border-r-2 border-b-2 border-ink-black bg-ink-yellow px-4 py-2" style={{ boxShadow: '4px 0 0 #1a1a1a, 4px 4px 0 #1a1a1a' }}>
             <div className="flex items-center gap-3">
               <p className="font-display text-xs text-ink-black flex-1">
@@ -356,11 +356,11 @@ export default function App() {
                 className="retro-btn h-[28px] w-[28px] p-0 inline-flex items-center justify-center bg-paper text-ink-black"
                 title={filtersToastExpanded ? 'Réduire les filtres actifs' : 'Afficher les filtres actifs'}
               >
-                <ChevronDown size={14} className={`${filtersToastExpanded ? 'rotate-180' : ''} transition-transform`} />
+                <ChevronDown size={14} className={`${filtersToastExpanded ? 'rotate-180' : ''} transition-transform duration-300`} />
               </button>
             </div>
 
-            {filtersToastExpanded && (
+            <div className={`overflow-hidden ${filtersToastExpanded ? 'toast-content-expand' : 'toast-content-collapse'}`}>
               <div className="mt-2 pt-3 border-t-2 border-ink-black/70">
                 <div className="flex flex-wrap items-center gap-2 mb-4">
                   <span className="text-[10px] font-bold uppercase tracking-wide text-ink-black">Légende :</span>
@@ -389,7 +389,7 @@ export default function App() {
                 ))}
                 </div>
               </div>
-            )}
+            </div>
           </div>
         </div>
       )}

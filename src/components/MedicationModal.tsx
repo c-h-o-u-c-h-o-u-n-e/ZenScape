@@ -200,7 +200,7 @@ export default function MedicationModal({ medication, userId, onClose, onSaved }
   }
 
   return (
-    <div className="fixed inset-0 bg-ink-black/60 flex items-center justify-center z-50 p-4">
+    <div className="fixed inset-0 bg-ink-black/60 flex items-center justify-center z-[1000] p-4">
       <div
         className="retro-card w-full max-w-lg bg-paper flex flex-col"
         style={{ boxShadow: '8px 8px 0 #1a1a1a', maxHeight: '92vh' }}

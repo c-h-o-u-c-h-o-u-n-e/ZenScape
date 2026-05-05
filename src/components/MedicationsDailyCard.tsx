@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import type { ComponentType, CSSProperties } from 'react';
 import { Medication } from '../types';
-import { ChevronDown, MoreVertical, Capsule, Tablets, Cream, Gel, Drops, Inhaler, Injection, Patch, Ointment, Syrup, Suppository, OralSuspension, Check, Pen, Trash } from '../lib/icons';
+import { ChevronDown, MoreVertical, Capsule, Tablets, Cream, Gel, Drops, Inhaler, Injection, Patch, Ointment, Syrup, Suppository, OralSuspension, Pen, Trash } from '../lib/icons';
 import { getMedicationFormatColor, shouldUseDarkText } from '../lib/medicationColors';
 import { createPortal } from 'react-dom';
 
@@ -160,6 +160,7 @@ export default function MedicationsDailyCard({
             sortedMedications.map((medication) => {
               const Icon = getMedicationFormatIcon(medication.format);
               const isTaken = medicationStatuses[medication.id] === 'taken';
+              const isMissed = medicationStatuses[medication.id] === 'missed';
               return (
                 <div key={medication.id} className="py-1 text-ink-black">
                   <button type="button" onClick={() => onEditMedication(medication)} className="w-full text-left pr-1">
@@ -182,13 +183,13 @@ export default function MedicationsDailyCard({
                         }}
                         className="shrink-0 self-start px-3 py-1 border-2 border-ink-black text-xs font-bold uppercase inline-flex items-center"
                         style={{
-                          backgroundColor: isTaken ? '#457b9d' : 'rgba(26, 26, 26, 0.15)',
-                          color: isTaken ? '#f4e8d1' : '#1a1a1a',
+                          backgroundColor: isMissed ? '#e63946' : '#457b9d',
+                          color: '#f4e8d1',
                           boxShadow: '2px 2px 0 #1a1a1a',
                         }}
                         title="Marquer comme pris"
                       >
-                          Marquer comme pris
+                          {isMissed ? 'Manqué' : isTaken ? 'Pris' : 'Marquer comme pris'}
                       </button>
                     </div>
                   </button>
@@ -230,6 +231,7 @@ export default function MedicationsDailyCard({
             const secondaryTextColor = isDarkText ? 'rgba(26, 26, 26, 0.7)' : 'rgba(255, 255, 255, 0.7)';
             const isExpanded = expandedMeds.has(medication.id);
             const medicationStatus = medicationStatuses[medication.id] ?? null;
+            const isMissed = medicationStatus === 'missed';
 
             return (
               <div key={medication.id} className="py-1">
@@ -251,14 +253,15 @@ export default function MedicationsDailyCard({
                       <div className="flex items-center gap-2 flex-shrink-0">
                         <button
                           onClick={() => onMarkTaken(medication.id)}
-                          className="px-2.5 py-1.5 border-2 border-ink-black transition-all flex items-center gap-1.5"
+                          className="px-3 py-1 border-2 border-ink-black text-xs font-bold uppercase transition-all inline-flex items-center"
                           style={{
-                            backgroundColor: medicationStatus === 'taken' ? '#f7f3e8' : 'transparent',
-                            boxShadow: medicationStatus === 'taken' ? '2px 2px 0 #1a1a1a' : 'none',
+                            backgroundColor: isMissed ? '#e63946' : '#457b9d',
+                            color: '#f4e8d1',
+                            boxShadow: '2px 2px 0 #1a1a1a',
                           }}
                           title="Marquer comme pris"
                         >
-                          <Check size={14} style={{ color: medicationStatus === 'taken' ? '#1a1a1a' : textColor, opacity: medicationStatus === 'taken' ? 1 : 0.8 }} />
+                          {isMissed ? 'Manqué' : medicationStatus === 'taken' ? 'Pris' : 'Marquer comme pris'}
                         </button>
                       </div>
 

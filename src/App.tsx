@@ -1,7 +1,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { User } from '@supabase/supabase-js';
-import { Search } from './lib/icons';
+import { Search, X, ChevronDown } from './lib/icons';
 import { supabase } from './lib/supabase';
 import { getEstDate } from './lib/timezone';
 import { getNextRecurrenceDate } from './lib/recurrence';
@@ -10,7 +10,7 @@ import { Goal, Task, Filters, TaskStatus } from './types';
 const DEFAULT_LABELS: Record<TaskStatus, string> = {
   todo: 'À faire',
   in_progress: 'En cours',
-  done: 'Accompli',
+  done: 'Terminé',
 };
 import Auth from './components/Auth';
 import GoalsSidebar from './components/GoalsSidebar';
@@ -45,13 +45,14 @@ export default function App() {
   const [view, setView] = useState<View>('kanban');
   const [columnLabels, setColumnLabels] = useState<Record<TaskStatus, string>>(DEFAULT_LABELS);
 
-  const [filters, setFilters] = useState<Filters>({ goalId: null, search: '', status: null, priority: null, tags: null, dateFrom: null, dateTo: null });
+  const [filters, setFilters] = useState<Filters>({ goalId: null, goalIds: [], search: '', status: null, priority: null, tags: null, dateFrom: null, dateTo: null });
 
   const [goalModal, setGoalModal] = useState<{ open: boolean; goal: Goal | null }>({ open: false, goal: null });
   const [taskModal, setTaskModal] = useState<{ open: boolean; task: Task | null; defaultStatus?: TaskStatus; defaultDate?: string; defaultGoalId?: string | null }>({ open: false, task: null });
   const [archivesModal, setArchivesModal] = useState<{ open: boolean; goal: Goal | null }>({ open: false, goal: null });
   const [profileModal, setProfileModal] = useState(false);
   const [confirmModal, setConfirmModal] = useState<ConfirmState>({ open: false });
+  const [filtersToastExpanded, setFiltersToastExpanded] = useState(false);
 
   function confirm(opts: { title: string; message: string; confirmLabel?: string; danger?: boolean; onConfirm: () => void }) {
     setConfirmModal({
@@ -224,8 +225,92 @@ export default function App() {
     fetchTasks();
   }
 
+  const activeFilterChips: { key: string; label: string; onRemove: () => void }[] = [];
+
+  if (filters.search.trim()) {
+    activeFilterChips.push({
+      key: 'search',
+      label: `Recherche: ${filters.search.trim()}`,
+      onRemove: () => setFilters({ ...filters, search: '' }),
+    });
+  }
+
+  if (filters.status) {
+    const statusLabel = columnLabels[filters.status] ?? filters.status;
+    activeFilterChips.push({
+      key: `status-${filters.status}`,
+      label: `Statut: ${statusLabel}`,
+      onRemove: () => setFilters({ ...filters, status: null }),
+    });
+  }
+
+  if (filters.priority?.length) {
+    const priorityLabels: Record<string, string> = {
+      low: 'Faible',
+      medium: 'Moyen',
+      high: 'Élevé',
+      urgent: 'Urgent',
+    };
+    for (const p of filters.priority) {
+      activeFilterChips.push({
+        key: `priority-${p}`,
+        label: `Priorité ${priorityLabels[p] ?? p}`,
+        onRemove: () => setFilters({ ...filters, priority: (filters.priority ?? []).filter(x => x !== p) || null }),
+      });
+    }
+  }
+
+  if (filters.goalIds?.length) {
+    for (const goalId of filters.goalIds) {
+      const goalName = goals.find(g => g.id === goalId)?.title ?? 'Projet';
+      activeFilterChips.push({
+        key: `goal-${goalId}`,
+        label: goalName,
+        onRemove: () => setFilters({ ...filters, goalIds: (filters.goalIds ?? []).filter(id => id !== goalId) }),
+      });
+    }
+  }
+
+  if (filters.tags?.length) {
+    for (const tag of filters.tags) {
+      activeFilterChips.push({
+        key: `tag-${tag}`,
+        label: tag,
+        onRemove: () => setFilters({ ...filters, tags: (filters.tags ?? []).filter(t => t !== tag) }),
+      });
+    }
+  }
+
+  if (filters.dateFrom) {
+    activeFilterChips.push({
+      key: 'date-from',
+      label: `Du: ${filters.dateFrom}`,
+      onRemove: () => setFilters({ ...filters, dateFrom: null }),
+    });
+  }
+
+  if (filters.dateTo) {
+    activeFilterChips.push({
+      key: 'date-to',
+      label: `Au: ${filters.dateTo}`,
+      onRemove: () => setFilters({ ...filters, dateTo: null }),
+    });
+  }
+
+  function getFilterChipClass(key: string): string {
+    if (key.startsWith('priority-')) return 'bg-ink-green text-paper';
+    if (key.startsWith('goal-')) return 'bg-ink-red text-paper';
+    if (key.startsWith('tag-')) return 'bg-ink-blue text-paper';
+    return 'bg-paper text-ink-black';
+  }
+
+  useEffect(() => {
+    if (activeFilterChips.length === 0) setFiltersToastExpanded(false);
+  }, [activeFilterChips.length]);
+
   const filteredTasks = tasks.filter(task => {
     if (task.archived) return false;
+    if (filters.goalIds && filters.goalIds.length > 0 && !filters.goalIds.includes(task.goal_id)) return false;
     if (filters.search.trim()) {
       const search = filters.search.trim().toLowerCase();
       const inTitle = task.title.toLowerCase().includes(search);
@@ -259,6 +344,56 @@ export default function App() {
 
   return (
     <div className="h-screen bg-paper p-5 flex flex-col" style={{ maxWidth: '100vw', overflowX: 'hidden', overflowY: 'hidden' }}>
+      {activeFilterChips.length > 0 && (
+        <div className="fixed top-0 left-1/2 -translate-x-1/2 z-[100] w-[min(980px,calc(100vw-2rem))]">
+          <div className="border-l-2 border-r-2 border-b-2 border-ink-black bg-ink-yellow px-4 py-2" style={{ boxShadow: '4px 0 0 #1a1a1a, 4px 4px 0 #1a1a1a' }}>
+            <div className="flex items-center gap-3">
+              <p className="font-display text-xs text-ink-black flex-1">
+                Des filtres ou étiquettes actifs masquent certaines tâches.
+              </p>
+              <button
+                onClick={() => setFiltersToastExpanded(v => !v)}
+                className="retro-btn h-[28px] w-[28px] p-0 inline-flex items-center justify-center bg-paper text-ink-black"
+                title={filtersToastExpanded ? 'Réduire les filtres actifs' : 'Afficher les filtres actifs'}
+              >
+                <ChevronDown size={14} className={`${filtersToastExpanded ? 'rotate-180' : ''} transition-transform`} />
+              </button>
+            </div>
+
+            {filtersToastExpanded && (
+              <div className="mt-2 pt-3 border-t-2 border-ink-black/70">
+                <div className="flex flex-wrap items-center gap-2 mb-4">
+                  <span className="text-[10px] font-bold uppercase tracking-wide text-ink-black">Légende :</span>
+                  <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase px-2 py-0.5 border-2 border-ink-black bg-ink-green text-paper" style={{ boxShadow: '2px 2px 0 #1a1a1a' }}>
+                    Priorité
+                  </span>
+                  <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase px-2 py-0.5 border-2 border-ink-black bg-ink-red text-paper" style={{ boxShadow: '2px 2px 0 #1a1a1a' }}>
+                    Projet
+                  </span>
+                  <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase px-2 py-0.5 border-2 border-ink-black bg-ink-blue text-paper" style={{ boxShadow: '2px 2px 0 #1a1a1a' }}>
+                    Tag
+                  </span>
+                </div>
+
+                <div className="flex flex-wrap gap-2">
+                {activeFilterChips.map(chip => (
+                  <button
+                    key={chip.key}
+                    onClick={chip.onRemove}
+                    className={`retro-btn h-[30px] px-2.5 py-0 text-xs font-bold inline-flex items-center gap-2 ${getFilterChipClass(chip.key)}`}
+                    title="Retirer ce filtre"
+                  >
+                    <span>{chip.label}</span>
+                    <X size={12} />
+                  </button>
+                ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* HEADER */}
       <header className="flex items-center justify-between border-b-[5px] border-ink-black pb-5 mb-6 flex-shrink-0">
         <div>
@@ -328,6 +463,14 @@ export default function App() {
           <GoalsSidebar
             goals={goals}
             tasks={tasks}
+            selectedGoalIds={filters.goalIds ?? []}
+            onToggleGoalFilter={(goalId) => {
+              const current = filters.goalIds ?? [];
+              const next = current.includes(goalId)
+                ? current.filter(id => id !== goalId)
+                : [...current, goalId];
+              setFilters({ ...filters, goalIds: next });
+            }}
             onNewGoal={() => setGoalModal({ open: true, goal: null })}
             onCreateTaskForGoal={(goalId) => setTaskModal({ open: true, task: null, defaultGoalId: goalId, defaultStatus: 'todo' })}
             onEditGoal={goal => setGoalModal({ open: true, goal })}
@@ -385,8 +528,6 @@ export default function App() {
               goals={goals}
               onEditTask={task => setTaskModal({ open: true, task })}
               onNewTask={date => setTaskModal({ open: true, task: null, defaultDate: date })}
-              onDeleteTask={handleDeleteTask}
-              onArchiveTask={handleArchiveTask}
               onChangeTaskStatus={handleChangeTaskStatus}
             />
           )}

@@ -34,7 +34,7 @@ export default function ProfileModal({ user, onClose }: Props) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[1000] p-4">
       <div className="bg-paper border-2 border-ink-black w-full max-w-md" style={{ boxShadow: '6px 6px 0 #1a1a1a' }}>
         {/* Header */}
         <div className="bg-ink-black text-paper px-6 py-4 flex items-center justify-between border-b-2 border-ink-black">

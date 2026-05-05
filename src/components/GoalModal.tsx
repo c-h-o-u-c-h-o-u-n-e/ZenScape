@@ -70,7 +70,7 @@ export default function GoalModal({ goal, userId, onClose, onSaved }: Props) {
 
 
   return (
-    <div className="fixed inset-0 bg-ink-black/60 flex items-center justify-center z-50 p-4">
+    <div className="fixed inset-0 bg-ink-black/60 flex items-center justify-center z-[1000] p-4">
       <div className="retro-card w-full max-w-lg bg-paper" style={{ boxShadow: '8px 8px 0 #1a1a1a' }}>
         <div className="flex items-center justify-between p-5 border-b-4 border-ink-black bg-ink-blue text-paper">
           <h2 className="font-display text-lg uppercase">{goal ? 'Modifier le projet' : 'Nouveau projet'}</h2>
@@ -99,15 +99,18 @@ export default function GoalModal({ goal, userId, onClose, onSaved }: Props) {
           <div>
             <div className="flex items-center justify-between mb-2">
               <label className="font-bold text-xs uppercase tracking-wide">Couleur des cartes</label>
-              {color && (
-                <button
-                  type="button"
-                  onClick={() => setColor(null)}
-                  className="text-[10px] uppercase font-bold text-ink-black/40 hover:text-ink-red transition-colors tracking-wide"
-                >
-                  Réinitialiser
-                </button>
-              )}
+              <button
+                type="button"
+                onClick={() => setColor(null)}
+                className={`text-[10px] uppercase font-bold transition-colors tracking-wide ${
+                  color
+                    ? 'text-ink-black/40 hover:text-ink-red'
+                    : 'text-transparent pointer-events-none select-none'
+                }`}
+                aria-hidden={!color}
+              >
+                Réinitialiser
+              </button>
             </div>
             <div className="flex flex-wrap gap-2 p-3 border-2 border-ink-black" style={{ boxShadow: '4px 4px 0 #1a1a1a' }}>
               {CUSTOM_COLORS.map(c => {
@@ -118,11 +121,10 @@ export default function GoalModal({ goal, userId, onClose, onSaved }: Props) {
                     key={c}
                     type="button"
                     onClick={() => setColor(isSelected ? null : c)}
-                    className="w-7 h-7 border-2 border-ink-black flex items-center justify-center transition-transform duration-75 hover:scale-110"
+                    className="w-7 h-7 border-2 border-ink-black flex items-center justify-center"
                     style={{
                       backgroundColor: c,
                       boxShadow: '2px 2px 0 #1a1a1a',
-                      transform: isSelected ? 'scale(1.15)' : undefined,
                     }}
                     title={c}
                   >

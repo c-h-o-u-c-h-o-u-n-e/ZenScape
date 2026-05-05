@@ -93,6 +93,16 @@ export default function DailyView({
       // Future day: show only tasks explicitly planned for that day.
       return task.start_date === selectedDate;
     })
+    .map(task => {
+      // In "Aujourd'hui", overdue tasks are carried forward visually.
+      // They should keep that carry-forward behavior, but without a scheduled hour
+      // so they appear in the unscheduled section.
+      if (selectedDate === todayDate && task.start_date && task.start_date < todayDate) {
+        return { ...task, start_time: null };
+      }
+
+      return task;
+    })
     .sort((a, b) => {
       if (a.start_time && !b.start_time) return -1;
       if (!a.start_time && b.start_time) return 1;
@@ -124,6 +134,22 @@ export default function DailyView({
   }
 
   async function handleMarkMedicationTaken(medicationId: string) {
+    if (medicationStatuses[medicationId] === 'taken') {
+      setMedicationStatuses(prev => ({
+        ...prev,
+        [medicationId]: 'missed',
+      }));
+      return;
+    }
+
+    if (medicationStatuses[medicationId] === 'missed') {
+      setMedicationStatuses(prev => ({
+        ...prev,
+        [medicationId]: null,
+      }));
+      return;
+    }
+
     const medication = medications.find(m => m.id === medicationId);
     if (!medication) return;
 
@@ -138,15 +164,6 @@ export default function DailyView({
     setMedicationStatuses(prev => ({
       ...prev,
       [medicationId]: 'taken'
-    }));
-
-    await fetchMedications();
-  }
-
-  function handleMarkMedicationMissed(medicationId: string) {
-    setMedicationStatuses(prev => ({
-      ...prev,
-      [medicationId]: prev[medicationId] === 'missed' ? null : 'missed'
     }));
   }
 

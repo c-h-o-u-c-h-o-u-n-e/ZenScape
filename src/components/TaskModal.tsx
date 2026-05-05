@@ -51,11 +51,22 @@ function unitToInterval(unit: RecurrenceUnit, interval: number): number {
   return interval;
 }
 
+function addOneDay(dateStr: string): string {
+  const d = new Date(`${dateStr}T00:00:00`);
+  d.setDate(d.getDate() + 1);
+  return d.toISOString().split('T')[0];
+}
+
+function isEndTimeEarlier(start: string, end: string): boolean {
+  if (!start || !end) return false;
+  return end < start;
+}
+
 export default function TaskModal({ task, goals, columnLabels, defaultGoalId, defaultStatus, defaultDate, userId, onClose, onSaved }: Props) {
   const statusOptions: DropdownOption[] = [
-    { value: 'todo', label: columnLabels.todo },
-    { value: 'in_progress', label: columnLabels.in_progress },
-    { value: 'done', label: columnLabels.done },
+    { value: 'todo', label: 'Planification' },
+    { value: 'in_progress', label: 'En cours' },
+    { value: 'done', label: 'Terminé' },
   ];
 
   const [goalId, setGoalId] = useState('');
@@ -152,7 +163,7 @@ export default function TaskModal({ task, goals, columnLabels, defaultGoalId, de
       }
     } else {
       if (defaultGoalId) setGoalId(defaultGoalId);
-      else if (goals.length > 0) setGoalId(goals[0].id);
+      else setGoalId('');
       if (defaultStatus) setStatus(defaultStatus);
       if (defaultDate) {
         setStartDate(defaultDate);
@@ -160,6 +171,16 @@ export default function TaskModal({ task, goals, columnLabels, defaultGoalId, de
       }
     }
   }, [task, defaultGoalId, defaultStatus, defaultDate, goals]);
+
+  useEffect(() => {
+    // Task modal behavior (new + edit):
+    // if end time is earlier than start time, auto-roll due date to next day.
+    if (!startDate || !startTime || !endTime) return;
+    if (!isEndTimeEarlier(startTime, endTime)) return;
+
+    const nextDay = addOneDay(startDate);
+    if (dueDate !== nextDay) setDueDate(nextDay);
+  }, [task, startDate, startTime, endTime, dueDate]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -274,7 +295,7 @@ export default function TaskModal({ task, goals, columnLabels, defaultGoalId, de
   };
 
   return (
-    <div className="fixed inset-0 bg-ink-black/60 flex items-center justify-center z-50 p-4">
+    <div className="fixed inset-0 bg-ink-black/60 flex items-center justify-center z-[1000] p-4">
       <div
         className="retro-card w-full max-w-lg bg-paper flex flex-col"
         style={{ boxShadow: '8px 8px 0 #1a1a1a', maxHeight: '92vh' }}

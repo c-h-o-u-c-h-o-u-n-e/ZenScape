@@ -6,14 +6,15 @@ import { createPortal } from 'react-dom';
 
 function formatCompletedAt(dateStr: string) {
   const date = new Date(dateStr);
-  return date.toLocaleDateString('fr-FR', {
-    day: '2-digit',
-    month: 'long',
-    year: 'numeric',
-  }) + ' à ' + date.toLocaleTimeString('fr-FR', {
-    hour: '2-digit',
+  const day = String(date.getDate());
+  const month = date.toLocaleDateString('fr-FR', { month: 'long' });
+  const year = date.getFullYear();
+  const time = date.toLocaleTimeString('fr-FR', {
+    hour: 'numeric',
     minute: '2-digit',
   });
+
+  return `${day} ${month} ${year}` + ' à ' + time;
 }
 
 function getCompletionDateTime(task: Task): Date {
@@ -133,7 +134,7 @@ export default function ArchivesModal({ goal, archivedTasks, onEdit, onUnarchive
   const menuTask = filteredAndSorted.find(t => t.id === menuOpenTaskId) ?? null;
 
   return (
-    <div className="fixed inset-0 bg-ink-black/70 flex items-center justify-center z-50 p-4">
+    <div className="fixed inset-0 bg-ink-black/70 flex items-center justify-center z-[1000] p-4">
       <div
         className="w-full max-w-2xl bg-paper border-2 border-ink-black flex flex-col"
         style={{ boxShadow: '8px 8px 0 #1a1a1a', maxHeight: '85vh' }}
@@ -268,7 +269,7 @@ export default function ArchivesModal({ goal, archivedTasks, onEdit, onUnarchive
                       <p className="font-mono font-bold text-sm leading-tight">{task.title}</p>
                       {calDate && (
                         <p className="font-mono text-[10px] opacity-70 mt-1">
-                          Complété le {formatCompletedAt(getCompletionDateTime(task).toISOString())}
+                          Terminé le {formatCompletedAt(getCompletionDateTime(task).toISOString())}
                           {calDate.recurring && ' (récurrent)'}
                         </p>
                       )}

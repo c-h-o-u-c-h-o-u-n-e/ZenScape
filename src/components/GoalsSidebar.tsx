@@ -12,6 +12,8 @@ function MenuIcon({ icon: Icon, size = 12 }: { icon: ComponentType<{ size?: numb
 interface Props {
   goals: Goal[];
   tasks: Task[];
+  selectedGoalIds?: string[];
+  onToggleGoalFilter?: (goalId: string) => void;
   onNewGoal: () => void;
   onCreateTaskForGoal: (goalId: string) => void;
   onEditGoal: (goal: Goal) => void;
@@ -29,10 +31,12 @@ function lightenHex(hex: string, amount = 60): string {
   return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
 }
 
-function GoalItem({ goal, itemIndex, tasks, onCreateTaskForGoal, onEditGoal, onDeleteGoal, onArchiveGoal, onUnarchiveGoal, onViewArchives }: {
+function GoalItem({ goal, itemIndex, tasks, selectedGoalIds = [], onToggleGoalFilter, onCreateTaskForGoal, onEditGoal, onDeleteGoal, onArchiveGoal, onUnarchiveGoal, onViewArchives }: {
   goal: Goal;
   itemIndex: number;
   tasks: Task[];
+  selectedGoalIds?: string[];
+  onToggleGoalFilter?: (goalId: string) => void;
   onCreateTaskForGoal: (goalId: string) => void;
   onEditGoal: (goal: Goal) => void;
   onDeleteGoal: (goalId: string) => void;
@@ -81,8 +85,18 @@ function GoalItem({ goal, itemIndex, tasks, onCreateTaskForGoal, onEditGoal, onD
   }
 
   const isArchived = goal.status === 'archived' || goal.status === 'completed';
+  const isFiltered = selectedGoalIds.includes(goal.id);
   const menuItems = [
     ...(!isArchived ? [{ label: 'Créer une tâche', icon: <MenuIcon icon={ListCheck} size={11} />, action: () => { setMenuOpen(false); onCreateTaskForGoal(goal.id); } }] : []),
+    {
+      label: 'Filtrer',
+      icon: <MenuIcon icon={ListCheck} size={11} />,
+      badge: isFiltered ? '✓' : null,
+      action: () => {
+        setMenuOpen(false);
+        onToggleGoalFilter?.(goal.id);
+      }
+    },
     { label: 'Modifier', icon: <MenuIcon icon={Pen} size={11} />, action: () => { setMenuOpen(false); onEditGoal(goal); } },
     { label: 'Tâches complétées', icon: <MenuIcon icon={Archive} size={11} />, badge: archivedCount > 0 ? String(archivedCount) : null, action: () => { setMenuOpen(false); onViewArchives(goal); } },
     ...(!isArchived
@@ -149,14 +163,14 @@ function GoalItem({ goal, itemIndex, tasks, onCreateTaskForGoal, onEditGoal, onD
   );
 }
 
-export default function GoalsSidebar({ goals, tasks, onNewGoal, onCreateTaskForGoal, onEditGoal, onDeleteGoal, onArchiveGoal, onUnarchiveGoal, onViewArchives }: Props) {
+export default function GoalsSidebar({ goals, tasks, selectedGoalIds = [], onToggleGoalFilter, onNewGoal, onCreateTaskForGoal, onEditGoal, onDeleteGoal, onArchiveGoal, onUnarchiveGoal, onViewArchives }: Props) {
   const active = goals.filter(g => g.status === 'active').sort((a, b) => a.title.localeCompare(b.title));
   const completed = goals.filter(g => g.status === 'completed').sort((a, b) => a.title.localeCompare(b.title));
   const archived = goals.filter(g => g.status === 'archived').sort((a, b) => a.title.localeCompare(b.title));
   const archiveGoals = [...completed, ...archived];
   const [filterView, setFilterView] = useState<'all' | 'active' | 'archived'>('active');
 
-  const cardProps = { tasks, onCreateTaskForGoal, onEditGoal, onDeleteGoal, onArchiveGoal, onUnarchiveGoal, onViewArchives };
+  const cardProps = { tasks, selectedGoalIds, onToggleGoalFilter, onCreateTaskForGoal, onEditGoal, onDeleteGoal, onArchiveGoal, onUnarchiveGoal, onViewArchives };
 
   return (
     <div className="flex flex-col border-2 border-ink-black h-full bg-ink-red/75" style={{ boxShadow: '4px 4px 0 #1a1a1a' }}>

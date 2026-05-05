@@ -64,7 +64,7 @@ export default function FilterBar({ filters, goals, tasks, columnLabels, onChang
         {allTags.length > 0 && (
           <button
             onClick={() => setTagsSidebarOpen(true)}
-            className="retro-btn ml-4 h-[34px] px-3 py-0 text-sm font-bold uppercase hover:opacity-80 shrink-0 inline-flex items-center"
+            className="retro-btn ml-[28rem] h-[34px] px-3 py-0 text-sm font-bold uppercase hover:opacity-80 shrink-0 inline-flex items-center"
             style={{
               backgroundColor: '#457b9d',
               color: '#f4e8d1',
@@ -107,11 +107,10 @@ export default function FilterBar({ filters, goals, tasks, columnLabels, onChang
                     : [...currentTags, tag];
                   onChange({ ...filters, tags: newTags.length > 0 ? newTags : null });
                 }}
-                className="px-3 py-1.5 text-xs font-bold uppercase border-2 border-ink-black transition-all"
+                className="retro-btn h-[34px] px-3 py-0 text-xs font-bold uppercase inline-flex items-center"
                 style={{
                   backgroundColor: isActive ? '#457b9d' : '#f4e8d1',
                   color: isActive ? '#f4e8d1' : '#1a1a1a',
-                  boxShadow: '2px 2px 0 #1a1a1a',
                 }}
               >
                 {tag}

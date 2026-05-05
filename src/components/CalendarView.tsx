@@ -154,6 +154,22 @@ function CalendarView({ tasks, allTasks, goals, onEditTask, onNewTask, onChangeT
   }
 
   async function handleMarkMedicationTaken(medicationId: string) {
+    if (medicationStatuses[medicationId] === 'taken') {
+      setMedicationStatuses(prev => ({
+        ...prev,
+        [medicationId]: 'missed',
+      }));
+      return;
+    }
+
+    if (medicationStatuses[medicationId] === 'missed') {
+      setMedicationStatuses(prev => ({
+        ...prev,
+        [medicationId]: null,
+      }));
+      return;
+    }
+
     const selectedDate = dateStr(selectedDay);
     const medication = medications.find(m => m.id === medicationId);
     if (!medication) return;
@@ -169,20 +185,6 @@ function CalendarView({ tasks, allTasks, goals, onEditTask, onNewTask, onChangeT
       ...prev,
       [medicationId]: 'taken'
     }));
-
-    if (!userId) return;
-    const { data } = await supabase
-      .from('medications')
-      .select('*')
-      .eq('user_id', userId)
-      .lte('start_date', selectedDate)
-      .or(`end_date.is.null,end_date.gte.${selectedDate}`)
-      .order('time_of_day', { ascending: true });
-
-    if (data) {
-      const dueOnly = (data as Medication[]).filter(med => isMedicationDueOnDate(med, selectedDate));
-      setMedications(dueOnly);
-    }
   }
 
   const visibleTasks = useMemo(() => {
@@ -285,7 +287,7 @@ function CalendarView({ tasks, allTasks, goals, onEditTask, onNewTask, onChangeT
       const start = weekIndex * 7;
       const weekDays = cells.slice(start, start + 7);
       const maxDayHeight = weekDays.reduce((maxHeight, day) => {
-        if (!day) return maxHeight;
+        if (day === null) return maxHeight;
         return Math.max(maxHeight, estimateDayCellHeightPx(day));
       }, MIN_CELL_HEIGHT_PX);
 
@@ -401,7 +403,7 @@ function CalendarView({ tasks, allTasks, goals, onEditTask, onNewTask, onChangeT
               style={{ gridTemplateRows: calendarRowTemplate }}
             >
               {cells.map((day, i) => {
-                if (!day) {
+                if (day === null) {
                   const isLastColumn = (i + 1) % 7 === 0;
                   const nextCellIsEmpty = !isLastColumn && cells[i + 1] == null;
                   return (
@@ -412,14 +414,15 @@ function CalendarView({ tasks, allTasks, goals, onEditTask, onNewTask, onChangeT
                   );
                 }
 
-                const dayTasks = getTasksForDay(day);
+                const dayNumber = day;
+                const dayTasks = getTasksForDay(dayNumber);
                 const dayPlannedTasks = dayTasks.filter(task => task.status !== 'done');
                 const dayCompletedTasks = showCompleted
-                  ? getCompletedTasksForDay(day)
+                  ? getCompletedTasksForDay(dayNumber)
                   : [];
-                const currentDay = day;
+                const currentDay = dayNumber;
                 const previewTasks = getFittingPreviewTasks(dayPlannedTasks, dayCompletedTasks);
-                const cellDate = new Date(year, month, day);
+                const cellDate = new Date(year, month, dayNumber);
                 const isPast = cellDate < todayStart;
                 const isFuture = cellDate > todayStart;
 

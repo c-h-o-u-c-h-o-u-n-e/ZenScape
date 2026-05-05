@@ -348,13 +348,14 @@ export default function App() {
       <AnimatePresence>
         {activeFilterChips.length > 0 && (
           <motion.div
-            className="fixed top-0 left-1/2 -translate-x-1/2 z-[100] w-[min(980px,calc(100vw-2rem))]"
+            className="fixed top-0 left-0 right-0 z-[100] flex justify-center px-4"
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
             transition={{ type: 'spring', stiffness: 300, damping: 30 }}
           >
-            <div className="border-l-2 border-r-2 border-b-2 border-ink-black bg-ink-yellow px-4 py-2" style={{ boxShadow: '4px 0 0 #1a1a1a, 4px 4px 0 #1a1a1a' }}>
+            <div className="w-full max-w-[980px]">
+              <div className="border-l-2 border-r-2 border-b-2 border-ink-black bg-ink-yellow px-4 py-2" style={{ boxShadow: '4px 0 0 #1a1a1a, 4px 4px 0 #1a1a1a' }}>
               <div className="flex items-center gap-3">
                 <p className="font-display text-xs text-ink-black flex-1">
                   Des filtres ou étiquettes actifs masquent certaines tâches.
@@ -419,6 +420,7 @@ export default function App() {
                   </motion.div>
                 )}
               </AnimatePresence>
+              </div>
             </div>
           </motion.div>
         )}

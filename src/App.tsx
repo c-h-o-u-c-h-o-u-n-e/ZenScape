@@ -402,13 +402,13 @@ export default function App() {
                           <motion.button
                             key={chip.key}
                             onClick={chip.onRemove}
-                            className={`retro-btn h-[30px] px-2.5 py-0 text-xs font-bold inline-flex items-center gap-2 ${getFilterChipClass(chip.key)}`}
+                            className={`h-[30px] px-2.5 py-0 text-xs font-bold inline-flex items-center gap-2 border-2 border-ink-black ${getFilterChipClass(chip.key)}`}
                             title="Retirer ce filtre"
+                            style={{ boxShadow: '3px 3px 0 #1a1a1a' }}
                             initial={{ opacity: 0, scale: 0.8 }}
                             animate={{ opacity: 1, scale: 1 }}
                             exit={{ opacity: 0, scale: 0.8 }}
                             transition={{ delay: index * 0.05 }}
-                            whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
                           >
                             <span>{chip.label}</span>

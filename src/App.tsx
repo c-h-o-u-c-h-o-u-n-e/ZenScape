@@ -1,6 +1,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { User } from '@supabase/supabase-js';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Search, X, ChevronDown } from './lib/icons';
 import { supabase } from './lib/supabase';
 import { getEstDate } from './lib/timezone';
@@ -344,55 +345,84 @@ export default function App() {
 
   return (
     <div className="h-screen bg-paper p-5 flex flex-col" style={{ maxWidth: '100vw', overflowX: 'hidden', overflowY: 'hidden' }}>
-      {activeFilterChips.length > 0 && (
-        <div className="fixed top-0 left-1/2 -translate-x-1/2 z-[100] w-[min(980px,calc(100vw-2rem))] toast-enter">
-          <div className="border-l-2 border-r-2 border-b-2 border-ink-black bg-ink-yellow px-4 py-2" style={{ boxShadow: '4px 0 0 #1a1a1a, 4px 4px 0 #1a1a1a' }}>
-            <div className="flex items-center gap-3">
-              <p className="font-display text-xs text-ink-black flex-1">
-                Des filtres ou étiquettes actifs masquent certaines tâches.
-              </p>
-              <button
-                onClick={() => setFiltersToastExpanded(v => !v)}
-                className="retro-btn h-[28px] w-[28px] p-0 inline-flex items-center justify-center bg-paper text-ink-black"
-                title={filtersToastExpanded ? 'Réduire les filtres actifs' : 'Afficher les filtres actifs'}
-              >
-                <ChevronDown size={14} className={`${filtersToastExpanded ? 'rotate-180' : ''} transition-transform duration-300`} />
-              </button>
-            </div>
-
-            <div className={`overflow-hidden ${filtersToastExpanded ? 'toast-content-expand' : 'toast-content-collapse'}`}>
-              <div className="mt-2 pt-3 border-t-2 border-ink-black/70">
-                <div className="flex flex-wrap items-center gap-2 mb-4">
-                  <span className="text-[10px] font-bold uppercase tracking-wide text-ink-black">Légende :</span>
-                  <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase px-2 py-0.5 border-2 border-ink-black bg-ink-green text-paper" style={{ boxShadow: '2px 2px 0 #1a1a1a' }}>
-                    Priorité
-                  </span>
-                  <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase px-2 py-0.5 border-2 border-ink-black bg-ink-red text-paper" style={{ boxShadow: '2px 2px 0 #1a1a1a' }}>
-                    Projet
-                  </span>
-                  <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase px-2 py-0.5 border-2 border-ink-black bg-ink-blue text-paper" style={{ boxShadow: '2px 2px 0 #1a1a1a' }}>
-                    Tag
-                  </span>
-                </div>
-
-                <div className="flex flex-wrap gap-2">
-                {activeFilterChips.map(chip => (
-                  <button
-                    key={chip.key}
-                    onClick={chip.onRemove}
-                    className={`retro-btn h-[30px] px-2.5 py-0 text-xs font-bold inline-flex items-center gap-2 ${getFilterChipClass(chip.key)}`}
-                    title="Retirer ce filtre"
+      <AnimatePresence>
+        {activeFilterChips.length > 0 && (
+          <motion.div
+            className="fixed top-0 left-1/2 -translate-x-1/2 z-[100] w-[min(980px,calc(100vw-2rem))]"
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+          >
+            <div className="border-l-2 border-r-2 border-b-2 border-ink-black bg-ink-yellow px-4 py-2" style={{ boxShadow: '4px 0 0 #1a1a1a, 4px 4px 0 #1a1a1a' }}>
+              <div className="flex items-center gap-3">
+                <p className="font-display text-xs text-ink-black flex-1">
+                  Des filtres ou étiquettes actifs masquent certaines tâches.
+                </p>
+                <button
+                  onClick={() => setFiltersToastExpanded(v => !v)}
+                  className="retro-btn h-[28px] w-[28px] p-0 inline-flex items-center justify-center bg-paper text-ink-black"
+                  title={filtersToastExpanded ? 'Réduire les filtres actifs' : 'Afficher les filtres actifs'}
+                >
+                  <motion.div
+                    animate={{ rotate: filtersToastExpanded ? 180 : 0 }}
+                    transition={{ duration: 0.3 }}
                   >
-                    <span>{chip.label}</span>
-                    <X size={12} />
-                  </button>
-                ))}
-                </div>
+                    <ChevronDown size={14} />
+                  </motion.div>
+                </button>
               </div>
+
+              <AnimatePresence>
+                {filtersToastExpanded && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+                    className="overflow-hidden"
+                  >
+                    <div className="mt-2 pt-3 border-t-2 border-ink-black/70">
+                      <div className="flex flex-wrap items-center gap-2 mb-4">
+                        <span className="text-[10px] font-bold uppercase tracking-wide text-ink-black">Légende :</span>
+                        <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase px-2 py-0.5 border-2 border-ink-black bg-ink-green text-paper" style={{ boxShadow: '2px 2px 0 #1a1a1a' }}>
+                          Priorité
+                        </span>
+                        <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase px-2 py-0.5 border-2 border-ink-black bg-ink-red text-paper" style={{ boxShadow: '2px 2px 0 #1a1a1a' }}>
+                          Projet
+                        </span>
+                        <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase px-2 py-0.5 border-2 border-ink-black bg-ink-blue text-paper" style={{ boxShadow: '2px 2px 0 #1a1a1a' }}>
+                          Tag
+                        </span>
+                      </div>
+
+                      <motion.div className="flex flex-wrap gap-2" layout>
+                        {activeFilterChips.map((chip, index) => (
+                          <motion.button
+                            key={chip.key}
+                            onClick={chip.onRemove}
+                            className={`retro-btn h-[30px] px-2.5 py-0 text-xs font-bold inline-flex items-center gap-2 ${getFilterChipClass(chip.key)}`}
+                            title="Retirer ce filtre"
+                            initial={{ opacity: 0, scale: 0.8 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.8 }}
+                            transition={{ delay: index * 0.05 }}
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                          >
+                            <span>{chip.label}</span>
+                            <X size={12} />
+                          </motion.button>
+                        ))}
+                      </motion.div>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
-          </div>
-        </div>
-      )}
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* HEADER */}
       <header className="flex items-center justify-between border-b-[5px] border-ink-black pb-5 mb-6 flex-shrink-0">

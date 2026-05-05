@@ -14,12 +14,30 @@ interface Props {
 }
 
 const CUSTOM_COLORS = [
-  '#FF4D4D', '#CC0000', '#660000', '#FF944D', '#CC5200', '#663300',
-  '#FFFF66', '#CCCC00', '#666600', '#B3FF66', '#66CC00', '#336600',
-  '#66FF66', '#00CC00', '#006600', '#66FFB3', '#00CC66', '#006633',
-  '#66FFFF', '#00CCCC', '#006666', '#66B3FF', '#0066CC', '#003366',
-  '#6666FF', '#0000CC', '#000066', '#B366FF', '#6600CC', '#330066',
-  '#FF66FF', '#CC00CC', '#660066', '#FF66B3', '#CC0066', '#660033',
+  // Reds & Pinks (8 colors)
+  '#FF6B6B', '#FF8A8A', '#FFB3B3', '#FFE0E0',
+  '#FF4444', '#E63946', '#D62828', '#A4161A',
+  // Oranges (8 colors)
+  '#FFA500', '#FFB84D', '#FFCC99', '#FFE6CC',
+  '#FF8C00', '#E67E22', '#D35400', '#B8651B',
+  // Yellows & Lime (8 colors)
+  '#FFEB3B', '#FFFF66', '#FFFF99', '#FFFFCC',
+  '#FFD700', '#FFC107', '#FFA000', '#FF8F00',
+  // Greens (8 colors)
+  '#66FF66', '#99FF99', '#B3FFB3', '#D4FFDD',
+  '#00CC00', '#4CAF50', '#45A049', '#2E7D32',
+  // Cyan & Turquoise (8 colors)
+  '#66FFFF', '#99FFFF', '#B3FFFF', '#CCFFFF',
+  '#00CCCC', '#00BCD4', '#0097A7', '#00838F',
+  // Blues (8 colors)
+  '#66B3FF', '#99CCFF', '#B3D9FF', '#CCEBFF',
+  '#0066CC', '#1E90FF', '#1976D2', '#1565C0',
+  // Purples (8 colors)
+  '#B366FF', '#CC99FF', '#D9B3FF', '#E6D9FF',
+  '#9966FF', '#7C3AED', '#6D28D9', '#5B21B6',
+  // Magentas (8 colors)
+  '#FF66FF', '#FF99FF', '#FFB3FF', '#FFCCFF',
+  '#FF00FF', '#E60BB4', '#D60095', '#BD0076',
 ];
 
 export default function GoalModal({ goal, userId, onClose, onSaved }: Props) {
@@ -112,7 +130,7 @@ export default function GoalModal({ goal, userId, onClose, onSaved }: Props) {
                 Réinitialiser
               </button>
             </div>
-            <div className="flex flex-wrap gap-2 p-3 border-2 border-ink-black" style={{ boxShadow: '4px 4px 0 #1a1a1a' }}>
+            <div className="grid grid-cols-8 gap-2 p-3 border-2 border-ink-black" style={{ boxShadow: '4px 4px 0 #1a1a1a' }}>
               {CUSTOM_COLORS.map(c => {
                 const isSelected = color === c;
                 const fg = fgForBg(c);

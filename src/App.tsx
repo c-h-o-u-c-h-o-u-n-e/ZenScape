@@ -397,7 +397,7 @@ export default function App() {
                         </span>
                       </div>
 
-                      <motion.div className="flex flex-wrap gap-2" layout>
+                      <motion.div className="flex flex-wrap gap-2 pb-2" layout>
                         {activeFilterChips.map((chip, index) => (
                           <motion.button
                             key={chip.key}

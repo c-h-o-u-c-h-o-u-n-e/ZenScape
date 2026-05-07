@@ -73,6 +73,15 @@ export interface Medication {
   updated_at: string;
 }
 
+export interface MedicationIntake {
+  id: string;
+  user_id: string;
+  medication_id: string;
+  status: 'taken' | 'missed';
+  intake_date: string;
+  created_at: string;
+}
+
 export interface Filters {
   goalId: string | null;
   goalIds?: string[];

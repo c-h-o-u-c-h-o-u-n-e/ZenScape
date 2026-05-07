@@ -1,26 +1,24 @@
 export function getMedicationFormatColor(format: string): string {
   const colorMap: Record<string, string> = {
-    'Capsule': '#FF3333',
-    'Comprimé': '#00D9A3',
-    'Crème': '#FFD700',
-    'Gel': '#00D9A3',
-    'Gouttes': '#0099FF',
-    'Inhalateur': '#00CC66',
-    'Injection': '#FF0066',
-    'Patch': '#9933FF',
-    'Pommade': '#FF6699',
-    'Sirop': '#FF9933',
-    'Suppositoire': '#DD00FF',
-    'Suspension orale': '#00CCFF',
+    // Palette pastel (texte noir lisible)
+    'Capsule': '#FFD6D6',
+    'Comprimé': '#D9F2E6',
+    'Crème': '#FFF4CC',
+    'Gel': '#D6F5F2',
+    'Gouttes': '#DDEBFF',
+    'Inhalateur': '#E2F7D9',
+    'Injection': '#FFDDE8',
+    'Patch': '#E9DDFF',
+    'Pommade': '#FFE6F0',
+    'Sirop': '#FFE8D1',
+    'Suppositoire': '#F3DFFF',
+    'Suspension orale': '#DFF4FF',
   };
-  return colorMap[format] || '#E8E8E8';
+  return colorMap[format] || '#F2F2F2';
 }
 
 export function shouldUseDarkText(color: string): boolean {
-  const hex = color.replace('#', '');
-  const r = parseInt(hex.substr(0, 2), 16);
-  const g = parseInt(hex.substr(2, 2), 16);
-  const b = parseInt(hex.substr(4, 2), 16);
-  const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
-  return luminance > 0.5;
+  // Avec la palette pastel actuelle, le texte sombre est toujours à privilégier.
+  void color;
+  return true;
 }

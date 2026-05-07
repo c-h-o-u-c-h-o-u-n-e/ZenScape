@@ -60,11 +60,11 @@ export default function DailyViewHeader({ date, onDateChange }: DailyViewHeaderP
         </button>
 
         <div className="text-center flex-1">
-          <h2 className="font-display text-sm uppercase text-paper leading-none">{getDayLabel()}</h2>
-          <p className="text-lg text-paper opacity-90 mt-2 font-bold">{dateStrWithCapitalizedDay}</p>
+          <h2 className="font-display text-sm uppercase text-paper opacity-90 leading-none">{getDayLabel()}</h2>
+          <p className="text-lg text-paper mt-2 font-bold">{dateStrWithCapitalizedDay}</p>
         </div>
 
-        <div className="flex items-center gap-2 shrink-0">
+        <div className="flex items-center gap-3 shrink-0">
           <button
             onClick={handleToday}
             className={`retro-btn bg-ink-blue text-paper px-4 py-3 text-xs font-bold uppercase ${

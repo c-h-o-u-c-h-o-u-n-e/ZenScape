@@ -16,6 +16,13 @@ interface MedicationsDailyCardProps {
   textOnly?: boolean;
 }
 
+function lightenHex(hex: string, amount = 60): string {
+  const r = Math.min(255, parseInt(hex.slice(1, 3), 16) + amount);
+  const g = Math.min(255, parseInt(hex.slice(3, 5), 16) + amount);
+  const b = Math.min(255, parseInt(hex.slice(5, 7), 16) + amount);
+  return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
+}
+
 export default function MedicationsDailyCard({
   medications,
   medicationStatuses,
@@ -141,17 +148,18 @@ export default function MedicationsDailyCard({
     return orderA - orderB;
   });
   const menuMedication = sortedMedications.find(m => m.id === menuOpenMedId) ?? null;
+  const menuBg = menuMedication ? lightenHex(getMedicationFormatColor(menuMedication.format)) : '#f4e8d1';
 
   if (textOnly) {
     return (
-      <div className="border-2 border-ink-black flex flex-col h-full bg-paper" style={{ boxShadow: '2px 2px 0 #1a1a1a' }}>
-        <div className="border-b-2 border-ink-black bg-ink-blue px-4 py-3 h-[50px] flex items-center gap-2 shrink-0">
+      <div className="border-2 border-ink-black flex flex-col h-full" style={{ boxShadow: '2px 2px 0 #1a1a1a' }}>
+        <div className="border-b-2 border-ink-black px-4 py-3 h-[50px] flex items-center gap-2 shrink-0" style={{ backgroundColor: '#FF4444' }}>
           <Capsule size={16} className="text-paper" />
           <h4 className="font-display text-base uppercase text-paper">Prescriptions</h4>
           <span className="ml-auto font-mono text-sm font-bold text-paper opacity-90 tabular-nums shrink-0">{sortedMedications.length}</span>
         </div>
 
-        <div className="px-4 py-2 space-y-1 flex-1 min-h-0 overflow-y-auto scrollbar-hide text-ink-black" style={{ scrollbarWidth: 'none' }}>
+        <div className="px-4 py-2 space-y-1 flex-1 min-h-0 overflow-y-auto scrollbar-hide text-ink-black bg-paper" style={{ scrollbarWidth: 'none' }}>
           {sortedMedications.length === 0 ? (
             <div className="flex items-center justify-center py-6 text-ink-black opacity-70">
               <p className="font-display text-sm text-center">Aucun médicament à prendre</p>
@@ -200,7 +208,7 @@ export default function MedicationsDailyCard({
         </div>
 
         {!hideCreateButton && (
-          <div className="px-3 pb-3 pt-1 flex justify-end bg-paper shrink-0">
+          <div className="px-3 pb-3 pt-1 flex justify-end shrink-0 bg-paper">
             <button onClick={onCreateMedication} className="retro-btn bg-ink-blue text-paper text-sm px-3 py-2 leading-none" title="Nouveau médicament">
               Nouvelle prescription
             </button>
@@ -212,13 +220,13 @@ export default function MedicationsDailyCard({
 
   return (
     <div className="border-2 border-ink-black flex flex-col h-full" style={{ boxShadow: '4px 4px 0 #1a1a1a' }}>
-      <div className="border-b-2 border-ink-black bg-ink-blue px-4 py-3 h-[50px] flex items-center gap-2 shrink-0">
+      <div className="border-b-2 border-ink-black px-4 py-3 h-[50px] flex items-center gap-2 shrink-0" style={{ backgroundColor: '#FF4444' }}>
         <Capsule size={16} className="text-paper" />
         <h3 className="font-display text-base uppercase text-paper">Prescriptions</h3>
         <span className="ml-auto font-mono text-sm font-bold text-paper opacity-90 tabular-nums shrink-0">{sortedMedications.length}</span>
       </div>
 
-      <div className="px-4 py-2 space-y-1 flex-1 min-h-0 overflow-y-auto scrollbar-hide bg-paper" style={{ scrollbarWidth: 'none' }}>
+      <div className="px-4 py-2 space-y-1 flex-1 min-h-0 overflow-y-auto scrollbar-hide" style={{ scrollbarWidth: 'none', backgroundColor: 'rgba(255, 68, 68, 0.6)' }}>
         {sortedMedications.length === 0 ? (
           <div className="flex items-center justify-center py-6 text-ink-black opacity-70">
             <p className="font-display text-sm text-center">Aucun médicament à prendre</p>
@@ -326,7 +334,7 @@ export default function MedicationsDailyCard({
       </div>
 
       {!hideCreateButton && (
-        <div className="px-3 pb-3 pt-1 flex justify-end bg-paper">
+        <div className="px-3 pb-3 pt-1 flex justify-end" style={{ backgroundColor: 'rgba(255, 68, 68, 0.6)' }}>
           <button onClick={onCreateMedication} className="retro-btn bg-ink-blue text-paper text-sm px-3 py-2 leading-none" title="Nouveau médicament">
             Nouvelle prescription
           </button>
@@ -336,10 +344,11 @@ export default function MedicationsDailyCard({
       {menuOpenMedId && menuMedication && menuPosition && createPortal(
         <div
           ref={menuPortalRef}
-          className="fixed min-w-[150px] border-2 border-ink-black bg-paper z-[9999]"
+          className="fixed min-w-[150px] border-2 border-ink-black z-[9999]"
           style={{
-            boxShadow: '3px 3px 0 #1a1a1a',
+            boxShadow: '4px 4px 0 #1a1a1a',
             color: '#1a1a1a',
+            backgroundColor: menuBg,
             top: menuPosition.top !== undefined ? `${menuPosition.top}px` : 'auto',
             bottom: menuPosition.bottom !== undefined ? `${menuPosition.bottom}px` : 'auto',
             left: `${menuPosition.left}px`,
@@ -351,7 +360,10 @@ export default function MedicationsDailyCard({
               setMenuPosition(null);
               onEditMedication(menuMedication);
             }}
-            className="w-full px-3 py-2 text-left text-xs font-bold border-b-2 border-ink-black hover:bg-ink-black hover:text-paper transition-colors flex items-center gap-2"
+            className="w-full px-3 py-2 text-left text-xs font-bold border-b border-ink-black transition-colors flex items-center gap-2"
+            style={{ backgroundColor: menuBg }}
+            onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = getMedicationFormatColor(menuMedication.format))}
+            onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = menuBg)}
           >
             <Pen size={14} /> Modifier
           </button>
@@ -361,7 +373,10 @@ export default function MedicationsDailyCard({
               setMenuPosition(null);
               onDeleteMedication(menuMedication.id);
             }}
-            className="w-full px-3 py-2 text-left text-xs font-bold text-ink-red hover:bg-ink-red hover:text-paper transition-colors flex items-center gap-2"
+            className="w-full px-3 py-2 text-left text-xs font-bold transition-colors flex items-center gap-2"
+            style={{ backgroundColor: menuBg }}
+            onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = getMedicationFormatColor(menuMedication.format))}
+            onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = menuBg)}
           >
             <Trash size={14} /> Supprimer
           </button>

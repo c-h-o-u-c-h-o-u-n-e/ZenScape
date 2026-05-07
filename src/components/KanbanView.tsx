@@ -1,16 +1,16 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState } from 'react';
 import { Task, TaskStatus, Goal } from '../types';
 import TaskCard from './TaskCard';
 import { supabase } from '../lib/supabase';
 import { getEstDate } from '../lib/timezone';
 import { getGoalColor } from '../lib/goalColors';
 import { getNextRecurrenceDate } from '../lib/recurrence';
+import { List, Progress, Check } from '../lib/icons';
 
 interface Props {
   tasks: Task[];
   goals: Goal[];
   columnLabels: Record<TaskStatus, string>;
-  onLabelsChange: (labels: Record<TaskStatus, string>) => void;
   onEditTask: (task: Task) => void;
   onDeleteTask: (taskId: string) => void;
   onArchiveTask: (taskId: string, archived: boolean) => void;
@@ -19,25 +19,15 @@ interface Props {
   onRefresh: () => void;
 }
 
-const COLUMNS: { status: TaskStatus; headerColor: string; bodyColor: string; textColor: string }[] = [
-  { status: 'todo', headerColor: 'bg-ink-orange', bodyColor: 'bg-ink-orange/60', textColor: 'text-black' },
-  { status: 'in_progress', headerColor: 'bg-ink-blue', bodyColor: 'bg-ink-blue/60', textColor: 'text-paper' },
-  { status: 'done', headerColor: 'bg-ink-green', bodyColor: 'bg-ink-green/60', textColor: 'text-paper' },
+const COLUMNS: { status: TaskStatus; headerColor: string; bodyColor: string; textColor: string; Icon: React.ComponentType<{ size?: number }> }[] = [
+  { status: 'todo', headerColor: 'bg-ink-orange', bodyColor: 'bg-ink-orange/60', textColor: 'text-black', Icon: List },
+  { status: 'in_progress', headerColor: 'bg-ink-blue', bodyColor: 'bg-ink-blue/60', textColor: 'text-paper', Icon: Progress },
+  { status: 'done', headerColor: 'bg-ink-green', bodyColor: 'bg-ink-green/60', textColor: 'text-paper', Icon: Check },
 ];
 
-export default function KanbanView({ tasks, goals, columnLabels, onLabelsChange, onEditTask, onDeleteTask, onArchiveTask, onNewTask, onDropGoal, onRefresh }: Props) {
+export default function KanbanView({ tasks, goals, columnLabels, onEditTask, onDeleteTask, onArchiveTask, onNewTask, onDropGoal, onRefresh }: Props) {
   const [draggedId, setDraggedId] = useState<string | null>(null);
   const [dragOverCol, setDragOverCol] = useState<TaskStatus | null>(null);
-  const [editing, setEditing] = useState<TaskStatus | null>(null);
-  const [draft, setDraft] = useState('');
-  const inputRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    if (editing && inputRef.current) {
-      inputRef.current.focus();
-      inputRef.current.select();
-    }
-  }, [editing]);
 
   function onDragStart(e: React.DragEvent, taskId: string) {
     setDraggedId(taskId);
@@ -108,32 +98,6 @@ export default function KanbanView({ tasks, goals, columnLabels, onLabelsChange,
     setDragOverCol(null);
   }
 
-  function startEdit(status: TaskStatus) {
-    setDraft(columnLabels[status]);
-    setEditing(status);
-  }
-
-  async function commitEdit() {
-    if (!editing) return;
-    const status = editing;
-    const value = draft.trim() || columnLabels[status];
-    onLabelsChange({ ...columnLabels, [status]: value });
-    setEditing(null);
-
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
-    await supabase.from('kanban_column_labels').upsert({
-      user_id: user.id,
-      status,
-      label: value,
-      updated_at: getEstDate().toISOString(),
-    }, { onConflict: 'user_id,status' });
-  }
-
-  function cancelEdit() {
-    setEditing(null);
-  }
-
   const activeTasks = tasks.filter(t => !t.archived);
 
   function sortTasks(colTasks: Task[], status: TaskStatus): Task[] {
@@ -180,6 +144,13 @@ export default function KanbanView({ tasks, goals, columnLabels, onLabelsChange,
         const isOver = dragOverCol === col.status;
         const label = columnLabels[col.status];
         const isDoneCol = col.status === 'done';
+        const Icon = col.Icon;
+        const titleColorClass = col.status === 'in_progress' ? 'text-paper' : 'text-ink-black';
+        const iconColorClass = col.status === 'done'
+          ? 'text-ink-black'
+          : col.status === 'in_progress'
+            ? 'text-paper'
+            : 'text-ink-black';
 
         return (
           <div
@@ -191,31 +162,12 @@ export default function KanbanView({ tasks, goals, columnLabels, onLabelsChange,
             onDrop={e => onDrop(e, col.status)}
             onDragEnd={onDragEnd}
           >
-            <div className={`${col.headerColor} ${col.textColor} px-4 py-3 border-b-2 border-ink-black flex items-center justify-between gap-2`}>
-              {editing === col.status ? (
-                <input
-                  ref={inputRef}
-                  value={draft}
-                  onChange={e => setDraft(e.target.value)}
-                  onBlur={commitEdit}
-                  onKeyDown={e => {
-                    if (e.key === 'Enter') commitEdit();
-                    else if (e.key === 'Escape') cancelEdit();
-                  }}
-                  maxLength={40}
-                  className="font-display text-base uppercase text-ink-black bg-transparent focus:outline-none flex-1 min-w-0"
-                  style={{ boxShadow: '0 2px 0 rgba(255,255,255,0.6)' }}
-                />
-              ) : (
-                <h3
-                  className="font-display text-base uppercase text-ink-black cursor-text flex-1 truncate hover:opacity-80 transition-opacity"
-                  onClick={() => startEdit(col.status)}
-                  title="Cliquer pour renommer"
-                >
-                  {label}
-                </h3>
-              )}
-              <span className="font-mono text-xs font-bold text-ink-black opacity-80 shrink-0">{colTasks.length}</span>
+            <div className={`${col.headerColor} ${col.textColor} px-4 py-3 h-[50px] border-b-2 border-ink-black flex items-center gap-2 shrink-0`}>
+              <Icon size={16} className={iconColorClass} />
+              <h3 className={`font-display text-base uppercase flex-1 truncate ${titleColorClass}`}>
+                {label}
+              </h3>
+              <span className="ml-auto font-mono text-sm font-bold text-ink-black opacity-80 tabular-nums shrink-0">{colTasks.length}</span>
             </div>
 
             <div className={`flex-1 p-3 overflow-y-auto scrollbar-hide ${col.bodyColor}`} style={{ minHeight: '0', scrollbarWidth: 'none' }}>

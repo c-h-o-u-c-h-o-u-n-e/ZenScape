@@ -9,7 +9,7 @@ import { getNextRecurrenceDate } from './lib/recurrence';
 import { Goal, Task, Filters, TaskStatus } from './types';
 
 const DEFAULT_LABELS: Record<TaskStatus, string> = {
-  todo: 'À faire',
+  todo: 'Planification',
   in_progress: 'En cours',
   done: 'Terminé',
 };
@@ -79,23 +79,6 @@ export default function App() {
     return () => subscription.unsubscribe();
   }, []);
 
-  const fetchLabels = useCallback(async () => {
-    if (!user) return;
-    const { data } = await supabase
-      .from('kanban_column_labels')
-      .select('status, label')
-      .eq('user_id', user.id);
-    if (data && data.length > 0) {
-      setColumnLabels(prev => {
-        const next = { ...prev };
-        data.forEach((row: { status: string; label: string }) => {
-          if (row.label) next[row.status as TaskStatus] = row.label;
-        });
-        return next;
-      });
-    }
-  }, [user]);
-
   const fetchGoals = useCallback(async () => {
     if (!user) return;
     const { data } = await supabase
@@ -118,9 +101,8 @@ export default function App() {
     if (user) {
       fetchGoals();
       fetchTasks();
-      fetchLabels();
     }
-  }, [user, fetchGoals, fetchTasks, fetchLabels]);
+  }, [user, fetchGoals, fetchTasks]);
 
   function refresh() {
     fetchGoals();
@@ -432,7 +414,7 @@ export default function App() {
           <img
             src="/images/logo.png"
             alt="Goal-O-Matic"
-            className="h-24 object-contain"
+            className="h-14 object-contain"
           />
         </div>
 
@@ -529,7 +511,6 @@ export default function App() {
               tasks={filteredTasks}
               goals={goals}
               columnLabels={columnLabels}
-              onLabelsChange={setColumnLabels}
               onEditTask={task => setTaskModal({ open: true, task })}
               onDeleteTask={handleDeleteTask}
               onArchiveTask={handleArchiveTask}

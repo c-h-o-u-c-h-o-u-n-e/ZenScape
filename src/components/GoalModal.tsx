@@ -5,6 +5,7 @@ import { getEstDate } from '../lib/timezone';
 import { Goal } from '../types';
 import DatePicker from './DatePicker';
 import { fgForBg } from '../lib/goalColors';
+import { useErrorToast } from './ErrorToastProvider';
 
 interface Props {
   goal: Goal | null;
@@ -47,7 +48,7 @@ export default function GoalModal({ goal, userId, onClose, onSaved }: Props) {
   const [status, setStatus] = useState<'active' | 'completed' | 'archived'>('active');
   const [color, setColor] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const { showError } = useErrorToast();
 
   useEffect(() => {
     if (goal) {
@@ -62,7 +63,6 @@ export default function GoalModal({ goal, userId, onClose, onSaved }: Props) {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
-    setError(null);
 
     const payload = {
       title,
@@ -75,10 +75,10 @@ export default function GoalModal({ goal, userId, onClose, onSaved }: Props) {
 
     if (goal) {
       const { error } = await supabase.from('goals').update(payload).eq('id', goal.id);
-      if (error) { setError(error.message); setLoading(false); return; }
+      if (error) { showError(error.message); setLoading(false); return; }
     } else {
       const { error } = await supabase.from('goals').insert({ ...payload, user_id: userId });
-      if (error) { setError(error.message); setLoading(false); return; }
+      if (error) { showError(error.message); setLoading(false); return; }
     }
 
     setLoading(false);
@@ -153,9 +153,6 @@ export default function GoalModal({ goal, userId, onClose, onSaved }: Props) {
             </div>
 
           </div>
-
-          {error && <div className="border-2 border-ink-red p-3 text-ink-red text-xs">{error}</div>}
-
           <div className="flex gap-3 pt-2">
             <button type="button" onClick={onClose} className="retro-btn flex-1 bg-transparent hover:bg-ink-black hover:text-paper transition-colors">Annuler</button>
             <button type="submit" disabled={loading} className={`retro-btn flex-1 text-paper hover:bg-ink-red transition-colors ${goal ? 'bg-ink-red' : 'bg-ink-black'}`}>

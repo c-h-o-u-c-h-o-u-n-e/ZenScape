@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from 'react';
-import type { ComponentType } from 'react';
 import { MoreVertical, List, Progress, Check, Drag, Pen, Archive, Trash } from '../lib/icons';
 import { Task, TaskPriority, RecurrenceRule, TaskStatus } from '../types';
 import { GoalColor } from '../lib/goalColors';
@@ -31,17 +30,28 @@ const PRIORITY_LABELS: Record<TaskPriority, string> = {
   urgent: 'urgent',
 };
 
-const FREQUENCY_LABELS: Record<string, string> = {
-  daily: 'jours',
-  weekly: 'semaines',
-  monthly: 'mois',
-  yearly: 'ans',
+const FREQUENCY_LABELS: Record<string, { singular: string; plural: string }> = {
+  daily: { singular: 'jour', plural: 'jours' },
+  weekly: { singular: 'semaine', plural: 'semaines' },
+  monthly: { singular: 'mois', plural: 'mois' },
+  yearly: { singular: 'an', plural: 'ans' },
 };
 
 function formatRecurrence(recurrence: RecurrenceRule): string {
   if (!recurrence) return '';
-  const freq = FREQUENCY_LABELS[recurrence.freq] || recurrence.freq;
-  return `Se répète tous les ${recurrence.interval} ${freq}`;
+  const interval = recurrence.interval || 1;
+  const labels = FREQUENCY_LABELS[recurrence.freq];
+  const unit = interval === 1
+    ? (labels?.singular || recurrence.freq)
+    : (labels?.plural || recurrence.freq);
+
+  if (interval === 1) {
+    if (recurrence.freq === 'weekly') return `Se répète toutes les ${unit}`;
+    return `Se répète tous les ${unit}`;
+  }
+
+  if (recurrence.freq === 'weekly') return `Se répète toutes les ${interval} ${unit}`;
+  return `Se répète tous les ${interval} ${unit}`;
 }
 
 function formatTime(time: string): string {
@@ -64,11 +74,11 @@ const STATUS_LABELS: Record<TaskStatus, string> = {
   done: 'Marquer comme terminé',
 };
 
-const STATUS_ICONS: Record<TaskStatus, ComponentType<{ size?: number; className?: string }>> = {
+const STATUS_ICONS = {
   todo: List,
   in_progress: Progress,
   done: Check,
-};
+} as const;
 
 function TaskCard({ task, goalColor, goalName, onEdit, onDelete, onArchive, onChangeStatus, draggable = false, onDragStart }: Props) {
   const isOverdue = task.due_date && task.status !== 'done' && new Date(task.due_date + 'T00:00:00') < new Date();
@@ -149,7 +159,7 @@ function TaskCard({ task, goalColor, goalName, onEdit, onDelete, onArchive, onCh
         )}
         {task.start_date && (
           <p className="text-[10px] font-mono opacity-75">
-            {isDone ? 'Complété' : 'Prévu'} le {new Date(task.start_date + 'T00:00:00').toLocaleDateString('fr-FR', { month: 'short', day: 'numeric', year: 'numeric' })}
+            {isDone ? 'Terminé' : 'Prévu'} le {new Date(task.start_date + 'T00:00:00').toLocaleDateString('fr-FR', { month: 'short', day: 'numeric', year: 'numeric' })}
             {task.start_time && ` à ${formatTime(task.start_time)}`}
           </p>
         )}

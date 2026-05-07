@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Task, Goal, Medication, TaskStatus } from '../types';
 import { supabase } from '../lib/supabase';
-import { getEstDate, getEstDateString } from '../lib/timezone';
-import { getNextMedicationOccurrenceDate, isMedicationDueOnDate } from '../lib/medicationSchedule';
+import { getEstDateString } from '../lib/timezone';
+import { isMedicationDueOnDate } from '../lib/medicationSchedule';
 import DailyViewHeader from './DailyViewHeader';
 import PlanningCard from './PlanningCard';
 import CompletedCard from './CompletedCard';
@@ -59,10 +59,36 @@ export default function DailyView({
       .or(`end_date.is.null,end_date.gte.${selectedDate}`)
       .order('time_of_day', { ascending: true });
 
-    if (data) {
-      const dueOnly = (data as Medication[]).filter(med => isMedicationDueOnDate(med, selectedDate));
-      setMedications(dueOnly);
+    const dueOnly = data
+      ? (data as Medication[]).filter(med => isMedicationDueOnDate(med, selectedDate))
+      : [];
+
+    const { data: intakeRows } = await supabase
+      .from('medication_intakes')
+      .select('medication_id, status')
+      .eq('user_id', userId)
+      .eq('intake_date', selectedDate);
+
+    const statusMap = (intakeRows ?? []).reduce<Record<string, 'taken' | 'missed' | null>>((acc, row) => {
+      acc[row.medication_id] = row.status as 'taken' | 'missed';
+      return acc;
+    }, {});
+    setMedicationStatuses(statusMap);
+
+    const intakeMedicationIds = [...new Set((intakeRows ?? []).map(row => row.medication_id))];
+    const missingIds = intakeMedicationIds.filter(id => !dueOnly.some(med => med.id === id));
+
+    let extraFromIntakes: Medication[] = [];
+    if (missingIds.length > 0) {
+      const { data: medsByIds } = await supabase
+        .from('medications')
+        .select('*')
+        .in('id', missingIds)
+        .order('time_of_day', { ascending: true });
+      extraFromIntakes = (medsByIds as Medication[] | null) ?? [];
     }
+
+    setMedications([...dueOnly, ...extraFromIntakes]);
   }
 
   function toLocalDateKey(dateValue: string): string {
@@ -135,6 +161,14 @@ export default function DailyView({
 
   async function handleMarkMedicationTaken(medicationId: string) {
     if (medicationStatuses[medicationId] === 'taken') {
+      if (userId) {
+        await supabase.from('medication_intakes').insert({
+          user_id: userId,
+          medication_id: medicationId,
+          status: 'missed',
+          intake_date: selectedDate,
+        });
+      }
       setMedicationStatuses(prev => ({
         ...prev,
         [medicationId]: 'missed',
@@ -153,13 +187,14 @@ export default function DailyView({
     const medication = medications.find(m => m.id === medicationId);
     if (!medication) return;
 
-    const nextDate = getNextMedicationOccurrenceDate(medication, selectedDate);
-
-    const payload = nextDate
-      ? { start_date: nextDate, updated_at: getEstDate().toISOString() }
-      : { end_date: selectedDate, updated_at: getEstDate().toISOString() };
-
-    await supabase.from('medications').update(payload).eq('id', medicationId);
+    if (userId) {
+      await supabase.from('medication_intakes').insert({
+        user_id: userId,
+        medication_id: medicationId,
+        status: 'taken',
+        intake_date: selectedDate,
+      });
+    }
 
     setMedicationStatuses(prev => ({
       ...prev,
@@ -220,6 +255,7 @@ export default function DailyView({
         <MedicationModal
           medication={medicationModal.medication}
           userId={userId}
+          defaultStartDate={medicationModal.medication ? undefined : selectedDate}
           onClose={() => setMedicationModal({ open: false, medication: null })}
           onSaved={fetchMedications}
         />

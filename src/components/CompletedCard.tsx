@@ -31,7 +31,7 @@ export default function CompletedCard({
       <div className="border-b-2 border-ink-black bg-ink-green px-4 py-3 h-[50px] flex items-center gap-2 shrink-0">
         <Check size={16} />
         <h3 className="font-display text-base uppercase text-ink-black">Terminé</h3>
-        <span className="ml-auto font-mono text-xs font-bold text-ink-black opacity-80 tabular-nums shrink-0">
+        <span className="ml-auto font-mono text-sm font-bold text-ink-black opacity-80 tabular-nums shrink-0">
           {completedTasks.length}
         </span>
       </div>
@@ -40,7 +40,7 @@ export default function CompletedCard({
       <div className="flex-1 overflow-y-auto scrollbar-hide p-4 flex flex-col gap-3 min-h-0 bg-ink-green/60" style={{ scrollbarWidth: 'none' }}>
         {completedTasks.length === 0 ? (
           <div className="flex items-center justify-center py-6 text-ink-black opacity-70">
-            <p className="font-display text-sm text-center">Aucune tâche complétée</p>
+            <p className="font-display text-sm text-center">Aucune tâche terminée</p>
           </div>
         ) : (
           completedTasks.map(task => {

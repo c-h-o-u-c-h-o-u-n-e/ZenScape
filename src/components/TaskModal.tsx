@@ -2,12 +2,13 @@ import { useState, useEffect } from 'react';
 import { X } from '../lib/icons';
 import { supabase } from '../lib/supabase';
 import { getEstDate } from '../lib/timezone';
-import { Task, Goal, TaskStatus, TaskPriority, RecurrenceType } from '../types';
+import { Task, Goal, TaskStatus, TaskPriority, RecurrenceType, RecurrenceRule } from '../types';
 import { getNextRecurrenceDate } from '../lib/recurrence';
 import Dropdown, { DropdownOption } from './Dropdown';
 import DatePicker from './DatePicker';
 import TimePicker from './TimePicker';
 import LocationInput from './LocationInput';
+import { useErrorToast } from './ErrorToastProvider';
 
 interface Props {
   task: Task | null;
@@ -46,8 +47,8 @@ function unitToType(unit: RecurrenceUnit, interval: number): RecurrenceType {
 function unitToInterval(unit: RecurrenceUnit, interval: number): number {
   if (unit === 'days') return interval;
   if (unit === 'weeks') return interval * 7;
-  if (unit === 'months') return interval * 30;
-  if (unit === 'years') return interval * 365;
+  if (unit === 'months') return interval;
+  if (unit === 'years') return interval;
   return interval;
 }
 
@@ -86,7 +87,7 @@ export default function TaskModal({ task, goals, columnLabels, defaultGoalId, de
   const [recurrenceEndDate, setRecurrenceEndDate] = useState('');
 
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const { showError } = useErrorToast();
   const [locationSuggestions, setLocationSuggestions] = useState<string[]>([]);
   const [allTags, setAllTags] = useState<string[]>([]);
   const [tagSuggestions, setTagSuggestions] = useState<string[]>([]);
@@ -141,6 +142,14 @@ export default function TaskModal({ task, goals, columnLabels, defaultGoalId, de
       setRecurrenceEndDate(task.recurrence_end_date ?? '');
 
       // Reverse-map legacy interval back to unit + count
+      const recurrence = task.recurrence;
+      if (recurrence?.freq === 'monthly') {
+        setRecurrenceIntervalInput(String(recurrence.interval || 1));
+        setRecurrenceUnit('months');
+      } else if (recurrence?.freq === 'yearly') {
+        setRecurrenceIntervalInput(String(recurrence.interval || 1));
+        setRecurrenceUnit('years');
+      } else {
       const iv = task.recurrence_interval ?? 0;
       if (iv === 0 || task.recurrence_type === 'none') {
         setRecurrenceIntervalInput('');
@@ -160,6 +169,7 @@ export default function TaskModal({ task, goals, columnLabels, defaultGoalId, de
       } else {
         setRecurrenceIntervalInput(String(iv));
         setRecurrenceUnit('days');
+      }
       }
     } else {
       if (defaultGoalId) setGoalId(defaultGoalId);
@@ -184,17 +194,22 @@ export default function TaskModal({ task, goals, columnLabels, defaultGoalId, de
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!goalId) { setError('Veuillez sélectionner un projet'); return; }
+    if (!goalId) { showError('Veuillez sélectionner un projet'); return; }
     setLoading(true);
-    setError(null);
 
     const tags = tagsInput.split(',').map(t => t.trim()).filter(Boolean);
 
     let resolvedType: RecurrenceType = 'none';
     let resolvedInterval: number | null = null;
+    let recurrenceRule: RecurrenceRule | null = null;
     if (recurrenceActive) {
       resolvedType = unitToType(recurrenceUnit, recurrenceInterval);
       resolvedInterval = unitToInterval(recurrenceUnit, recurrenceInterval);
+      recurrenceRule = {
+        freq: recurrenceUnit === 'days' ? 'daily' : recurrenceUnit === 'weeks' ? 'weekly' : recurrenceUnit === 'months' ? 'monthly' : 'yearly',
+        interval: recurrenceInterval,
+        ...(recurrenceEndDate ? { end_date: recurrenceEndDate } : {}),
+      };
     }
 
     const payload = {
@@ -211,12 +226,13 @@ export default function TaskModal({ task, goals, columnLabels, defaultGoalId, de
       recurrence_type: resolvedType,
       recurrence_interval: resolvedInterval,
       recurrence_end_date: (recurrenceActive && recurrenceEndDate) ? recurrenceEndDate : null,
+      recurrence: recurrenceRule,
       updated_at: getEstDate().toISOString(),
     };
 
     if (task) {
       const { error } = await supabase.from('tasks').update(payload).eq('id', task.id);
-      if (error) { setError(error.message); setLoading(false); return; }
+      if (error) { showError(error.message); setLoading(false); return; }
 
       if (status === 'done' && task.status !== 'done' && task.recurrence) {
         const baseDate = (dueDate || startDate) || task.due_date || task.start_date;
@@ -247,7 +263,7 @@ export default function TaskModal({ task, goals, columnLabels, defaultGoalId, de
       }
     } else {
       const { error } = await supabase.from('tasks').insert({ ...payload, user_id: userId, position: Date.now() });
-      if (error) { setError(error.message); setLoading(false); return; }
+      if (error) { showError(error.message); setLoading(false); return; }
     }
 
     setLoading(false);
@@ -469,9 +485,6 @@ export default function TaskModal({ task, goals, columnLabels, defaultGoalId, de
               />
             </div>
           </div>
-
-          {error && <div className="border-2 border-ink-red p-3 text-ink-red text-xs">{error}</div>}
-
           <div className="flex gap-3 pt-2">
             <button type="button" onClick={onClose} className="retro-btn flex-1 bg-transparent hover:bg-ink-black hover:text-paper transition-colors">
               Annuler

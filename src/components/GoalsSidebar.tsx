@@ -98,7 +98,7 @@ function GoalItem({ goal, itemIndex, tasks, selectedGoalIds = [], onToggleGoalFi
       }
     },
     { label: 'Modifier', icon: <MenuIcon icon={Pen} size={11} />, action: () => { setMenuOpen(false); onEditGoal(goal); } },
-    { label: 'Tâches complétées', icon: <MenuIcon icon={Archive} size={11} />, badge: archivedCount > 0 ? String(archivedCount) : null, action: () => { setMenuOpen(false); onViewArchives(goal); } },
+    { label: 'Tâches terminées', icon: <MenuIcon icon={Archive} size={11} />, badge: archivedCount > 0 ? String(archivedCount) : null, action: () => { setMenuOpen(false); onViewArchives(goal); } },
     ...(!isArchived
       ? [{ label: 'Archiver', icon: <MenuIcon icon={FolderDown} size={11} />, action: () => { setMenuOpen(false); onArchiveGoal(goal.id); } }]
       : [{ label: 'Désarchiver', icon: <MenuIcon icon={FolderDown} size={11} />, action: () => { setMenuOpen(false); onUnarchiveGoal(goal.id); } }]

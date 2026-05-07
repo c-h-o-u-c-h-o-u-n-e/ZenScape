@@ -1,24 +1,24 @@
 import { useState } from 'react';
 import { supabase } from '../lib/supabase';
+import { useErrorToast } from './ErrorToastProvider';
 
 export default function Auth() {
   const [mode, setMode] = useState<'login' | 'register'>('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const { showError } = useErrorToast();
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
-    setError(null);
 
     if (mode === 'login') {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
-      if (error) setError(error.message);
+      if (error) showError(error.message);
     } else {
       const { error } = await supabase.auth.signUp({ email, password });
-      if (error) setError(error.message);
+      if (error) showError(error.message);
     }
 
     setLoading(false);
@@ -71,13 +71,6 @@ export default function Auth() {
                 minLength={6}
               />
             </div>
-
-            {error && (
-              <div className="border-2 border-ink-red bg-red-50 p-3 text-ink-red font-mono text-sm">
-                {error}
-              </div>
-            )}
-
             <button
               type="submit"
               disabled={loading}

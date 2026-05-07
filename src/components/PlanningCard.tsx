@@ -80,7 +80,7 @@ export default function PlanningCard({
       <div className="border-b-2 border-ink-black bg-ink-orange px-4 py-3 h-[50px] flex items-center gap-2 shrink-0">
         <List size={16} />
         <h3 className="font-display text-base uppercase text-ink-black">Planification</h3>
-        <span className="ml-auto font-mono text-xs font-bold text-ink-black opacity-80 tabular-nums shrink-0">
+        <span className="ml-auto font-mono text-sm font-bold text-ink-black opacity-80 tabular-nums shrink-0">
           {allTasks.length}
         </span>
       </div>

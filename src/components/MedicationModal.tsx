@@ -2,14 +2,16 @@ import { useState, useEffect } from 'react';
 import { X } from '../lib/icons';
 import { supabase } from '../lib/supabase';
 import { getEstDate, getEstDateString } from '../lib/timezone';
-import { Medication, RecurrenceType } from '../types';
+import { Medication, RecurrenceType, RecurrenceRule } from '../types';
 import Dropdown, { DropdownOption } from './Dropdown';
 import DatePicker from './DatePicker';
 import Checkbox from './Checkbox';
+import { useErrorToast } from './ErrorToastProvider';
 
 interface Props {
   medication: Medication | null;
   userId: string;
+  defaultStartDate?: string;
   onClose: () => void;
   onSaved: () => void;
 }
@@ -55,12 +57,12 @@ function unitToType(unit: RecurrenceUnit, interval: number): RecurrenceType {
 function unitToInterval(unit: RecurrenceUnit, interval: number): number {
   if (unit === 'days') return interval;
   if (unit === 'weeks') return interval * 7;
-  if (unit === 'months') return interval * 30;
-  if (unit === 'years') return interval * 365;
+  if (unit === 'months') return interval;
+  if (unit === 'years') return interval;
   return interval;
 }
 
-export default function MedicationModal({ medication, userId, onClose, onSaved }: Props) {
+export default function MedicationModal({ medication, userId, defaultStartDate, onClose, onSaved }: Props) {
   const [name, setName] = useState('');
   const [format, setFormat] = useState('Comprimé');
   const [dosage, setDosage] = useState('');
@@ -76,7 +78,7 @@ export default function MedicationModal({ medication, userId, onClose, onSaved }
   const [recurrenceEndDate, setRecurrenceEndDate] = useState('');
 
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const { showError } = useErrorToast();
 
   const recurrenceTimes = recurrenceTimesInput;
   const recurrenceInterval = parseInt(recurrenceIntervalInput) || 0;
@@ -95,7 +97,13 @@ export default function MedicationModal({ medication, userId, onClose, onSaved }
 
       // Reverse-map legacy interval back to unit + count
       const iv = medication.recurrence_interval ?? 0;
-      if (iv === 0 || medication.recurrence_type === 'none') {
+      if (medication.recurrence?.freq === 'monthly') {
+        setRecurrenceIntervalInput(String(medication.recurrence.interval || 1));
+        setRecurrenceUnit('months');
+      } else if (medication.recurrence?.freq === 'yearly') {
+        setRecurrenceIntervalInput(String(medication.recurrence.interval || 1));
+        setRecurrenceUnit('years');
+      } else if (iv === 0 || medication.recurrence_type === 'none') {
         setRecurrenceTimesInput('');
         setRecurrenceIntervalInput('');
         setRecurrenceUnit('days');
@@ -121,33 +129,40 @@ export default function MedicationModal({ medication, userId, onClose, onSaved }
         }
       }
     } else {
-      setStartDate(getEstDateString());
+      setStartDate(defaultStartDate || getEstDateString());
     }
-  }, [medication]);
+  }, [medication, defaultStartDate]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
-    setError(null);
 
     let resolvedType: RecurrenceType = 'none';
     let resolvedInterval: number | null = null;
+    let recurrenceRule: RecurrenceRule | null = null;
     let frequency = 'Not specified';
 
     if (recurrenceActive) {
       resolvedType = unitToType(recurrenceUnit, recurrenceInterval);
       resolvedInterval = unitToInterval(recurrenceUnit, recurrenceInterval);
+      recurrenceRule = {
+        freq: recurrenceUnit === 'days' ? 'daily' : recurrenceUnit === 'weeks' ? 'weekly' : recurrenceUnit === 'months' ? 'monthly' : 'yearly',
+        interval: recurrenceInterval,
+        ...(recurrenceEndDate ? { end_date: recurrenceEndDate } : {}),
+      };
 
       // Generate human-readable frequency string with times and dosage
       const timesText = 'fois';
       const dosageText = ` ${dosage}`;
 
       if (resolvedType === 'daily') {
-        frequency = recurrenceInterval === 1
-          ? `${recurrenceTimes}${timesText} ${dosageText}`
-          : `${recurrenceTimes}${timesText} ${dosageText}`;
-      } else if (resolvedType === 'weekly') {
-        frequency = `${recurrenceTimes}${timesText} ${dosageText} tous les ${recurrenceInterval} jours`;
+        frequency = `${recurrenceTimes}${timesText} ${dosageText}`;
+      } else if (recurrenceUnit === 'weeks') {
+        frequency = `${recurrenceTimes}${timesText} ${dosageText} toutes les ${recurrenceInterval} semaines`;
+      } else if (recurrenceUnit === 'months') {
+        frequency = `${recurrenceTimes}${timesText} ${dosageText} tous les ${recurrenceInterval} mois`;
+      } else if (recurrenceUnit === 'years') {
+        frequency = `${recurrenceTimes}${timesText} ${dosageText} tous les ${recurrenceInterval} ans`;
       } else {
         frequency = `${recurrenceTimes}${timesText} ${dosageText} tous les ${recurrenceInterval} jours`;
       }
@@ -166,6 +181,7 @@ export default function MedicationModal({ medication, userId, onClose, onSaved }
       recurrence_interval: resolvedInterval,
       recurrence_times: recurrenceActive ? recurrenceTimes : null,
       recurrence_end_date: (recurrenceActive && recurrenceEndDate) ? recurrenceEndDate : null,
+      recurrence: recurrenceRule,
       updated_at: getEstDate().toISOString(),
     };
 
@@ -176,7 +192,7 @@ export default function MedicationModal({ medication, userId, onClose, onSaved }
           .update(payload)
           .eq('id', medication.id);
         if (err) {
-          setError(err.message);
+          showError(err.message);
           setLoading(false);
           return;
         }
@@ -185,7 +201,7 @@ export default function MedicationModal({ medication, userId, onClose, onSaved }
           .from('medications')
           .insert({ ...payload, user_id: userId });
         if (err) {
-          setError(err.message);
+          showError(err.message);
           setLoading(false);
           return;
         }
@@ -194,7 +210,7 @@ export default function MedicationModal({ medication, userId, onClose, onSaved }
       onSaved();
       onClose();
     } catch (err) {
-      setError((err as Error).message);
+      showError((err as Error).message);
       setLoading(false);
     }
   }
@@ -234,13 +250,12 @@ export default function MedicationModal({ medication, userId, onClose, onSaved }
               />
             </div>
             <div>
-              <label className="font-bold text-xs uppercase block mb-2 tracking-wide">Combien prendre *</label>
+              <label className="font-bold text-xs uppercase block mb-2 tracking-wide">DOSAGE *</label>
               <input
                 type="text"
                 value={dosage}
                 onChange={e => setDosage(e.target.value)}
                 className="retro-input !bg-transparent"
-                placeholder="ex: ¼, ½, ¾, 1, 2..."
                 required
               />
             </div>
@@ -266,8 +281,9 @@ export default function MedicationModal({ medication, userId, onClose, onSaved }
             <textarea
               value={notes}
               onChange={e => setNotes(e.target.value)}
-              className="retro-input !bg-transparent resize-none"
-              rows={2}
+              className="retro-input !bg-transparent resize-none overflow-y-auto scrollbar-hide"
+              style={{ scrollbarWidth: 'none' }}
+              rows={4}
             />
           </div>
 
@@ -331,9 +347,6 @@ export default function MedicationModal({ medication, userId, onClose, onSaved }
               />
             </div>
           </div>
-
-          {error && <div className="border-2 border-ink-red p-3 text-ink-red text-xs">{error}</div>}
-
           <div className="flex gap-3 pt-2">
             <button type="button" onClick={onClose} className="retro-btn flex-1 bg-transparent hover:bg-ink-black hover:text-paper transition-colors">Annuler</button>
             <button type="submit" disabled={loading} className={`retro-btn flex-1 text-paper hover:bg-ink-red transition-colors ${medication ? 'bg-ink-red' : 'bg-ink-black'}`}>

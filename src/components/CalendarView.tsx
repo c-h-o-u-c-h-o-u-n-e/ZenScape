@@ -3,7 +3,7 @@ import { ChevronLeft, ChevronRight, Check, X, List } from '../lib/icons';
 import { Task, Goal, TaskStatus, Medication } from '../types';
 import { isRecurrenceMatch } from '../lib/recurrence';
 import { getEstDate } from '../lib/timezone';
-import { getNextMedicationOccurrenceDate, isMedicationDueOnDate } from '../lib/medicationSchedule';
+import { isMedicationDueOnDate } from '../lib/medicationSchedule';
 import { supabase } from '../lib/supabase';
 import Checkbox from './Checkbox';
 import MedicationsDailyCard from './MedicationsDailyCard';
@@ -127,10 +127,36 @@ function CalendarView({ tasks, allTasks, goals, onEditTask, onNewTask, onChangeT
         .or(`end_date.is.null,end_date.gte.${selectedDate}`)
         .order('time_of_day', { ascending: true });
 
-      if (data) {
-        const dueOnly = (data as Medication[]).filter(med => isMedicationDueOnDate(med, selectedDate));
-        setMedications(dueOnly);
+      const dueOnly = data
+        ? (data as Medication[]).filter(med => isMedicationDueOnDate(med, selectedDate))
+        : [];
+
+      const { data: intakeRows } = await supabase
+        .from('medication_intakes')
+        .select('medication_id, status')
+        .eq('user_id', userId)
+        .eq('intake_date', selectedDate);
+
+      const statusMap = (intakeRows ?? []).reduce<Record<string, 'taken' | 'missed' | null>>((acc, row) => {
+        acc[row.medication_id] = row.status as 'taken' | 'missed';
+        return acc;
+      }, {});
+      setMedicationStatuses(statusMap);
+
+      const intakeMedicationIds = [...new Set((intakeRows ?? []).map(row => row.medication_id))];
+      const missingIds = intakeMedicationIds.filter(id => !dueOnly.some(med => med.id === id));
+
+      let extraFromIntakes: Medication[] = [];
+      if (missingIds.length > 0) {
+        const { data: medsByIds } = await supabase
+          .from('medications')
+          .select('*')
+          .in('id', missingIds)
+          .order('time_of_day', { ascending: true });
+        extraFromIntakes = (medsByIds as Medication[] | null) ?? [];
       }
+
+      setMedications([...dueOnly, ...extraFromIntakes]);
     }
 
     fetchMedications();
@@ -155,6 +181,15 @@ function CalendarView({ tasks, allTasks, goals, onEditTask, onNewTask, onChangeT
 
   async function handleMarkMedicationTaken(medicationId: string) {
     if (medicationStatuses[medicationId] === 'taken') {
+      const selectedDate = dateStr(selectedDay);
+      if (userId) {
+        await supabase.from('medication_intakes').insert({
+          user_id: userId,
+          medication_id: medicationId,
+          status: 'missed',
+          intake_date: selectedDate,
+        });
+      }
       setMedicationStatuses(prev => ({
         ...prev,
         [medicationId]: 'missed',
@@ -174,12 +209,14 @@ function CalendarView({ tasks, allTasks, goals, onEditTask, onNewTask, onChangeT
     const medication = medications.find(m => m.id === medicationId);
     if (!medication) return;
 
-    const nextDate = getNextMedicationOccurrenceDate(medication, selectedDate);
-    const payload = nextDate
-      ? { start_date: nextDate, updated_at: getEstDate().toISOString() }
-      : { end_date: selectedDate, updated_at: getEstDate().toISOString() };
-
-    await supabase.from('medications').update(payload).eq('id', medicationId);
+    if (userId) {
+      await supabase.from('medication_intakes').insert({
+        user_id: userId,
+        medication_id: medicationId,
+        status: 'taken',
+        intake_date: selectedDate,
+      });
+    }
 
     setMedicationStatuses(prev => ({
       ...prev,
@@ -338,13 +375,13 @@ function CalendarView({ tasks, allTasks, goals, onEditTask, onNewTask, onChangeT
           </button>
 
           <div className="text-center flex-1">
-            <h2 className="font-display text-sm uppercase text-paper leading-none">{getMonthLabel()}</h2>
-            <p className="text-lg text-paper opacity-90 mt-2 font-bold">
+            <h2 className="font-display text-sm uppercase text-paper opacity-90 leading-none">{getMonthLabel()}</h2>
+            <p className="text-lg text-paper mt-2 font-bold">
               {MONTHS[month]} {year}
             </p>
           </div>
 
-          <div className="flex items-center gap-2 shrink-0">
+          <div className="flex items-center gap-3 shrink-0">
             <button
               onClick={goToCurrentMonth}
               className={`retro-btn bg-ink-blue text-paper px-4 py-3 text-xs font-bold uppercase ${
@@ -414,7 +451,7 @@ function CalendarView({ tasks, allTasks, goals, onEditTask, onNewTask, onChangeT
                   );
                 }
 
-                const dayNumber = day;
+                const dayNumber = day as number;
                 const dayTasks = getTasksForDay(dayNumber);
                 const dayPlannedTasks = dayTasks.filter(task => task.status !== 'done');
                 const dayCompletedTasks = showCompleted
@@ -425,6 +462,7 @@ function CalendarView({ tasks, allTasks, goals, onEditTask, onNewTask, onChangeT
                 const cellDate = new Date(year, month, dayNumber);
                 const isPast = cellDate < todayStart;
                 const isFuture = cellDate > todayStart;
+                const isTodayCell = !isPast && !isFuture;
 
                 const stateClass = isPast
                   ? 'bg-ink-blue/60'
@@ -457,7 +495,11 @@ function CalendarView({ tasks, allTasks, goals, onEditTask, onNewTask, onChangeT
                         <div
                           key={task.id}
                           className={`px-0 py-0 text-[11px] font-display leading-tight whitespace-normal break-words flex items-start gap-1 ${
-                            task.status === 'done' ? 'text-ink-black line-through opacity-80' : 'text-ink-black'
+                            task.status === 'done'
+                              ? `${isTodayCell ? 'text-paper' : 'text-ink-black'} line-through opacity-80`
+                              : isTodayCell
+                                ? 'text-paper'
+                                : 'text-ink-black'
                           }`}
                         >
                           <span className={`inline-block h-2 w-2 min-h-2 min-w-2 shrink-0 rounded-full border border-ink-black mt-[2px] mr-1 ${PRIORITY_STYLES[task.priority]}`} />
@@ -473,7 +515,7 @@ function CalendarView({ tasks, allTasks, goals, onEditTask, onNewTask, onChangeT
                           setSelectedDay(currentDay);
                           setIsSidebarOpen(true);
                         }}
-                        className="absolute bottom-1 right-2 text-[9px] underline font-mono font-bold uppercase text-ink-black"
+                        className={`absolute bottom-1 right-2 text-[9px] underline font-mono font-bold uppercase ${isTodayCell ? 'text-paper' : 'text-ink-black'}`}
                       >
                         Voir plus
                       </button>
@@ -645,10 +687,36 @@ function CalendarView({ tasks, allTasks, goals, onEditTask, onNewTask, onChangeT
               .lte('start_date', selectedDate)
               .or(`end_date.is.null,end_date.gte.${selectedDate}`)
               .order('time_of_day', { ascending: true });
-            if (data) {
-              const dueOnly = (data as Medication[]).filter(med => isMedicationDueOnDate(med, selectedDate));
-              setMedications(dueOnly);
+            const dueOnly = data
+              ? (data as Medication[]).filter(med => isMedicationDueOnDate(med, selectedDate))
+              : [];
+
+            const { data: intakeRows } = await supabase
+              .from('medication_intakes')
+              .select('medication_id, status')
+              .eq('user_id', userId)
+              .eq('intake_date', selectedDate);
+
+            const statusMap = (intakeRows ?? []).reduce<Record<string, 'taken' | 'missed' | null>>((acc, row) => {
+              acc[row.medication_id] = row.status as 'taken' | 'missed';
+              return acc;
+            }, {});
+            setMedicationStatuses(statusMap);
+
+            const intakeMedicationIds = [...new Set((intakeRows ?? []).map(row => row.medication_id))];
+            const missingIds = intakeMedicationIds.filter(id => !dueOnly.some(med => med.id === id));
+
+            let extraFromIntakes: Medication[] = [];
+            if (missingIds.length > 0) {
+              const { data: medsByIds } = await supabase
+                .from('medications')
+                .select('*')
+                .in('id', missingIds)
+                .order('time_of_day', { ascending: true });
+              extraFromIntakes = (medsByIds as Medication[] | null) ?? [];
             }
+
+            setMedications([...dueOnly, ...extraFromIntakes]);
           }}
         />
       )}

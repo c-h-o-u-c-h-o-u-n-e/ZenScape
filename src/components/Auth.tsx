@@ -27,12 +27,14 @@ export default function Auth() {
   return (
     <div className="min-h-screen bg-paper flex flex-col items-center justify-center p-8">
       <div className="w-full max-w-md">
-        <h1 className="font-display text-5xl uppercase text-ink-red bleed-anim mb-8 text-center" style={{ textShadow: '4px 4px 0 #457b9d', letterSpacing: '-2px' }}>
-          Goal-O-Matic
-        </h1>
+        <img
+          src="/images/logo.png"
+          alt="TaskFlow"
+          className="mx-auto mb-8 w-full max-w-xs"
+        />
 
         <div className="retro-card p-8">
-          <div className="flex gap-4 mb-8 border-b-4 border-ink-black pb-4">
+          <div className="flex justify-center gap-12 mb-8 border-b-4 border-ink-black pb-4">
             <button
               onClick={() => setMode('login')}
               className={`font-display text-xl uppercase pb-1 border-b-4 transition-colors ${mode === 'login' ? 'border-ink-red' : 'border-transparent opacity-50'}`}
@@ -49,19 +51,24 @@ export default function Auth() {
 
           <form onSubmit={handleSubmit} className="flex flex-col gap-5">
             <div>
-              <label className="font-mono font-bold text-xs uppercase block mb-2">Courriel</label>
+              <label htmlFor="auth-email" className="font-mono font-bold text-xs uppercase block mb-2">Courriel</label>
               <input
+                id="auth-email"
+                name="email"
                 type="email"
                 value={email}
                 onChange={e => setEmail(e.target.value)}
                 className="retro-input"
                 required
                 placeholder=""
+                autoComplete="email"
               />
             </div>
             <div>
-              <label className="font-mono font-bold text-xs uppercase block mb-2">Mot de passe</label>
+              <label htmlFor="auth-password" className="font-mono font-bold text-xs uppercase block mb-2">Mot de passe</label>
               <input
+                id="auth-password"
+                name="password"
                 type="password"
                 value={password}
                 onChange={e => setPassword(e.target.value)}
@@ -69,14 +76,15 @@ export default function Auth() {
                 required
                 placeholder=""
                 minLength={6}
+                autoComplete="current-password"
               />
             </div>
             <button
               type="submit"
               disabled={loading}
-              className="retro-btn bg-ink-black text-paper hover:bg-ink-red mt-2"
+              className="retro-btn bg-ink-blue text-paper hover:bg-ink-blue mt-2"
             >
-              {loading ? 'Traitement...' : mode === 'login' ? 'Se connecter' : 'Créer un compte'}
+              {loading ? 'Connexion en cours...' : mode === 'login' ? 'Me connecter' : 'Créer mon compte'}
             </button>
           </form>
         </div>

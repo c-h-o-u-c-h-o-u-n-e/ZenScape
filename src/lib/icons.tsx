@@ -4,6 +4,7 @@ export {
   Calendar,
   Clock,
   Search,
+  Palette,
   X,
   Archive,
   ChevronDown,

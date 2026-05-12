@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { X } from '../lib/icons';
 import { supabase } from '../lib/supabase';
 import { getEstDate } from '../lib/timezone';
 import { Task, Goal, TaskStatus, TaskPriority, RecurrenceType, RecurrenceRule } from '../types';
@@ -9,6 +8,8 @@ import DatePicker from './DatePicker';
 import TimePicker from './TimePicker';
 import LocationInput from './LocationInput';
 import { useErrorToast } from './ErrorToastProvider';
+import ModalCloseButton from './ModalCloseButton';
+import { X } from '../lib/icons';
 
 interface Props {
   task: Task | null;
@@ -24,9 +25,9 @@ interface Props {
 
 const PRIORITY_OPTIONS: DropdownOption[] = [
   { value: 'low', label: 'Faible' },
-  { value: 'medium', label: 'Moyen' },
-  { value: 'high', label: 'Élevé' },
-  { value: 'urgent', label: 'Urgent' },
+  { value: 'medium', label: 'Moyenne' },
+  { value: 'high', label: 'Élevée' },
+  { value: 'urgent', label: 'Urgente' },
 ];
 
 const UNIT_OPTIONS: DropdownOption[] = [
@@ -105,7 +106,9 @@ export default function TaskModal({ task, goals, columnLabels, defaultGoalId, de
         .not('location', 'is', null);
 
       if (locData) {
-        const unique = [...new Set(locData.map(t => t.location).filter(Boolean))].sort();
+        const unique = [...new Set(locData.map(t => t.location).filter(Boolean))].sort((a, b) =>
+          a.localeCompare(b, 'fr', { sensitivity: 'base' })
+        );
         setLocationSuggestions(unique);
       }
 
@@ -121,7 +124,7 @@ export default function TaskModal({ task, goals, columnLabels, defaultGoalId, de
             t.tags.forEach((tag: string) => allTagsSet.add(tag));
           }
         });
-        setAllTags(Array.from(allTagsSet).sort());
+        setAllTags(Array.from(allTagsSet).sort((a, b) => a.localeCompare(b, 'fr', { sensitivity: 'base' })));
       }
     }
     loadLocationsAndTags();
@@ -194,7 +197,7 @@ export default function TaskModal({ task, goals, columnLabels, defaultGoalId, de
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!goalId) { showError('Veuillez sélectionner un projet'); return; }
+    if (!goalId) { showError('Veuillez sélectionner une catégorie'); return; }
     setLoading(true);
 
     const tags = tagsInput.split(',').map(t => t.trim()).filter(Boolean);
@@ -272,8 +275,11 @@ export default function TaskModal({ task, goals, columnLabels, defaultGoalId, de
   }
 
   const goalOptions: DropdownOption[] = [
-    { value: '', label: 'Sélectionner un projet...' },
-    ...goals.filter(g => g.status !== 'archived').sort((a, b) => a.title.localeCompare(b.title)).map(g => ({ value: g.id, label: g.title })),
+    { value: '', label: 'Sélectionner une catégorie...' },
+    ...goals
+      .filter(g => g.status !== 'archived')
+      .sort((a, b) => a.title.localeCompare(b.title, 'fr', { sensitivity: 'base' }))
+      .map(g => ({ value: g.id, label: g.title })),
   ];
 
   const handleTagsInputChange = (value: string) => {
@@ -314,29 +320,29 @@ export default function TaskModal({ task, goals, columnLabels, defaultGoalId, de
     <div className="fixed inset-0 bg-ink-black/60 flex items-center justify-center z-[1000] p-4">
       <div
         className="retro-card w-full max-w-lg bg-paper flex flex-col"
-        style={{ boxShadow: '8px 8px 0 #1a1a1a', maxHeight: '92vh' }}
+        style={{ boxShadow: '8px 8px 0 color-mix(in srgb, color-mix(in srgb, var(--theme-primary-text) 60%, transparent) 60%, transparent)', maxHeight: '92vh' }}
       >
         <div className="flex items-center justify-between p-5 border-b-4 border-ink-black bg-ink-red text-paper shrink-0">
           <h2 className="font-display text-lg uppercase">{task ? 'Modifier la tâche' : 'Nouvelle tâche'}</h2>
-          <button onClick={onClose} className="hover:opacity-70 transition-opacity">
-            <X size={24} />
-          </button>
+          <ModalCloseButton onClose={onClose} className="text-paper" />
         </div>
 
-        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 flex flex-col gap-4">
+        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 flex flex-col gap-4" style={{ backgroundColor: 'var(--theme-surface)' }}>
 
           <div>
-            <label className="font-bold text-xs uppercase block mb-2 tracking-wide">Projet *</label>
-            <Dropdown value={goalId} onChange={setGoalId} options={goalOptions} placeholder="Sélectionner un projet..." />
+            <label className="font-bold text-xs uppercase block mb-2 tracking-wide">Catégorie *</label>
+            <Dropdown value={goalId} onChange={setGoalId} options={goalOptions} placeholder="Sélectionner une catégorie..." />
           </div>
 
           <div>
-            <label className="font-bold text-xs uppercase block mb-2 tracking-wide">Titre *</label>
+            <label htmlFor="task-title" className="font-bold text-xs uppercase block mb-2 tracking-wide">Titre *</label>
             <input
+              id="task-title"
+              name="title"
               type="text"
               value={title}
               onChange={e => setTitle(e.target.value)}
-              className="retro-input !bg-transparent"
+              className="retro-input"
               required
             />
           </div>
@@ -402,9 +408,11 @@ export default function TaskModal({ task, goals, columnLabels, defaultGoalId, de
           </div>
 
           <div className="relative">
-            <label className="font-bold text-xs uppercase block mb-2 tracking-wide">Tags (séparés par des virgules)</label>
+            <label htmlFor="task-tags" className="font-bold text-xs uppercase block mb-2 tracking-wide">Tags (séparés par des virgules)</label>
             <div className="relative">
               <input
+                id="task-tags"
+                name="tags"
                 type="text"
                 value={tagsInput}
                 onChange={e => handleTagsInputChange(e.target.value)}
@@ -423,7 +431,7 @@ export default function TaskModal({ task, goals, columnLabels, defaultGoalId, de
                   }
                 }}
                 onBlur={() => setTimeout(() => setShowTagSuggestions(false), 150)}
-                className="retro-input !bg-transparent w-full"
+                className="retro-input w-full"
               />
               {showTagSuggestions && tagSuggestions.length > 0 && (
                 <div className="absolute top-full left-0 right-0 mt-1 bg-paper border-2 border-ink-black z-10 max-h-32 overflow-y-auto">
@@ -449,6 +457,8 @@ export default function TaskModal({ task, goals, columnLabels, defaultGoalId, de
             <div className="flex items-center gap-2">
               <span className="text-sm font-bold shrink-0">Répéter tous les</span>
               <input
+                id="task-recurrence-interval"
+                name="recurrenceInterval"
                 type="number"
                 min="1"
                 max="9"
@@ -458,7 +468,7 @@ export default function TaskModal({ task, goals, columnLabels, defaultGoalId, de
                   if (v === '' || (parseInt(v) > 0 && parseInt(v) <= 9)) setRecurrenceIntervalInput(v);
                 }}
                 placeholder="—"
-                className="retro-input !bg-transparent w-12 text-center [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                className="retro-input w-12 text-center [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
               />
               <div
                 className="w-40 transition-opacity shrink-0"
@@ -486,11 +496,19 @@ export default function TaskModal({ task, goals, columnLabels, defaultGoalId, de
             </div>
           </div>
           <div className="flex gap-3 pt-2">
-            <button type="button" onClick={onClose} className="retro-btn flex-1 bg-transparent hover:bg-ink-black hover:text-paper transition-colors">
+            <button
+              type="button"
+              onClick={onClose}
+              className="retro-btn flex-1 py-3 bg-[var(--theme-background)] text-ink-black hover:bg-ink-red hover:text-paper transition-colors"
+            >
               Annuler
             </button>
-            <button type="submit" disabled={loading} className={`retro-btn flex-1 text-paper hover:bg-ink-red transition-colors ${task ? 'bg-ink-red' : 'bg-ink-black'}`}>
-              {loading ? 'Enregistrement...' : task ? 'Mettre à jour' : 'Déployer'}
+            <button
+              type="submit"
+              disabled={loading}
+              className="retro-btn flex-1 py-3 bg-[var(--theme-background)] text-ink-black hover:bg-ink-red hover:text-paper transition-colors"
+            >
+              {loading ? 'Enregistrement...' : 'Confirmer'}
             </button>
           </div>
 

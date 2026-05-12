@@ -25,19 +25,19 @@ export default function CompletedCard({
   return (
     <div
       className="border-2 border-ink-black flex flex-col h-full"
-      style={{ boxShadow: '4px 4px 0 #1a1a1a' }}
+      style={{ boxShadow: '4px 4px 0 color-mix(in srgb, color-mix(in srgb, var(--theme-primary-text) 60%, transparent) 60%, transparent)' }}
     >
       {/* Header */}
-      <div className="border-b-2 border-ink-black bg-ink-green px-4 py-3 h-[50px] flex items-center gap-2 shrink-0">
-        <Check size={16} />
-        <h3 className="font-display text-base uppercase text-ink-black">Terminé</h3>
-        <span className="ml-auto font-mono text-sm font-bold text-ink-black opacity-80 tabular-nums shrink-0">
+      <div className="border-b-2 border-ink-black bg-ink-red px-4 py-3 h-[50px] flex items-center gap-2 shrink-0">
+        <Check size={16} className="text-paper" />
+        <h3 className="font-display text-base uppercase text-paper">Terminé</h3>
+        <span className="ml-auto font-mono text-sm font-bold text-paper tabular-nums shrink-0">
           {completedTasks.length}
         </span>
       </div>
 
       {/* Content - Scrollable */}
-      <div className="flex-1 overflow-y-auto scrollbar-hide p-4 flex flex-col gap-3 min-h-0 bg-ink-green/60" style={{ scrollbarWidth: 'none' }}>
+      <div className="flex-1 overflow-y-auto scrollbar-hide p-4 flex flex-col min-h-0" style={{ scrollbarWidth: 'none', backgroundColor: 'var(--theme-surface)' }}>
         {completedTasks.length === 0 ? (
           <div className="flex items-center justify-center py-6 text-ink-black opacity-70">
             <p className="font-display text-sm text-center">Aucune tâche terminée</p>

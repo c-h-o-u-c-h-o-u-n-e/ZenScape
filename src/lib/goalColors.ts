@@ -3,46 +3,16 @@ export interface GoalColor {
   fg: string;
 }
 
-export const PALETTE: GoalColor[] = [
-  { bg: '#FF4D4D', fg: '#f4e8d1' },
-  { bg: '#CC0000', fg: '#f4e8d1' },
-  { bg: '#660000', fg: '#f4e8d1' },
-  { bg: '#FF944D', fg: '#1a1a1a' },
-  { bg: '#CC5200', fg: '#f4e8d1' },
-  { bg: '#663300', fg: '#f4e8d1' },
-  { bg: '#FFFF66', fg: '#1a1a1a' },
-  { bg: '#CCCC00', fg: '#1a1a1a' },
-  { bg: '#666600', fg: '#f4e8d1' },
-  { bg: '#B3FF66', fg: '#1a1a1a' },
-  { bg: '#66CC00', fg: '#1a1a1a' },
-  { bg: '#336600', fg: '#f4e8d1' },
-  { bg: '#66FF66', fg: '#1a1a1a' },
-  { bg: '#00CC00', fg: '#1a1a1a' },
-  { bg: '#006600', fg: '#f4e8d1' },
-  { bg: '#66FFB3', fg: '#1a1a1a' },
-  { bg: '#00CC66', fg: '#1a1a1a' },
-  { bg: '#006633', fg: '#f4e8d1' },
-  { bg: '#66FFFF', fg: '#1a1a1a' },
-  { bg: '#00CCCC', fg: '#1a1a1a' },
-  { bg: '#006666', fg: '#f4e8d1' },
-  { bg: '#66B3FF', fg: '#1a1a1a' },
-  { bg: '#0066CC', fg: '#f4e8d1' },
-  { bg: '#003366', fg: '#f4e8d1' },
-  { bg: '#6666FF', fg: '#f4e8d1' },
-  { bg: '#0000CC', fg: '#f4e8d1' },
-  { bg: '#000066', fg: '#f4e8d1' },
-  { bg: '#B366FF', fg: '#f4e8d1' },
-  { bg: '#6600CC', fg: '#f4e8d1' },
-  { bg: '#330066', fg: '#f4e8d1' },
-  { bg: '#FF66FF', fg: '#f4e8d1' },
-  { bg: '#CC00CC', fg: '#f4e8d1' },
-  { bg: '#660066', fg: '#f4e8d1' },
-  { bg: '#FF66B3', fg: '#f4e8d1' },
-  { bg: '#CC0066', fg: '#f4e8d1' },
-  { bg: '#660033', fg: '#f4e8d1' },
-];
-
 const NEUTRAL: GoalColor = { bg: '#ffffff', fg: '#1a1a1a' };
+const THEME_GOAL_COLOR_COUNT = 32;
+
+function resolveCssVarColor(color: string): string {
+  if (typeof window === 'undefined') return color;
+  const match = color.match(/^var\((--[^)]+)\)$/);
+  if (!match) return color;
+  const resolved = getComputedStyle(document.documentElement).getPropertyValue(match[1]).trim();
+  return resolved || color;
+}
 
 function hashString(s: string): number {
   let h = 0;
@@ -59,15 +29,24 @@ function luminance(hex: string): number {
 }
 
 export function fgForBg(bg: string): string {
-  try {
-    return luminance(bg) > 0.35 ? '#1a1a1a' : '#f4e8d1';
-  } catch {
-    return '#1a1a1a';
+  void bg;
+  // Palette des catégories volontairement claire: texte noir constant pour cohérence.
+  return '#1a1a1a';
+}
+
+export function getMenuBgFromCardColor(bg: string): string {
+  const resolved = resolveCssVarColor(bg);
+  if (!resolved.startsWith('#')) {
+    return 'color-mix(in srgb, var(--theme-background) 68%, white 32%)';
   }
+  // Fond de menu lié à la couleur de la carte, mais plus pâle / moins intense.
+  return `color-mix(in srgb, ${resolved} 58%, white 42%)`;
 }
 
 export function getGoalColor(goalId: string | null | undefined, goalColor?: string | null): GoalColor {
   if (goalColor) return { bg: goalColor, fg: fgForBg(goalColor) };
   if (!goalId) return NEUTRAL;
-  return PALETTE[hashString(goalId) % PALETTE.length];
+  const index = (hashString(goalId) % THEME_GOAL_COLOR_COUNT) + 1;
+  const bg = `var(--goal-color-${index})`;
+  return { bg, fg: fgForBg(bg) };
 }

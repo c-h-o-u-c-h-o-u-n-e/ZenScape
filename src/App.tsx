@@ -1,8 +1,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { User } from '@supabase/supabase-js';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Search, X, ChevronDown } from './lib/icons';
+import { Search } from './lib/icons';
 import { supabase } from './lib/supabase';
 import { getEstDate } from './lib/timezone';
 import { getNextRecurrenceDate } from './lib/recurrence';
@@ -25,6 +24,9 @@ import ArchivesModal from './components/ArchivesModal';
 import UserMenu from './components/UserMenu';
 import ProfileModal from './components/ProfileModal';
 import ConfirmModal from './components/ConfirmModal';
+import ThemeModal from './components/ThemeModal';
+import { DEFAULT_THEME, THEME_STORAGE_KEY, ThemeId, applyTheme } from './lib/themes';
+import { useUserPreferences } from './lib/userPreferences';
 
 type ConfirmState = {
   open: true;
@@ -52,8 +54,23 @@ export default function App() {
   const [taskModal, setTaskModal] = useState<{ open: boolean; task: Task | null; defaultStatus?: TaskStatus; defaultDate?: string; defaultGoalId?: string | null }>({ open: false, task: null });
   const [archivesModal, setArchivesModal] = useState<{ open: boolean; goal: Goal | null }>({ open: false, goal: null });
   const [profileModal, setProfileModal] = useState(false);
+  const [themeModal, setThemeModal] = useState(false);
+  const [theme, setTheme] = useState<ThemeId>(DEFAULT_THEME);
   const [confirmModal, setConfirmModal] = useState<ConfirmState>({ open: false });
-  const [filtersToastExpanded, setFiltersToastExpanded] = useState(false);
+  const [preferences] = useUserPreferences(user?.id);
+
+  useEffect(() => {
+    const storedTheme = localStorage.getItem(THEME_STORAGE_KEY) as ThemeId | null;
+    const initialTheme = storedTheme ?? DEFAULT_THEME;
+    setTheme(initialTheme);
+    applyTheme(initialTheme);
+  }, []);
+
+  function handleThemeChange(nextTheme: ThemeId) {
+    setTheme(nextTheme);
+    localStorage.setItem(THEME_STORAGE_KEY, nextTheme);
+    applyTheme(nextTheme);
+  }
 
   function confirm(opts: { title: string; message: string; confirmLabel?: string; danger?: boolean; onConfirm: () => void }) {
     setConfirmModal({
@@ -85,7 +102,16 @@ export default function App() {
       .from('goals')
       .select('*')
       .order('created_at', { ascending: true });
-    if (data) setGoals(data as Goal[]);
+    if (data) {
+      // Sort by position if it exists, otherwise keep created_at order
+      const sorted = data.sort((a, b) => {
+        if (a.position !== undefined && b.position !== undefined) {
+          return a.position - b.position;
+        }
+        return 0;
+      });
+      setGoals(sorted as Goal[]);
+    }
   }, [user]);
 
   const fetchTasks = useCallback(async () => {
@@ -111,8 +137,8 @@ export default function App() {
 
   function handleDeleteGoal(goalId: string) {
     confirm({
-      title: 'Supprimer le projet',
-      message: 'Cette action supprimera le projet et toutes ses tâches définitivement. Cette action est irréversible.',
+      title: 'Supprimer la catégorie',
+      message: 'Cette action supprimera la catégorie et toutes ses tâches définitivement. Cette action est irréversible.',
       confirmLabel: 'Supprimer',
       danger: true,
       onConfirm: async () => {
@@ -124,8 +150,8 @@ export default function App() {
 
   function handleArchiveGoal(goalId: string) {
     confirm({
-      title: 'Archiver le projet',
-      message: 'Le projet sera archivé et n\'apparaîtra plus dans la liste des projets actifs.',
+      title: 'Archiver la catégorie',
+      message: 'La catégorie sera archivée et n\'apparaîtra plus dans la liste des catégories actives.',
       confirmLabel: 'Archiver',
       danger: false,
       onConfirm: async () => {
@@ -137,8 +163,8 @@ export default function App() {
 
   function handleUnarchiveGoal(goalId: string) {
     confirm({
-      title: 'Désarchiver le projet',
-      message: 'Le projet sera restauré et réapparaîtra dans la liste des projets actifs.',
+      title: 'Désarchiver la catégorie',
+      message: 'La catégorie sera restaurée et réapparaîtra dans la liste des catégories actives.',
       confirmLabel: 'Désarchiver',
       danger: false,
       onConfirm: async () => {
@@ -208,93 +234,12 @@ export default function App() {
     fetchTasks();
   }
 
-  const activeFilterChips: { key: string; label: string; onRemove: () => void }[] = [];
-
-  if (filters.search.trim()) {
-    activeFilterChips.push({
-      key: 'search',
-      label: `Recherche: ${filters.search.trim()}`,
-      onRemove: () => setFilters({ ...filters, search: '' }),
-    });
-  }
-
-  if (filters.status) {
-    const statusLabel = columnLabels[filters.status] ?? filters.status;
-    activeFilterChips.push({
-      key: `status-${filters.status}`,
-      label: `Statut: ${statusLabel}`,
-      onRemove: () => setFilters({ ...filters, status: null }),
-    });
-  }
-
-  if (filters.priority?.length) {
-    const priorityLabels: Record<string, string> = {
-      low: 'Faible',
-      medium: 'Moyen',
-      high: 'Élevé',
-      urgent: 'Urgent',
-    };
-    for (const p of filters.priority) {
-      activeFilterChips.push({
-        key: `priority-${p}`,
-        label: `Priorité ${priorityLabels[p] ?? p}`,
-        onRemove: () => setFilters({ ...filters, priority: (filters.priority ?? []).filter(x => x !== p) || null }),
-      });
-    }
-  }
-
-  if (filters.goalIds?.length) {
-    for (const goalId of filters.goalIds) {
-      const goalName = goals.find(g => g.id === goalId)?.title ?? 'Projet';
-      activeFilterChips.push({
-        key: `goal-${goalId}`,
-        label: goalName,
-        onRemove: () => setFilters({ ...filters, goalIds: (filters.goalIds ?? []).filter(id => id !== goalId) }),
-      });
-    }
-  }
-
-  if (filters.tags?.length) {
-    for (const tag of filters.tags) {
-      activeFilterChips.push({
-        key: `tag-${tag}`,
-        label: tag,
-        onRemove: () => setFilters({ ...filters, tags: (filters.tags ?? []).filter(t => t !== tag) }),
-      });
-    }
-  }
-
-  if (filters.dateFrom) {
-    activeFilterChips.push({
-      key: 'date-from',
-      label: `Du: ${filters.dateFrom}`,
-      onRemove: () => setFilters({ ...filters, dateFrom: null }),
-    });
-  }
-
-  if (filters.dateTo) {
-    activeFilterChips.push({
-      key: 'date-to',
-      label: `Au: ${filters.dateTo}`,
-      onRemove: () => setFilters({ ...filters, dateTo: null }),
-    });
-  }
-
-  function getFilterChipClass(key: string): string {
-    if (key.startsWith('priority-')) return 'bg-ink-green text-paper';
-    if (key.startsWith('goal-')) return 'bg-ink-red text-paper';
-    if (key.startsWith('tag-')) return 'bg-ink-blue text-paper';
-    return 'bg-paper text-ink-black';
-  }
-
-  useEffect(() => {
-    if (activeFilterChips.length === 0) setFiltersToastExpanded(false);
-  }, [activeFilterChips.length]);
-
   const filteredTasks = tasks.filter(task => {
-    if (task.archived) return false;
+    const hasSearch = filters.search.trim().length > 0;
+    const includeArchivedInSearch = preferences.searchIncludeArchivedTasks && hasSearch;
+    if (task.archived && !includeArchivedInSearch) return false;
     if (filters.goalIds && filters.goalIds.length > 0 && !filters.goalIds.includes(task.goal_id)) return false;
-    if (filters.search.trim()) {
+    if (hasSearch) {
       const search = filters.search.trim().toLowerCase();
       const inTitle = task.title.toLowerCase().includes(search);
       const inLocation = task.location?.toLowerCase().includes(search) ?? false;
@@ -315,6 +260,45 @@ export default function App() {
     return true;
   });
 
+  // Variante dédiée au calendrier: on applique les mêmes filtres,
+  // mais on conserve les tâches archivées terminées pour qu'elles
+  // puissent aussi être filtrées (ex: priorité "moyenne").
+  const calendarFilteredAllTasks = tasks.filter(task => {
+    const hasSearch = filters.search.trim().length > 0;
+    const includeArchivedInSearch = preferences.searchIncludeArchivedTasks && hasSearch;
+    const keepArchivedDoneForCalendar = task.archived && task.status === 'done';
+    if (task.archived && !includeArchivedInSearch && !keepArchivedDoneForCalendar) return false;
+    if (filters.goalIds && filters.goalIds.length > 0 && !filters.goalIds.includes(task.goal_id)) return false;
+    if (hasSearch) {
+      const search = filters.search.trim().toLowerCase();
+      const inTitle = task.title.toLowerCase().includes(search);
+      const inLocation = task.location?.toLowerCase().includes(search) ?? false;
+      const inTags = task.tags.some(tag => tag.toLowerCase().includes(search));
+      if (!inTitle && !inLocation && !inTags) return false;
+    }
+    if (filters.status && task.status !== filters.status) return false;
+    if (filters.priority && !filters.priority.includes(task.priority)) return false;
+    if (filters.tags && !filters.tags.some(tag => task.tags.includes(tag))) return false;
+    if (filters.dateFrom && task.due_date) {
+      const taskDate = task.due_date.split('T')[0];
+      if (taskDate < filters.dateFrom) return false;
+    }
+    if (filters.dateTo && task.due_date) {
+      const taskDate = task.due_date.split('T')[0];
+      if (taskDate > filters.dateTo) return false;
+    }
+    return true;
+  });
+
+  const hasActiveTaskFilters =
+    (filters.goalIds?.length ?? 0) > 0 ||
+    filters.search.trim().length > 0 ||
+    filters.status !== null ||
+    (filters.priority?.length ?? 0) > 0 ||
+    (filters.tags?.length ?? 0) > 0 ||
+    filters.dateFrom !== null ||
+    filters.dateTo !== null;
+
   if (authLoading) {
     return (
       <div className="min-h-screen bg-paper flex items-center justify-center">
@@ -327,105 +311,9 @@ export default function App() {
 
   return (
     <div className="h-screen bg-paper p-5 flex flex-col" style={{ maxWidth: '100vw', overflowX: 'hidden', overflowY: 'hidden' }}>
-      <AnimatePresence>
-        {activeFilterChips.length > 0 && (
-          <motion.div
-            className="fixed top-0 left-0 right-0 z-[100] flex justify-center px-4"
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-          >
-            <div className="w-full max-w-[980px]">
-              <div className="border-l-2 border-r-2 border-b-2 border-ink-black bg-ink-yellow px-4 py-2" style={{ boxShadow: '4px 0 0 #1a1a1a, 4px 4px 0 #1a1a1a' }}>
-              <div className="flex items-center gap-3">
-                <p className="font-display text-xs text-ink-black flex-1">
-                  Des filtres ou étiquettes actifs masquent certaines tâches.
-                </p>
-                <button
-                  onClick={() => setFiltersToastExpanded(v => !v)}
-                  className="retro-btn h-[28px] w-[28px] p-0 inline-flex items-center justify-center bg-paper text-ink-black"
-                  title={filtersToastExpanded ? 'Réduire les filtres actifs' : 'Afficher les filtres actifs'}
-                >
-                  <motion.div
-                    animate={{ rotate: filtersToastExpanded ? 180 : 0 }}
-                    transition={{ duration: 0.3 }}
-                  >
-                    <ChevronDown size={14} />
-                  </motion.div>
-                </button>
-              </div>
-
-              <AnimatePresence>
-                {filtersToastExpanded && (
-                  <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: 'auto' }}
-                    exit={{ opacity: 0, height: 0 }}
-                    transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-                    className="overflow-hidden"
-                  >
-                    <div className="mt-2 pt-3 border-t-2 border-ink-black/70">
-                      <div className="flex flex-wrap items-center gap-2 mb-4">
-                        <span className="text-[10px] font-bold uppercase tracking-wide text-ink-black">Légende :</span>
-                        <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase px-2 py-0.5 border-2 border-ink-black bg-ink-green text-paper" style={{ boxShadow: '2px 2px 0 #1a1a1a' }}>
-                          Priorité
-                        </span>
-                        <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase px-2 py-0.5 border-2 border-ink-black bg-ink-red text-paper" style={{ boxShadow: '2px 2px 0 #1a1a1a' }}>
-                          Projet
-                        </span>
-                        <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase px-2 py-0.5 border-2 border-ink-black bg-ink-blue text-paper" style={{ boxShadow: '2px 2px 0 #1a1a1a' }}>
-                          Tag
-                        </span>
-                      </div>
-
-                      <motion.div className="flex flex-wrap gap-2 pb-2" layout>
-                        {activeFilterChips.map((chip, index) => (
-                          <motion.button
-                            key={chip.key}
-                            onClick={chip.onRemove}
-                            className={`h-[30px] px-2.5 py-0 text-xs font-bold inline-flex items-center gap-2 border-2 border-ink-black ${getFilterChipClass(chip.key)}`}
-                            title="Retirer ce filtre"
-                            style={{ boxShadow: '3px 3px 0 #1a1a1a' }}
-                            initial={{ opacity: 0, scale: 0.8 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            exit={{ opacity: 0, scale: 0.8 }}
-                            transition={{ delay: index * 0.05 }}
-                            whileTap={{ scale: 0.95 }}
-                          >
-                            <span>{chip.label}</span>
-                            <X size={12} />
-                          </motion.button>
-                        ))}
-                      </motion.div>
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
       {/* HEADER */}
-      <header className="flex items-center justify-between border-b-[5px] border-ink-black pb-5 mb-6 flex-shrink-0">
-        <div>
-          <img
-            src="/images/logo.png"
-            alt="Goal-O-Matic"
-            className="h-14 object-contain"
-          />
-        </div>
-
-        <div className="flex items-center gap-4">
-          <UserMenu user={user} onProfileClick={() => setProfileModal(true)} />
-        </div>
-      </header>
-
-      {/* VIEW SWITCHER + FILTERS + NEW TASK */}
-      <div className="flex items-center mb-5 gap-3 flex-wrap flex-shrink-0">
-        <div className="flex gap-3 shrink-0">
+      <header className="grid grid-cols-[1fr_auto_1fr] items-center border-b-[5px] border-ink-black pb-5 mb-6 flex-shrink-0 gap-4">
+        <div className="flex items-center gap-3 justify-self-start">
           <button
             onClick={() => setView('daily')}
             className={`retro-btn flex items-center gap-2 text-sm ${view === 'daily' ? 'bg-ink-red text-paper' : 'bg-ink-black/15'}`}
@@ -446,57 +334,70 @@ export default function App() {
           </button>
         </div>
 
-        <div className="flex-1 min-w-0">
-          <FilterBar filters={filters} goals={goals} tasks={tasks} columnLabels={columnLabels} onChange={setFilters} />
-        </div>
-
-        <div className="search-field relative w-full max-w-[320px] min-w-[220px] shrink-0">
-          <Search size={14} className="search-icon absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-          <input
-            type="text"
-            value={filters.search}
-            onChange={e => setFilters({ ...filters, search: e.target.value })}
-            placeholder="Rechercher une tâche..."
-            className="search-input h-[36px] w-full pl-9 pr-3 py-0 text-sm border-2 border-ink-black bg-ink-black/15 placeholder:text-ink-black/70 focus:outline-none"
-            style={{ boxShadow: '2px 2px 0 #1a1a1a' }}
+        <div className="justify-self-center">
+          <img
+            src="/images/logo.png"
+            alt="Goal-O-Matic"
+            className="h-14 object-contain"
           />
         </div>
 
-        <button
-          onClick={() => setTaskModal({ open: true, task: null })}
-          className="retro-btn bg-ink-red text-paper text-sm flex items-center gap-2 shrink-0"
-        >
-          Nouvelle tâche
-        </button>
-      </div>
+        <div className="flex items-center gap-4 justify-self-end pr-[100px]">
+          <div className="search-field relative w-full max-w-[320px] min-w-[220px] shrink-0">
+            <Search size={14} className="search-icon absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+            <input
+              id="task-search"
+              name="search"
+              type="text"
+              value={filters.search}
+              onChange={e => setFilters({ ...filters, search: e.target.value })}
+              placeholder="Rechercher une tâche..."
+              className="search-input h-[36px] w-full pl-9 pr-3 py-0 text-sm border-2 border-ink-black bg-ink-black/15 placeholder:text-ink-black/70 focus:outline-none"
+              style={{ boxShadow: '2px 2px 0 color-mix(in srgb, color-mix(in srgb, var(--theme-primary-text) 60%, transparent) 60%, transparent)' }}
+              autoComplete="off"
+            />
+          </div>
+          <UserMenu user={user} onProfileClick={() => setProfileModal(true)} onThemeClick={() => setThemeModal(true)} />
+        </div>
+      </header>
 
       {/* MAIN LAYOUT */}
-      <div className="flex gap-6 flex-1 min-h-0 pb-2">
+      <div className="flex gap-6 flex-1 min-h-0">
         {/* SIDEBAR */}
-        <div className="w-72 shrink-0 min-h-0 pr-1.5">
-          <GoalsSidebar
-            goals={goals}
-            tasks={tasks}
-            selectedGoalIds={filters.goalIds ?? []}
-            onToggleGoalFilter={(goalId) => {
-              const current = filters.goalIds ?? [];
-              const next = current.includes(goalId)
-                ? current.filter(id => id !== goalId)
-                : [...current, goalId];
-              setFilters({ ...filters, goalIds: next });
-            }}
-            onNewGoal={() => setGoalModal({ open: true, goal: null })}
-            onCreateTaskForGoal={(goalId) => setTaskModal({ open: true, task: null, defaultGoalId: goalId, defaultStatus: 'todo' })}
-            onEditGoal={goal => setGoalModal({ open: true, goal })}
-            onDeleteGoal={handleDeleteGoal}
-            onArchiveGoal={handleArchiveGoal}
-            onUnarchiveGoal={handleUnarchiveGoal}
-            onViewArchives={goal => setArchivesModal({ open: true, goal })}
-          />
+        <div className="w-72 shrink-0 min-h-0 flex flex-col">
+          <button
+            onClick={() => setTaskModal({ open: true, task: null })}
+            className="retro-btn bg-ink-red text-paper text-base h-14 flex items-center justify-center gap-2 shrink-0 mb-3"
+          >
+            Nouvelle tâche
+          </button>
+
+          <div className="flex-1 min-h-0">
+            <GoalsSidebar
+              goals={goals}
+              tasks={tasks}
+              selectedGoalIds={filters.goalIds ?? []}
+              onToggleGoalFilter={(goalId) => {
+                const current = filters.goalIds ?? [];
+                const next = current.includes(goalId)
+                  ? current.filter(id => id !== goalId)
+                  : [...current, goalId];
+                setFilters({ ...filters, goalIds: next });
+              }}
+              onNewGoal={() => setGoalModal({ open: true, goal: null })}
+              onCreateTaskForGoal={(goalId) => setTaskModal({ open: true, task: null, defaultGoalId: goalId, defaultStatus: 'todo' })}
+              onEditGoal={goal => setGoalModal({ open: true, goal })}
+              onDeleteGoal={handleDeleteGoal}
+              onArchiveGoal={handleArchiveGoal}
+              onUnarchiveGoal={handleUnarchiveGoal}
+              onViewArchives={goal => setArchivesModal({ open: true, goal })}
+              onRefresh={fetchGoals}
+            />
+          </div>
         </div>
 
         {/* CONTENT */}
-        <div className="flex-1 min-w-0 min-h-0 flex flex-col pr-1.5">
+        <div className="flex-1 min-w-0 min-h-0 flex flex-col gap-4">
           {view === 'daily' ? (
             <DailyView
               tasks={tasks}
@@ -537,13 +438,23 @@ export default function App() {
           ) : (
             <CalendarView
               tasks={filteredTasks}
-              allTasks={tasks}
+              allTasks={hasActiveTaskFilters ? calendarFilteredAllTasks : tasks}
               goals={goals}
               onEditTask={task => setTaskModal({ open: true, task })}
               onNewTask={date => setTaskModal({ open: true, task: null, defaultDate: date })}
               onChangeTaskStatus={handleChangeTaskStatus}
             />
           )}
+
+          <div
+            className="shrink-0 border-2 border-ink-black px-4 py-2.5"
+            style={{
+              backgroundColor: 'var(--theme-surface)',
+              boxShadow: '4px 4px 0 color-mix(in srgb, color-mix(in srgb, var(--theme-primary-text) 60%, transparent) 60%, transparent)'
+            }}
+          >
+            <FilterBar filters={filters} tasks={tasks} onChange={setFilters} />
+          </div>
         </div>
       </div>
 
@@ -574,7 +485,21 @@ export default function App() {
       {archivesModal.open && archivesModal.goal && (
         <ArchivesModal
           goal={archivesModal.goal}
-          archivedTasks={tasks.filter(t => t.goal_id === archivesModal.goal!.id && t.archived)}
+          archivedTasks={tasks.filter(t => {
+            if (t.goal_id !== archivesModal.goal!.id || !t.archived) return false;
+            if (!preferences.archiveModalApplyTagFilters) return true;
+            const matchesTags = !filters.tags || filters.tags.length === 0
+              ? true
+              : filters.tags.some(tag => t.tags.includes(tag));
+            const matchesPriority = !filters.priority || filters.priority.length === 0
+              ? true
+              : filters.priority.includes(t.priority);
+            return matchesTags && matchesPriority;
+          })}
+          hasActiveArchiveFilters={
+            preferences.archiveModalApplyTagFilters
+            && ((filters.tags?.length ?? 0) > 0 || (filters.priority?.length ?? 0) > 0)
+          }
           onEdit={(task) => {
             setArchivesModal({ open: false, goal: null });
             setTaskModal({ open: true, task });
@@ -592,6 +517,13 @@ export default function App() {
       {profileModal && (
         <ProfileModal user={user} onClose={() => setProfileModal(false)} />
       )}
+
+      <ThemeModal
+        open={themeModal}
+        selectedTheme={theme}
+        onSelectTheme={handleThemeChange}
+        onClose={() => setThemeModal(false)}
+      />
 
       {confirmModal.open && (
         <ConfirmModal

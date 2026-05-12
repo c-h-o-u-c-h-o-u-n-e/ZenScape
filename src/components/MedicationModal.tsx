@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { X } from '../lib/icons';
 import { supabase } from '../lib/supabase';
 import { getEstDate, getEstDateString } from '../lib/timezone';
 import { Medication, RecurrenceType, RecurrenceRule } from '../types';
@@ -7,6 +6,7 @@ import Dropdown, { DropdownOption } from './Dropdown';
 import DatePicker from './DatePicker';
 import Checkbox from './Checkbox';
 import { useErrorToast } from './ErrorToastProvider';
+import ModalCloseButton from './ModalCloseButton';
 
 interface Props {
   medication: Medication | null;
@@ -219,23 +219,23 @@ export default function MedicationModal({ medication, userId, defaultStartDate, 
     <div className="fixed inset-0 bg-ink-black/60 flex items-center justify-center z-[1000] p-4">
       <div
         className="retro-card w-full max-w-lg bg-paper flex flex-col"
-        style={{ boxShadow: '8px 8px 0 #1a1a1a', maxHeight: '92vh' }}
+        style={{ boxShadow: '8px 8px 0 color-mix(in srgb, color-mix(in srgb, var(--theme-primary-text) 60%, transparent) 60%, transparent)', maxHeight: '92vh' }}
       >
-        <div className="flex items-center justify-between p-5 border-b-4 border-ink-black bg-ink-yellow text-ink-black shrink-0">
+        <div className="flex items-center justify-between p-5 border-b-4 border-ink-black bg-ink-red text-paper shrink-0">
           <h2 className="font-display text-lg uppercase">{medication ? 'Modifier la prescription' : 'Nouvelle prescription'}</h2>
-          <button onClick={onClose} className="hover:opacity-70 transition-opacity">
-            <X size={24} />
-          </button>
+          <ModalCloseButton onClose={onClose} className="text-paper" />
         </div>
 
-        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 flex flex-col gap-4">
+        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 flex flex-col gap-4" style={{ backgroundColor: 'var(--theme-surface)' }}>
           <div>
-            <label className="font-bold text-xs uppercase block mb-2 tracking-wide">Nom du médicament *</label>
+            <label htmlFor="medication-name" className="font-bold text-xs uppercase block mb-2 tracking-wide">Nom du médicament *</label>
             <input
+              id="medication-name"
+              name="name"
               type="text"
               value={name}
               onChange={e => setName(e.target.value)}
-              className="retro-input !bg-transparent"
+              className="retro-input"
               required
             />
           </div>
@@ -250,12 +250,14 @@ export default function MedicationModal({ medication, userId, defaultStartDate, 
               />
             </div>
             <div>
-              <label className="font-bold text-xs uppercase block mb-2 tracking-wide">DOSAGE *</label>
+              <label htmlFor="medication-dosage" className="font-bold text-xs uppercase block mb-2 tracking-wide">DOSAGE *</label>
               <input
+                id="medication-dosage"
+                name="dosage"
                 type="text"
                 value={dosage}
                 onChange={e => setDosage(e.target.value)}
-                className="retro-input !bg-transparent"
+                className="retro-input"
                 required
               />
             </div>
@@ -277,11 +279,13 @@ export default function MedicationModal({ medication, userId, defaultStartDate, 
           </div>
 
           <div>
-            <label className="font-bold text-xs uppercase block mb-2 tracking-wide">Notes</label>
+            <label htmlFor="medication-notes" className="font-bold text-xs uppercase block mb-2 tracking-wide">Notes</label>
             <textarea
+              id="medication-notes"
+              name="notes"
               value={notes}
               onChange={e => setNotes(e.target.value)}
-              className="retro-input !bg-transparent resize-none overflow-y-auto scrollbar-hide"
+              className="retro-input resize-none overflow-y-auto scrollbar-hide"
               style={{ scrollbarWidth: 'none' }}
               rows={4}
             />
@@ -301,6 +305,8 @@ export default function MedicationModal({ medication, userId, defaultStartDate, 
             <div className="flex items-center gap-2">
               <span className="text-sm font-bold shrink-0">Prendre</span>
               <input
+                id="medication-recurrence-times"
+                name="recurrenceTimes"
                 type="text"
                 value={recurrenceTimesInput}
                 onChange={e => {
@@ -308,10 +314,12 @@ export default function MedicationModal({ medication, userId, defaultStartDate, 
                   if (v === '' || /^[0-9½⅓⅔¼¾⅛⅜⅝⅞/]+$/.test(v)) setRecurrenceTimesInput(v);
                 }}
                 placeholder="—"
-                className="retro-input !bg-transparent w-[40px] text-center"
+                className="retro-input w-[40px] text-center"
               />
               <span className="text-sm font-bold shrink-0">fois tous les</span>
               <input
+                id="medication-recurrence-interval"
+                name="recurrenceInterval"
                 type="number"
                 min="1"
                 max="999"
@@ -321,7 +329,7 @@ export default function MedicationModal({ medication, userId, defaultStartDate, 
                   if (v === '' || (parseInt(v) > 0 && parseInt(v) <= 999)) setRecurrenceIntervalInput(v);
                 }}
                 placeholder="—"
-                className="retro-input !bg-transparent w-[46px] text-center [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                className="retro-input w-[46px] text-center [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
               />
               <div
                 className="flex-1 transition-opacity"
@@ -348,9 +356,19 @@ export default function MedicationModal({ medication, userId, defaultStartDate, 
             </div>
           </div>
           <div className="flex gap-3 pt-2">
-            <button type="button" onClick={onClose} className="retro-btn flex-1 bg-transparent hover:bg-ink-black hover:text-paper transition-colors">Annuler</button>
-            <button type="submit" disabled={loading} className={`retro-btn flex-1 text-paper hover:bg-ink-red transition-colors ${medication ? 'bg-ink-red' : 'bg-ink-black'}`}>
-              {loading ? 'Enregistrement...' : medication ? 'Mettre à jour' : 'Créer'}
+            <button
+              type="button"
+              onClick={onClose}
+              className="retro-btn flex-1 py-3 bg-[var(--theme-background)] text-ink-black hover:bg-ink-red hover:text-paper transition-colors"
+            >
+              Annuler
+            </button>
+            <button
+              type="submit"
+              disabled={loading}
+              className="retro-btn flex-1 py-3 bg-[var(--theme-background)] text-ink-black hover:bg-ink-red hover:text-paper transition-colors"
+            >
+              {loading ? 'Enregistrement...' : medication ? 'Mettre à jour' : 'Comfirmer'}
             </button>
           </div>
         </form>

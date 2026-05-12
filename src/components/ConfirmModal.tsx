@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { X } from '../lib/icons';
+import ModalCloseButton from './ModalCloseButton';
 
 interface Props {
   title: string;
@@ -28,22 +28,20 @@ export default function ConfirmModal({ title, message, confirmLabel = 'Confirmer
       className="fixed inset-0 bg-ink-black/60 flex items-center justify-center z-[10000] p-4"
       onMouseDown={e => { if (e.target === e.currentTarget) onCancel(); }}
     >
-      <div className="retro-card w-full max-w-md bg-paper" style={{ boxShadow: '8px 8px 0 #1a1a1a' }}>
-        <div className={`flex items-center justify-between p-5 border-b-4 border-ink-black ${danger ? 'bg-ink-red' : 'bg-ink-blue'} text-paper`}>
+      <div className="retro-card w-full max-w-md bg-paper" style={{ boxShadow: '8px 8px 0 color-mix(in srgb, color-mix(in srgb, var(--theme-primary-text) 60%, transparent) 60%, transparent)' }}>
+        <div className="flex items-center justify-between p-5 border-b-4 border-ink-black bg-ink-red text-paper">
           <h2 className="font-display text-lg uppercase">{title}</h2>
-          <button onClick={onCancel} className="hover:opacity-70 transition-opacity">
-            <X size={24} />
-          </button>
+          <ModalCloseButton onClose={onCancel} className="text-paper" />
         </div>
 
-        <div className="p-6 flex flex-col gap-6">
+        <div className="p-6 flex flex-col gap-6" style={{ backgroundColor: 'var(--theme-surface)' }}>
           <p className="text-sm text-ink-black leading-relaxed">{message}</p>
 
           <div className="flex gap-3 justify-end">
             <button
               type="button"
               onClick={onCancel}
-              className="retro-btn bg-paper text-ink-black text-sm"
+              className="retro-btn bg-transparent text-ink-black text-sm hover:bg-ink-red hover:text-paper transition-colors"
             >
               Annuler
             </button>
@@ -51,7 +49,7 @@ export default function ConfirmModal({ title, message, confirmLabel = 'Confirmer
               ref={confirmRef}
               type="button"
               onClick={onConfirm}
-              className={`retro-btn text-paper text-sm ${danger ? 'bg-ink-red' : 'bg-ink-blue'}`}
+              className={`retro-btn bg-transparent text-sm transition-colors ${danger ? 'text-ink-red hover:bg-ink-red hover:text-paper' : 'text-ink-black hover:bg-ink-red hover:text-paper'}`}
             >
               {confirmLabel}
             </button>

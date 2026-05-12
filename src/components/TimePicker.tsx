@@ -1,4 +1,5 @@
 import Dropdown, { DropdownOption } from './Dropdown';
+import { useUserPreferences } from '../lib/userPreferences';
 
 interface TimePickerProps {
   value: string; // Format: "HH:MM"
@@ -7,11 +8,24 @@ interface TimePickerProps {
 }
 
 export default function TimePicker({ value, onChange, placeholder = '--:--' }: TimePickerProps) {
+  const [preferences] = useUserPreferences();
   const [hour, minute] = value ? value.split(':') : ['', ''];
 
-  const hours = Array.from({ length: 24 }, (_, i) => {
+  const is12h = preferences.timeFormat === '12h';
+
+  const hours24 = Array.from({ length: 24 }, (_, i) => {
     const h = String(i).padStart(2, '0');
     return { value: h, label: String(i) };
+  });
+
+  const hours12 = Array.from({ length: 24 }, (_, i) => {
+    const h24 = i;
+    const suffix = h24 >= 12 ? 'PM' : 'AM';
+    const h12 = h24 % 12 || 12;
+    return {
+      value: String(h24).padStart(2, '0'),
+      label: `${h12} ${suffix}`,
+    };
   });
 
   const minutes = Array.from({ length: 12 }, (_, i) => {
@@ -25,7 +39,7 @@ export default function TimePicker({ value, onChange, placeholder = '--:--' }: T
   }
 
   function handleMinuteChange(newMinute: string) {
-    const newHour = hour || '00';
+    const newHour = hour || (is12h ? '12' : '00');
     onChange(`${newHour}:${newMinute}`);
   }
 
@@ -35,7 +49,7 @@ export default function TimePicker({ value, onChange, placeholder = '--:--' }: T
         <Dropdown
           value={hour}
           onChange={handleHourChange}
-          options={hours}
+          options={is12h ? hours12 : hours24}
           placeholder="HH"
         />
       </div>

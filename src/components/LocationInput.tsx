@@ -35,6 +35,8 @@ export default function LocationInput({ value, onChange, suggestions }: Props) {
     <div ref={ref} className="relative">
       <div className="relative">
         <input
+          id="location-input"
+          name="location"
           type="text"
           value={value}
           onChange={e => {
@@ -42,8 +44,9 @@ export default function LocationInput({ value, onChange, suggestions }: Props) {
             if (e.target.value) setOpen(true);
           }}
           onFocus={() => value && setOpen(true)}
-          className="retro-input !bg-transparent w-full"
+          className="retro-input w-full"
           placeholder="Entrer un emplacement..."
+          autoComplete="off"
         />
         {filtered.length > 0 && (
           <ChevronDown
@@ -56,14 +59,15 @@ export default function LocationInput({ value, onChange, suggestions }: Props) {
       {open && filtered.length > 0 && (
         <div
           className="absolute z-[200] top-full left-0 right-0 mt-2 bg-paper border-2 border-ink-black overflow-y-auto"
-          style={{ boxShadow: '4px 4px 0 #1a1a1a', maxHeight: '200px', scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+          style={{ boxShadow: '4px 4px 0 color-mix(in srgb, color-mix(in srgb, var(--theme-primary-text) 60%, transparent) 60%, transparent)', maxHeight: '200px', scrollbarWidth: 'none', msOverflowStyle: 'none' }}
         >
           {filtered.map(suggestion => (
             <button
               key={suggestion}
               type="button"
               onClick={() => handleSelect(suggestion)}
-              className="w-full text-left px-3 py-2.5 font-mono text-xs transition-colors duration-75 border-b border-ink-black/10 last:border-b-0 hover:bg-ink-black/8"
+              className="w-full text-left px-3 py-2.5 font-mono text-xs transition-colors duration-75 border-b last:border-b-0 hover:bg-ink-black/8"
+              style={{ borderColor: 'color-mix(in srgb, var(--theme-primary-text) 70%, transparent)' }}
             >
               {suggestion}
             </button>

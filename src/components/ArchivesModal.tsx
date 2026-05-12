@@ -1,8 +1,9 @@
 import { useState, useRef, useEffect } from 'react';
-import { X, Archive, ChevronDown, MoreVertical, Pen, FolderUp, Trash } from '../lib/icons';
+import { Archive, ChevronDown, MoreVertical, Pen, FolderUp, Trash } from '../lib/icons';
 import { Task, Goal, TaskPriority } from '../types';
 import { getGoalColor } from '../lib/goalColors';
 import { createPortal } from 'react-dom';
+import ModalCloseButton from './ModalCloseButton';
 
 function formatCompletedAt(dateStr: string) {
   const date = new Date(dateStr);
@@ -39,6 +40,7 @@ function getCalendarDate(task: Task): { date: string; recurring: boolean } | nul
 interface Props {
   goal: Goal;
   archivedTasks: Task[];
+  hasActiveArchiveFilters?: boolean;
   onEdit: (task: Task) => void;
   onUnarchive: (taskId: string) => void;
   onDelete: (taskId: string) => void;
@@ -46,10 +48,17 @@ interface Props {
 }
 
 const PRIORITY_STYLES: Record<TaskPriority, string> = {
-  low: 'bg-ink-green text-paper',
-  medium: 'bg-ink-blue text-paper',
-  high: 'bg-ink-orange text-ink-black',
-  urgent: 'bg-ink-red text-paper',
+  low: '',
+  medium: '',
+  high: '',
+  urgent: '',
+};
+
+const PRIORITY_BG_COLORS: Record<TaskPriority, string> = {
+  low: 'var(--priority-low-bg)',
+  medium: 'var(--priority-medium-bg)',
+  high: 'var(--priority-high-bg)',
+  urgent: 'var(--priority-urgent-bg)',
 };
 
 const PRIORITY_LABELS: Record<TaskPriority, string> = {
@@ -63,7 +72,7 @@ const PRIORITY_LABELS: Record<TaskPriority, string> = {
 type SortOrder = 'newest' | 'oldest' | 'name';
 type TimeRange = 'all' | 'week' | 'month' | 'year';
 
-export default function ArchivesModal({ goal, archivedTasks, onEdit, onUnarchive, onDelete, onClose }: Props) {
+export default function ArchivesModal({ goal, archivedTasks, hasActiveArchiveFilters = false, onEdit, onUnarchive, onDelete, onClose }: Props) {
   const [sortOrder, setSortOrder] = useState<SortOrder>('newest');
   const [timeRange, setTimeRange] = useState<TimeRange>('all');
   const [sortOpen, setSortOpen] = useState(false);
@@ -125,7 +134,7 @@ export default function ArchivesModal({ goal, archivedTasks, onEdit, onUnarchive
       });
     }
     if (sortOrder === 'name') {
-      return sorted.sort((a, b) => a.title.localeCompare(b.title));
+      return sorted.sort((a, b) => a.title.localeCompare(b.title, 'fr', { sensitivity: 'base' }));
     }
     return sorted;
   };
@@ -137,7 +146,7 @@ export default function ArchivesModal({ goal, archivedTasks, onEdit, onUnarchive
     <div className="fixed inset-0 bg-ink-black/70 flex items-center justify-center z-[1000] p-4">
       <div
         className="w-full max-w-2xl bg-paper border-2 border-ink-black flex flex-col"
-        style={{ boxShadow: '8px 8px 0 #1a1a1a', maxHeight: '85vh' }}
+        style={{ boxShadow: '8px 8px 0 color-mix(in srgb, color-mix(in srgb, var(--theme-primary-text) 60%, transparent) 60%, transparent)', maxHeight: '85vh' }}
       >
         {/* Header */}
         <div
@@ -150,20 +159,18 @@ export default function ArchivesModal({ goal, archivedTasks, onEdit, onUnarchive
               <h2 className="font-display text-lg uppercase leading-tight">{goal.title}</h2>
             </div>
           </div>
-          <button onClick={onClose} className="hover:opacity-60 transition-opacity p-1">
-            <X size={22} />
-          </button>
+          <ModalCloseButton onClose={onClose} size={22} className="p-1" />
         </div>
 
         {/* Filters */}
-        <div ref={dropdownRef} className="px-5 py-3 border-b-2 border-ink-black/20 flex gap-4 flex-wrap justify-end items-center shrink-0">
+        <div ref={dropdownRef} className="px-5 py-3 border-b-2 border-ink-black flex gap-4 flex-wrap justify-end items-center shrink-0" style={{ backgroundColor: 'var(--theme-surface)' }}>
           <span className="text-xs font-bold">Affichage :</span>
           {/* Sort Dropdown */}
           <div className="relative">
             <button
               onClick={() => { setSortOpen(!sortOpen); setTimeOpen(false); }}
               className="bg-paper text-ink-black text-xs font-bold flex items-center justify-between gap-1 border-2 border-ink-black normal-case"
-              style={{ boxShadow: '2px 2px 0 #1a1a1a', width: '210px', padding: '6px 12px' }}
+              style={{ boxShadow: '2px 2px 0 color-mix(in srgb, color-mix(in srgb, var(--theme-primary-text) 60%, transparent) 60%, transparent)', width: '210px', padding: '6px 12px' }}
             >
               <span>{sortOrder === 'newest' && "Plus récentes d'abord"}
               {sortOrder === 'oldest' && "Plus anciennes d'abord"}
@@ -175,7 +182,7 @@ export default function ArchivesModal({ goal, archivedTasks, onEdit, onUnarchive
             {sortOpen && (
               <div
                 className="absolute top-full left-0 mt-2 w-[210px] border-2 border-ink-black bg-paper z-50"
-                style={{ boxShadow: '3px 3px 0 #1a1a1a' }}
+                style={{ boxShadow: '3px 3px 0 color-mix(in srgb, color-mix(in srgb, var(--theme-primary-text) 60%, transparent) 60%, transparent)' }}
               >
                 <button
                   onClick={() => { setSortOrder('name'); setSortOpen(false); }}
@@ -204,7 +211,7 @@ export default function ArchivesModal({ goal, archivedTasks, onEdit, onUnarchive
             <button
               onClick={() => { setTimeOpen(!timeOpen); setSortOpen(false); }}
               className="bg-paper text-ink-black text-xs font-bold flex items-center justify-between gap-1 border-2 border-ink-black normal-case"
-              style={{ boxShadow: '2px 2px 0 #1a1a1a', width: '192px', padding: '6px 12px' }}
+              style={{ boxShadow: '2px 2px 0 color-mix(in srgb, color-mix(in srgb, var(--theme-primary-text) 60%, transparent) 60%, transparent)', width: '192px', padding: '6px 12px' }}
             >
               <span>{timeRange === 'all' && 'Toutes les archives'}
               {timeRange === 'week' && 'La dernière semaine'}
@@ -217,7 +224,7 @@ export default function ArchivesModal({ goal, archivedTasks, onEdit, onUnarchive
             {timeOpen && (
               <div
                 className="absolute top-full left-0 mt-2 w-[192px] border-2 border-ink-black bg-paper z-50"
-                style={{ boxShadow: '3px 3px 0 #1a1a1a' }}
+                style={{ boxShadow: '3px 3px 0 color-mix(in srgb, color-mix(in srgb, var(--theme-primary-text) 60%, transparent) 60%, transparent)' }}
               >
                 <button
                   onClick={() => { setTimeRange('all'); setTimeOpen(false); }}
@@ -249,11 +256,15 @@ export default function ArchivesModal({ goal, archivedTasks, onEdit, onUnarchive
         </div>
 
         {/* Body */}
-        <div ref={bodyRef} className="flex-1 overflow-y-auto scrollbar-hide p-5" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+        <div ref={bodyRef} className="flex-1 overflow-y-auto scrollbar-hide p-5" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', backgroundColor: 'var(--theme-surface)' }}>
           {filteredAndSorted.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-16 gap-3 opacity-40">
               <Archive size={40} />
-              <p className="font-mono text-sm tracking-wide">Aucune tâche archivée pour ce projet</p>
+              <p className="font-mono text-sm tracking-wide">
+                {hasActiveArchiveFilters
+                  ? 'Des filtres ou tags actifs limitent les tâches visibles.'
+                  : 'Aucune tâche archivée pour cette catégorie'}
+              </p>
             </div>
           ) : (
             <div className="flex flex-col gap-3">
@@ -263,7 +274,7 @@ export default function ArchivesModal({ goal, archivedTasks, onEdit, onUnarchive
                   <div
                     key={task.id}
                     className="relative border-2 border-ink-black p-4 flex items-start justify-between gap-4"
-                    style={{ boxShadow: '3px 3px 0 #1a1a1a', backgroundColor: color.bg, color: color.fg, opacity: 0.75 }}
+                    style={{ boxShadow: '3px 3px 0 color-mix(in srgb, color-mix(in srgb, var(--theme-primary-text) 60%, transparent) 60%, transparent)', backgroundColor: color.bg, color: color.fg, opacity: 0.75 }}
                   >
                     <div className="flex-1 min-w-0 pr-8">
                       <p className="font-mono font-bold text-sm leading-tight">{task.title}</p>
@@ -276,7 +287,7 @@ export default function ArchivesModal({ goal, archivedTasks, onEdit, onUnarchive
                       <div className="flex items-center gap-2 flex-wrap mt-2">
                         <span
                           className={`text-[10px] font-bold uppercase px-1.5 py-0.5 ${PRIORITY_STYLES[task.priority]}`}
-                          style={{ border: '2px solid #1a1a1a', boxShadow: '2px 2px 0 #1a1a1a' }}
+                          style={{ backgroundColor: PRIORITY_BG_COLORS[task.priority], color: '#1a1a1a', border: '2px solid #1a1a1a', boxShadow: '2px 2px 0 color-mix(in srgb, color-mix(in srgb, var(--theme-primary-text) 60%, transparent) 60%, transparent)' }}
                         >
                           {PRIORITY_LABELS[task.priority]}
                         </span>
@@ -284,7 +295,7 @@ export default function ArchivesModal({ goal, archivedTasks, onEdit, onUnarchive
                           <span
                             key={tag}
                             className="text-[10px] uppercase px-1.5 py-0.5 border-2 border-ink-black font-mono"
-                            style={{ boxShadow: '2px 2px 0 #1a1a1a' }}
+                            style={{ boxShadow: '2px 2px 0 color-mix(in srgb, color-mix(in srgb, var(--theme-primary-text) 60%, transparent) 60%, transparent)' }}
                           >
                             {tag}
                           </span>
@@ -328,7 +339,7 @@ export default function ArchivesModal({ goal, archivedTasks, onEdit, onUnarchive
         </div>
 
         {/* Footer */}
-        <div className="px-5 py-3 border-t-2 border-ink-black/20 flex items-center justify-between shrink-0">
+        <div className="px-5 py-3 border-t-2 border-ink-black flex items-center justify-between shrink-0" style={{ backgroundColor: 'var(--theme-surface)' }}>
           <p className="font-mono text-[10px] opacity-70">
             {filteredAndSorted.length} tâche{filteredAndSorted.length !== 1 ? 's' : ''} archivée{filteredAndSorted.length !== 1 ? 's' : ''}
           </p>
@@ -343,7 +354,7 @@ export default function ArchivesModal({ goal, archivedTasks, onEdit, onUnarchive
           ref={menuPortalRef}
           className="fixed min-w-[150px] border-2 border-ink-black bg-paper z-[9999]"
           style={{
-            boxShadow: '3px 3px 0 #1a1a1a',
+            boxShadow: '3px 3px 0 color-mix(in srgb, color-mix(in srgb, var(--theme-primary-text) 60%, transparent) 60%, transparent)',
             color: '#1a1a1a',
             top: menuPosition.top !== undefined ? `${menuPosition.top}px` : 'auto',
             bottom: menuPosition.bottom !== undefined ? `${menuPosition.bottom}px` : 'auto',

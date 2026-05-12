@@ -25,6 +25,7 @@ export interface Goal {
   start_date: string | null;
   end_date: string | null;
   color: string | null;
+  position: number;
   created_at: string;
   updated_at: string;
 }

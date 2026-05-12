@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
 import { MoreVertical, List, Progress, Check, Drag, Pen, Archive, Trash } from '../lib/icons';
 import { Task, TaskPriority, RecurrenceRule, TaskStatus } from '../types';
-import { GoalColor } from '../lib/goalColors';
+import { GoalColor, getMenuBgFromCardColor } from '../lib/goalColors';
 import { createPortal } from 'react-dom';
+import { formatTimeForDisplay, useUserPreferences } from '../lib/userPreferences';
 
 interface Props {
   task: Task;
@@ -17,17 +18,24 @@ interface Props {
 }
 
 const PRIORITY_STYLES: Record<TaskPriority, string> = {
-  low: 'bg-ink-green text-paper',
-  medium: 'bg-ink-blue text-paper',
-  high: 'bg-ink-orange text-ink-black',
-  urgent: 'bg-ink-red text-paper',
+  low: '',
+  medium: '',
+  high: '',
+  urgent: '',
+};
+
+const PRIORITY_BG_COLORS: Record<TaskPriority, string> = {
+  low: 'var(--priority-low-bg)',
+  medium: 'var(--priority-medium-bg)',
+  high: 'var(--priority-high-bg)',
+  urgent: 'var(--priority-urgent-bg)',
 };
 
 const PRIORITY_LABELS: Record<TaskPriority, string> = {
-  low: 'faible',
-  medium: 'moyen',
-  high: 'élevé',
-  urgent: 'urgent',
+  low: 'Priorité faible',
+  medium: 'Priorité moyenne',
+  high: 'Priorité élevée',
+  urgent: 'Priorité urgente',
 };
 
 const FREQUENCY_LABELS: Record<string, { singular: string; plural: string }> = {
@@ -54,20 +62,6 @@ function formatRecurrence(recurrence: RecurrenceRule): string {
   return `Se répète tous les ${interval} ${unit}`;
 }
 
-function formatTime(time: string): string {
-  if (!time) return '';
-  const parts = time.split(':');
-  const hour = parseInt(parts[0]);
-  return `${hour}h${parts[1]}`;
-}
-
-function lightenHex(hex: string, amount = 60): string {
-  const r = Math.min(255, parseInt(hex.slice(1, 3), 16) + amount);
-  const g = Math.min(255, parseInt(hex.slice(3, 5), 16) + amount);
-  const b = Math.min(255, parseInt(hex.slice(5, 7), 16) + amount);
-  return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
-}
-
 const STATUS_LABELS: Record<TaskStatus, string> = {
   todo: 'Ramener en planification',
   in_progress: 'Marquer comme en cours',
@@ -81,9 +75,10 @@ const STATUS_ICONS = {
 } as const;
 
 function TaskCard({ task, goalColor, goalName, onEdit, onDelete, onArchive, onChangeStatus, draggable = false, onDragStart }: Props) {
+  const [preferences] = useUserPreferences(task.user_id);
   const isOverdue = task.due_date && task.status !== 'done' && new Date(task.due_date + 'T00:00:00') < new Date();
   const isDone = task.status === 'done';
-  const menuBg = lightenHex(goalColor.bg);
+  const menuBg = getMenuBgFromCardColor(goalColor.bg);
   const [menuOpen, setMenuOpen] = useState(false);
   const [menuPosition, setMenuPosition] = useState<{ top?: number; bottom?: number; right: number } | null>(null);
   const cardRef = useRef<HTMLDivElement>(null);
@@ -109,7 +104,7 @@ function TaskCard({ task, goalColor, goalName, onEdit, onDelete, onArchive, onCh
     <div
       ref={cardRef}
       className={`border-2 border-ink-black p-4 mb-3 relative group transition-all duration-150 ${isDone ? 'opacity-60' : ''}`}
-      style={{ boxShadow: '4px 4px 0 #1a1a1a', backgroundColor: goalColor.bg, color: goalColor.fg }}
+      style={{ boxShadow: '4px 4px 0 color-mix(in srgb, color-mix(in srgb, var(--theme-primary-text) 60%, transparent) 60%, transparent)', backgroundColor: goalColor.bg, color: goalColor.fg }}
       draggable={draggable}
       onDragStart={onDragStart ? e => onDragStart(e, task.id) : undefined}
     >
@@ -160,13 +155,13 @@ function TaskCard({ task, goalColor, goalName, onEdit, onDelete, onArchive, onCh
         {task.start_date && (
           <p className="text-[10px] font-mono opacity-75">
             {isDone ? 'Terminé' : 'Prévu'} le {new Date(task.start_date + 'T00:00:00').toLocaleDateString('fr-FR', { month: 'short', day: 'numeric', year: 'numeric' })}
-            {task.start_time && ` à ${formatTime(task.start_time)}`}
+            {task.start_time && ` à ${formatTimeForDisplay(task.start_time, preferences.timeFormat)}`}
           </p>
         )}
         {task.due_date && (
           <p className={`text-[10px] font-mono ${isOverdue ? 'font-bold text-ink-red' : 'opacity-75'}`}>
             Échéance le {new Date(task.due_date + 'T00:00:00').toLocaleDateString('fr-FR', { month: 'short', day: 'numeric', year: 'numeric' })}
-            {task.end_time && ` à ${formatTime(task.end_time)}`}
+            {task.end_time && ` à ${formatTimeForDisplay(task.end_time, preferences.timeFormat)}`}
           </p>
         )}
         {task.recurrence && (
@@ -175,7 +170,7 @@ function TaskCard({ task, goalColor, goalName, onEdit, onDelete, onArchive, onCh
         <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
           <span
             className={`text-[10px] font-bold uppercase px-1.5 py-0.5 ${PRIORITY_STYLES[task.priority]}`}
-            style={{ border: '2px solid #1a1a1a', boxShadow: '2px 2px 0 #1a1a1a' }}
+            style={{ backgroundColor: PRIORITY_BG_COLORS[task.priority], color: '#1a1a1a', border: '2px solid #1a1a1a', boxShadow: '2px 2px 0 color-mix(in srgb, color-mix(in srgb, var(--theme-primary-text) 60%, transparent) 60%, transparent)' }}
           >
             {PRIORITY_LABELS[task.priority]}
           </span>
@@ -184,7 +179,7 @@ function TaskCard({ task, goalColor, goalName, onEdit, onDelete, onArchive, onCh
             <span
               key={tag}
               className="text-[10px] uppercase px-1.5 py-0.5 border-2 border-ink-black font-mono"
-              style={{ backgroundColor: 'transparent', color: goalColor.fg, boxShadow: '2px 2px 0 #1a1a1a' }}
+              style={{ backgroundColor: 'transparent', color: goalColor.fg, boxShadow: '2px 2px 0 color-mix(in srgb, color-mix(in srgb, var(--theme-primary-text) 60%, transparent) 60%, transparent)' }}
             >
               {tag}
             </span>
@@ -197,7 +192,7 @@ function TaskCard({ task, goalColor, goalName, onEdit, onDelete, onArchive, onCh
           ref={menuPortalRef}
           className="fixed min-w-[150px] border-2 border-ink-black z-[9999]"
           style={{
-            boxShadow: '4px 4px 0 #1a1a1a',
+            boxShadow: '4px 4px 0 color-mix(in srgb, color-mix(in srgb, var(--theme-primary-text) 60%, transparent) 60%, transparent)',
             color: '#1a1a1a',
             backgroundColor: menuBg,
             top: menuPosition.top !== undefined ? `${menuPosition.top}px` : 'auto',

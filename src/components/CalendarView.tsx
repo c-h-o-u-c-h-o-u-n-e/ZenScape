@@ -2,12 +2,13 @@ import { useEffect, useMemo, useState } from 'react';
 import { ChevronLeft, ChevronRight, Check, X, List } from '../lib/icons';
 import { Task, Goal, TaskStatus, Medication } from '../types';
 import { isRecurrenceMatch } from '../lib/recurrence';
-import { getEstDate } from '../lib/timezone';
+import { getEstDate, getMsUntilNextEstMidnight } from '../lib/timezone';
 import { isMedicationDueOnDate } from '../lib/medicationSchedule';
 import { supabase } from '../lib/supabase';
 import Checkbox from './Checkbox';
 import MedicationsDailyCard from './MedicationsDailyCard';
 import MedicationModal from './MedicationModal';
+import { formatTimeForDisplay, useUserPreferences } from '../lib/userPreferences';
 
 interface Props {
   tasks: Task[];
@@ -19,7 +20,8 @@ interface Props {
 }
 
 const MONTHS = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'];
-const DAY_NAMES = ['Dimanche', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'];
+const DAY_NAMES_SUNDAY = ['Dimanche', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'];
+const DAY_NAMES_MONDAY = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche'];
 const PRIORITY_LABELS = {
   low: 'Faible',
   medium: 'Moyenne',
@@ -28,10 +30,10 @@ const PRIORITY_LABELS = {
 } as const;
 
 const PRIORITY_STYLES = {
-  low: 'bg-ink-green text-paper',
-  medium: 'bg-ink-blue text-paper',
-  high: 'bg-ink-orange text-ink-black',
-  urgent: 'bg-ink-red text-paper',
+  low: '',
+  medium: '',
+  high: '',
+  urgent: '',
 } as const;
 
 const PRIORITY_ORDER = {
@@ -41,6 +43,20 @@ const PRIORITY_ORDER = {
   low: 3,
 } as const;
 
+const PRIORITY_FILTER_ACTIVE_COLORS = {
+  low: 'var(--priority-low-bg)',
+  medium: 'var(--priority-medium-bg)',
+  high: 'var(--priority-high-bg)',
+  urgent: 'var(--priority-urgent-bg)',
+} as const;
+
+const PRIORITY_DOT_COLORS = {
+  low: 'var(--priority-low-bg)',
+  medium: 'var(--priority-medium-bg)',
+  high: 'var(--priority-high-bg)',
+  urgent: 'var(--priority-urgent-bg)',
+} as const;
+
 const MIN_CELL_HEIGHT_PX = 56; // Date (40px) + padding haut (8px) + padding bas miroir (8px)
 const TASK_LINE_HEIGHT_PX = 14;
 const TASK_GAP_PX = 2;
@@ -48,7 +64,7 @@ const CELL_CONTENT_EXTRA_PX = 8;
 const SEE_MORE_SPACE_PX = 14;
 
 function CalendarView({ tasks, allTasks, goals, onEditTask, onNewTask, onChangeTaskStatus }: Props) {
-  const today = getEstDate();
+  const [today, setToday] = useState(getEstDate());
   const [year, setYear] = useState(today.getFullYear());
   const [month, setMonth] = useState(today.getMonth());
   const [selectedDay, setSelectedDay] = useState(today.getDate());
@@ -61,6 +77,8 @@ function CalendarView({ tasks, allTasks, goals, onEditTask, onNewTask, onChangeT
     medication: null,
   });
   const [userId, setUserId] = useState<string | null>(null);
+  const [preferences] = useUserPreferences(userId ?? undefined);
+  const dayNames = preferences.weekStartsOn === 'monday' ? DAY_NAMES_MONDAY : DAY_NAMES_SUNDAY;
 
   useEffect(() => {
     const getUser = async () => {
@@ -68,7 +86,26 @@ function CalendarView({ tasks, allTasks, goals, onEditTask, onNewTask, onChangeT
       if (session) setUserId(session.user.id);
     };
     getUser();
-  }, []);
+  }, [preferences.timezone]);
+
+  useEffect(() => {
+    setToday(getEstDate());
+
+    let timeoutId: number;
+
+    const scheduleMidnightRefresh = () => {
+      timeoutId = window.setTimeout(() => {
+        setToday(getEstDate());
+        scheduleMidnightRefresh();
+      }, getMsUntilNextEstMidnight());
+    };
+
+    scheduleMidnightRefresh();
+
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
+  }, [preferences.timezone]);
 
   function prevMonth() {
     if (month === 0) {
@@ -94,7 +131,8 @@ function CalendarView({ tasks, allTasks, goals, onEditTask, onNewTask, onChangeT
     setSelectedDay(today.getDate());
   }
 
-  const firstDay = new Date(year, month, 1).getDay();
+  const jsFirstDay = new Date(year, month, 1).getDay();
+  const firstDay = preferences.weekStartsOn === 'monday' ? (jsFirstDay + 6) % 7 : jsFirstDay;
   const daysInMonth = new Date(year, month + 1, 0).getDate();
   const cells: (number | null)[] = [...Array(firstDay).fill(null), ...Array.from({ length: daysInMonth }, (_, i) => i + 1)];
   while (cells.length % 7 !== 0) cells.push(null);
@@ -180,36 +218,18 @@ function CalendarView({ tasks, allTasks, goals, onEditTask, onNewTask, onChangeT
   }
 
   async function handleMarkMedicationTaken(medicationId: string) {
-    if (medicationStatuses[medicationId] === 'taken') {
-      const selectedDate = dateStr(selectedDay);
-      if (userId) {
-        await supabase.from('medication_intakes').insert({
-          user_id: userId,
-          medication_id: medicationId,
-          status: 'missed',
-          intake_date: selectedDate,
-        });
-      }
-      setMedicationStatuses(prev => ({
-        ...prev,
-        [medicationId]: 'missed',
-      }));
-      return;
-    }
-
-    if (medicationStatuses[medicationId] === 'missed') {
-      setMedicationStatuses(prev => ({
-        ...prev,
-        [medicationId]: null,
-      }));
-      return;
-    }
-
     const selectedDate = dateStr(selectedDay);
     const medication = medications.find(m => m.id === medicationId);
     if (!medication) return;
 
     if (userId) {
+      await supabase
+        .from('medication_intakes')
+        .delete()
+        .eq('user_id', userId)
+        .eq('medication_id', medicationId)
+        .eq('intake_date', selectedDate);
+
       await supabase.from('medication_intakes').insert({
         user_id: userId,
         medication_id: medicationId,
@@ -221,6 +241,50 @@ function CalendarView({ tasks, allTasks, goals, onEditTask, onNewTask, onChangeT
     setMedicationStatuses(prev => ({
       ...prev,
       [medicationId]: 'taken'
+    }));
+  }
+
+  async function handleMarkMedicationMissed(medicationId: string) {
+    const selectedDate = dateStr(selectedDay);
+    const medication = medications.find(m => m.id === medicationId);
+    if (!medication) return;
+
+    if (userId) {
+      await supabase
+        .from('medication_intakes')
+        .delete()
+        .eq('user_id', userId)
+        .eq('medication_id', medicationId)
+        .eq('intake_date', selectedDate);
+
+      await supabase.from('medication_intakes').insert({
+        user_id: userId,
+        medication_id: medicationId,
+        status: 'missed',
+        intake_date: selectedDate,
+      });
+    }
+
+    setMedicationStatuses(prev => ({
+      ...prev,
+      [medicationId]: 'missed',
+    }));
+  }
+
+  async function handleClearMedicationTaken(medicationId: string) {
+    const selectedDate = dateStr(selectedDay);
+    if (userId) {
+      await supabase
+        .from('medication_intakes')
+        .delete()
+        .eq('user_id', userId)
+        .eq('medication_id', medicationId)
+        .eq('intake_date', selectedDate);
+    }
+
+    setMedicationStatuses(prev => ({
+      ...prev,
+      [medicationId]: null,
     }));
   }
 
@@ -252,8 +316,21 @@ function CalendarView({ tasks, allTasks, goals, onEditTask, onNewTask, onChangeT
 
   function getCompletedTasksForDay(day: number) {
     const ds = dateStr(day);
+    // Les tâches terminées doivent s'afficher uniquement le jour de leur occurrence
+    // (due_date / start_date), pas sur les occurrences futures d'une règle récurrente.
     return allTasks
-      .filter(task => task.status === 'done' && toLocalDateKey(task.updated_at) === ds)
+      .filter(task => {
+        // Doit être terminée
+        if (task.status !== 'done') return false;
+        
+        // Vérifier si la tâche était planifiée pour ce jour
+        if (task.due_date === ds) return true;
+        if (!task.due_date && task.start_date === ds) return true;
+
+        // Important: ne pas projeter une tâche terminée via sa récurrence
+        // (sinon elle apparaît à des dates où elle n'existe pas réellement).
+        return false;
+      })
       .sort((a, b) => (a.position ?? 0) - (b.position ?? 0));
   }
 
@@ -272,16 +349,38 @@ function CalendarView({ tasks, allTasks, goals, onEditTask, onNewTask, onChangeT
     const bDone = b.status === 'done';
     if (aDone !== bDone) return aDone ? 1 : -1;
 
-    // 2) Priorité plus élevée en premier
+    // 2) Tâches programmées (avec heure) viennent en premier, triées par heure
+    const aHasTime = !!a.start_time;
+    const bHasTime = !!b.start_time;
+    
+    if (aHasTime && !bHasTime) return -1;
+    if (!aHasTime && bHasTime) return 1;
+    
+    // Si les deux ont une heure, trier par ordre chronologique
+    if (aHasTime && bHasTime) {
+      const timeA = a.start_time || '';
+      const timeB = b.start_time || '';
+      
+      const [hoursA, minutesA] = timeA.split(':').map(Number);
+      const [hoursB, minutesB] = timeB.split(':').map(Number);
+      const totalMinutesA = (hoursA || 0) * 60 + (minutesA || 0);
+      const totalMinutesB = (hoursB || 0) * 60 + (minutesB || 0);
+      
+      if (totalMinutesA !== totalMinutesB) {
+        return totalMinutesA - totalMinutesB;
+      }
+    }
+
+    // 3) Pour les tâches sans heure, trier par priorité
     const priorityDiff = PRIORITY_ORDER[a.priority] - PRIORITY_ORDER[b.priority];
     if (priorityDiff !== 0) return priorityDiff;
 
-    // 3) Récurrentes avant non récurrentes
+    // 4) Récurrentes avant non récurrentes
     const aRecurring = isRecurringTask(a);
     const bRecurring = isRecurringTask(b);
     if (aRecurring !== bRecurring) return aRecurring ? -1 : 1;
 
-    // 4) Ordre alphabétique
+    // 5) Ordre alphabétique
     return a.title.localeCompare(b.title, 'fr-CA', { sensitivity: 'base' });
   }
 
@@ -341,7 +440,23 @@ function CalendarView({ tasks, allTasks, goals, onEditTask, onNewTask, onChangeT
   const selectedTasks = getTasksForDay(selectedDay);
   const selectedTodos = selectedTasks.filter(t => t.status !== 'done');
   const orderedSelectedTodos = [...selectedTodos].sort(compareCalendarTasks);
-  const scheduledSelectedTodos = orderedSelectedTodos.filter(task => !!task.start_time);
+  
+  // Trier les tâches programmées par heure chronologique
+  const scheduledSelectedTodos = orderedSelectedTodos
+    .filter(task => !!task.start_time)
+    .sort((a, b) => {
+      const timeA = a.start_time || '';
+      const timeB = b.start_time || '';
+      
+      // Convertir HH:MM en minutes pour comparaison numérique
+      const [hoursA, minutesA] = timeA.split(':').map(Number);
+      const [hoursB, minutesB] = timeB.split(':').map(Number);
+      const totalMinutesA = (hoursA || 0) * 60 + (minutesA || 0);
+      const totalMinutesB = (hoursB || 0) * 60 + (minutesB || 0);
+      
+      return totalMinutesA - totalMinutesB;
+    });
+  
   const unscheduledSelectedTodos = orderedSelectedTodos.filter(task => !task.start_time);
   const selectedDone = getCompletedTasksForDay(selectedDay);
   const orderedSelectedDone = [...selectedDone].sort(compareCalendarTasks);
@@ -368,9 +483,9 @@ function CalendarView({ tasks, allTasks, goals, onEditTask, onNewTask, onChangeT
   return (
     <div className="h-full min-h-0 flex flex-col pr-1 pb-1">
       <div className="shrink-0 mb-6">
-        <div className="border-2 border-ink-black bg-ink-red p-6" style={{ boxShadow: '4px 4px 0 #1a1a1a' }}>
+        <div className="border-2 border-ink-black bg-ink-red p-6" style={{ boxShadow: '4px 4px 0 color-mix(in srgb, color-mix(in srgb, var(--theme-primary-text) 60%, transparent) 60%, transparent)' }}>
         <div className="flex items-center justify-between gap-4">
-          <button onClick={prevMonth} className="retro-btn p-3 text-paper bg-ink-blue" title="Mois précédent">
+          <button onClick={prevMonth} className="retro-btn p-3 text-ink-black bg-paper" title="Mois précédent">
             <ChevronLeft size={24} />
           </button>
 
@@ -384,7 +499,7 @@ function CalendarView({ tasks, allTasks, goals, onEditTask, onNewTask, onChangeT
           <div className="flex items-center gap-3 shrink-0">
             <button
               onClick={goToCurrentMonth}
-              className={`retro-btn bg-ink-blue text-paper px-4 py-3 text-xs font-bold uppercase ${
+              className={`retro-btn bg-paper text-ink-black px-4 py-3 text-sm uppercase ${
                 isCurrentMonth ? 'invisible pointer-events-none' : ''
               }`}
               title="Revenir à aujourd'hui"
@@ -394,7 +509,7 @@ function CalendarView({ tasks, allTasks, goals, onEditTask, onNewTask, onChangeT
               Revenir à aujourd'hui
             </button>
 
-            <button onClick={nextMonth} className="retro-btn p-3 text-paper bg-ink-blue" title="Mois suivant">
+            <button onClick={nextMonth} className="retro-btn p-3 text-ink-black bg-paper" title="Mois suivant">
               <ChevronRight size={24} />
             </button>
           </div>
@@ -414,21 +529,24 @@ function CalendarView({ tasks, allTasks, goals, onEditTask, onNewTask, onChangeT
           <span className="opacity-70">Légende priorité :</span>
           {(['low', 'medium', 'high', 'urgent'] as const).map(priority => (
             <span key={priority} className="inline-flex items-center gap-1">
-              <span className={`w-3 h-3 rounded-full border border-ink-black ${PRIORITY_STYLES[priority]}`} />
+              <span
+                className="w-3 h-3 rounded-full border border-ink-black mr-1"
+                style={{ backgroundColor: PRIORITY_FILTER_ACTIVE_COLORS[priority] }}
+              />
               {PRIORITY_LABELS[priority]}
             </span>
           ))}
         </div>
       </div>
 
-      <div className="border-2 border-ink-black bg-paper flex flex-col min-h-0 flex-1" style={{ boxShadow: '4px 4px 0 #1a1a1a' }}>
+      <div className="border-2 border-ink-black bg-paper flex flex-col min-h-0 flex-1" style={{ boxShadow: '4px 4px 0 color-mix(in srgb, color-mix(in srgb, var(--theme-primary-text) 60%, transparent) 60%, transparent)' }}>
         <div className="min-h-0 flex flex-col flex-1">
             <div className="grid grid-cols-7">
-              {DAY_NAMES.map((day, i) => {
+              {dayNames.map((day, i) => {
                 return (
                 <div
                   key={day}
-                  className={`text-center py-3 text-sm uppercase font-mono font-bold tracking-wide text-paper border-b-4 ${i === 0 ? 'border-l-2' : ''} ${i !== 6 ? 'border-r-2' : ''} bg-ink-black border-ink-black border-t-2`}
+                  className={`text-center py-3 text-sm uppercase font-mono font-bold tracking-wide text-paper border-b-2 border-b-ink-black ${i !== 6 ? 'border-r-2 border-r-ink-black' : ''} bg-ink-red`}
                 >
                   {day}
                 </div>
@@ -440,13 +558,16 @@ function CalendarView({ tasks, allTasks, goals, onEditTask, onNewTask, onChangeT
               style={{ gridTemplateRows: calendarRowTemplate }}
             >
               {cells.map((day, i) => {
+                const isLastRow = i >= cells.length - 7;
+                const isLastColumn = (i + 1) % 7 === 0;
+                const nextCell = !isLastColumn ? cells[i + 1] : null;
+                const isEmptyCell = day === null;
+                const removeRightBorderBetweenEmptyCells = isEmptyCell && nextCell === null;
                 if (day === null) {
-                  const isLastColumn = (i + 1) % 7 === 0;
-                  const nextCellIsEmpty = !isLastColumn && cells[i + 1] == null;
                   return (
                     <div
                       key={`empty-${i}`}
-                      className={`border-b-2 border-ink-black bg-ink-black/15 ${nextCellIsEmpty ? '' : 'border-r-2'}`}
+                      className={`${isLastRow ? '' : 'border-b-2'} ${isLastColumn || removeRightBorderBetweenEmptyCells ? '' : 'border-r-2'} border-ink-black bg-[var(--theme-surface)]`}
                     />
                   );
                 }
@@ -464,29 +585,27 @@ function CalendarView({ tasks, allTasks, goals, onEditTask, onNewTask, onChangeT
                 const isFuture = cellDate > todayStart;
                 const isTodayCell = !isPast && !isFuture;
 
-                const stateClass = isPast
-                  ? 'bg-ink-blue/60'
-                  : isFuture
-                    ? 'bg-ink-red/60'
-                    : 'bg-ink-red';
-                const hoverClass = isPast
-                  ? 'hover:bg-ink-blue/80'
-                  : isFuture
-                    ? 'hover:bg-ink-red/80'
-                    : 'hover:bg-ink-red';
+                const dayCellBgStyle = {
+                  backgroundColor: isPast
+                    ? 'color-mix(in srgb, var(--theme-cta) 60%, transparent)'
+                    : isTodayCell
+                      ? 'var(--theme-cta)'
+                      : 'var(--theme-surface)',
+                };
 
                 return (
                   <div
-                    key={`day-${day}`}
+                    key={`day-${dayNumber}`}
                     onClick={() => {
                       setSelectedDay(currentDay);
                       setIsSidebarOpen(true);
                     }}
-                    className={`relative border-r-2 border-b-2 border-ink-black p-0 text-left transition-colors cursor-pointer ${stateClass} ${hoverClass}`}
+                    style={dayCellBgStyle}
+                    className={`relative ${isLastColumn ? '' : 'border-r-2'} ${isLastRow ? '' : 'border-b-2'} ${isLastRow && !isLastColumn ? "after:content-[''] after:absolute after:right-[-2px] after:bottom-[-2px] after:h-[2px] after:w-[2px] after:bg-ink-black" : ''} border-ink-black p-0 text-left transition-colors cursor-pointer`}
                   >
                     <span
                       className="absolute top-2 left-2 inline-flex h-10 w-10 items-center justify-center border-2 border-ink-black bg-paper text-xl leading-none font-display text-ink-black"
-                      style={{ boxShadow: '2px 2px 0 #1a1a1a' }}
+                      style={{ boxShadow: '2px 2px 0 color-mix(in srgb, color-mix(in srgb, var(--theme-primary-text) 60%, transparent) 60%, transparent)' }}
                     >
                       {day}
                     </span>
@@ -502,7 +621,7 @@ function CalendarView({ tasks, allTasks, goals, onEditTask, onNewTask, onChangeT
                                 : 'text-ink-black'
                           }`}
                         >
-                          <span className={`inline-block h-2 w-2 min-h-2 min-w-2 shrink-0 rounded-full border border-ink-black mt-[2px] mr-1 ${PRIORITY_STYLES[task.priority]}`} />
+                          <span className={`inline-block h-2 w-2 min-h-2 min-w-2 shrink-0 rounded-full border border-ink-black mt-[2px] mr-1 ${PRIORITY_STYLES[task.priority]}`} style={{ backgroundColor: PRIORITY_DOT_COLORS[task.priority] }} />
                           {task.title}
                         </div>
                       ))}
@@ -556,17 +675,17 @@ function CalendarView({ tasks, allTasks, goals, onEditTask, onNewTask, onChangeT
               </button>
             </div>
 
-            <div className="flex-1 p-4 overflow-hidden flex flex-col min-h-0" style={{ backgroundColor: 'rgba(220, 38, 38, 0.75)' }}>
-              <div className="flex-1 min-h-0 flex flex-col gap-4">
-              <section className="border-2 border-ink-black bg-paper flex flex-col min-h-0 flex-1 basis-0" style={{ boxShadow: '2px 2px 0 #1a1a1a' }}>
-                <div className="border-b-2 border-ink-black bg-ink-orange px-4 py-3 h-[50px] flex items-center gap-2 shrink-0">
+            <div className="flex-1 p-4 overflow-hidden flex flex-col min-h-0" style={{ backgroundColor: 'var(--theme-surface)' }}>
+              <div className="flex-1 min-h-0 flex flex-col gap-5">
+              <section className="border-2 border-ink-black flex flex-col min-h-0 flex-1 basis-0" style={{ boxShadow: '4px 4px 0 color-mix(in srgb, color-mix(in srgb, var(--theme-primary-text) 60%, transparent) 60%, transparent)', backgroundColor: 'var(--theme-background)' }}>
+                <div className="border-b-2 border-ink-black bg-ink-red px-4 py-3 h-[50px] flex items-center gap-2 shrink-0 text-paper">
                   <List size={16} />
-                  <h4 className="font-display text-base uppercase text-ink-black">Planification</h4>
-                  <span className="ml-auto font-mono text-sm font-bold text-ink-black opacity-80 tabular-nums shrink-0">
+                  <h4 className="font-display text-base uppercase text-paper">Planification</h4>
+                  <span className="ml-auto font-mono text-sm font-bold text-paper tabular-nums shrink-0">
                     {selectedTodos.length}
                   </span>
                 </div>
-                <div className="px-4 py-2 space-y-1 flex-1 min-h-0 overflow-y-auto scrollbar-hide" style={{ scrollbarWidth: 'none' }}>
+                <div className="px-4 py-2 space-y-3 flex-1 min-h-0 overflow-y-auto scrollbar-hide" style={{ scrollbarWidth: 'none' }}>
                   {selectedTodos.length === 0 && (
                     <div className="flex items-center justify-center py-6 text-ink-black opacity-70">
                       <p className="font-display text-sm text-center">Aucune tâche planifiée</p>
@@ -574,12 +693,12 @@ function CalendarView({ tasks, allTasks, goals, onEditTask, onNewTask, onChangeT
                   )}
 
                   {scheduledSelectedTodos.length > 0 && scheduledSelectedTodos.map(task => {
-                    const timeDisplay = task.start_time?.slice(0, 5).replace(/^0/, '');
+                    const timeDisplay = formatTimeForDisplay(task.start_time, preferences.timeFormat);
                     return (
                       <div key={task.id} className="py-0 text-ink-black">
                         <button onClick={() => onEditTask(task)} className="w-full text-left pr-1">
                           <div className="flex items-start mt-0.5 gap-2">
-                            <span className={`inline-block h-4 w-4 min-h-4 min-w-4 shrink-0 ml-0.5 rounded-full border border-ink-black ${PRIORITY_STYLES[task.priority]}`} />
+                            <span className={`inline-block h-4 w-4 min-h-4 min-w-4 shrink-0 ml-0.5 rounded-full border border-ink-black ${PRIORITY_STYLES[task.priority]}`} style={{ backgroundColor: PRIORITY_DOT_COLORS[task.priority] }} />
                             <div className="flex-1 min-w-0 flex items-start justify-between gap-2">
                               <p className="font-display text-sm ml-1 leading-tight whitespace-normal break-words">{task.title}</p>
                               {timeDisplay && (
@@ -599,12 +718,12 @@ function CalendarView({ tasks, allTasks, goals, onEditTask, onNewTask, onChangeT
                   )}
 
                   {unscheduledSelectedTodos.length > 0 && unscheduledSelectedTodos.map(task => {
-                    const timeDisplay = task.start_time?.slice(0, 5).replace(/^0/, '');
+                    const timeDisplay = formatTimeForDisplay(task.start_time, preferences.timeFormat);
                     return (
                       <div key={task.id} className="py-0 text-ink-black">
                         <button onClick={() => onEditTask(task)} className="w-full text-left pr-1">
                           <div className="flex items-start mt-0.5 gap-2">
-                            <span className={`inline-block h-4 w-4 min-h-4 min-w-4 shrink-0 ml-0.5 rounded-full border border-ink-black ${PRIORITY_STYLES[task.priority]}`} />
+                            <span className={`inline-block h-4 w-4 min-h-4 min-w-4 shrink-0 ml-0.5 rounded-full border border-ink-black ${PRIORITY_STYLES[task.priority]}`} style={{ backgroundColor: PRIORITY_DOT_COLORS[task.priority] }} />
                             <div className="flex-1 min-w-0 flex items-start justify-between gap-2">
                               <p className="font-display text-sm ml-1 leading-tight whitespace-normal break-words">{task.title}</p>
                               {timeDisplay && (
@@ -620,25 +739,25 @@ function CalendarView({ tasks, allTasks, goals, onEditTask, onNewTask, onChangeT
                   })}
 
                 </div>
-                <div className="px-4 pb-3 pt-1 flex justify-end bg-paper shrink-0">
+                <div className="px-4 pb-3 pt-1 flex justify-end shrink-0" style={{ backgroundColor: 'var(--theme-background)' }}>
                   <button
                     onClick={() => onNewTask(dateStr(selectedDay))}
-                    className="retro-btn bg-ink-blue text-paper text-sm px-3 py-2 leading-none"
+                    className="retro-btn bg-ink-red text-paper text-sm px-3 py-2 leading-none"
                   >
                     Nouvelle tâche
                   </button>
                 </div>
               </section>
 
-              <section className="border-2 border-ink-black bg-paper flex flex-col min-h-0 flex-1 basis-0" style={{ boxShadow: '2px 2px 0 #1a1a1a' }}>
-                <div className="border-b-2 border-ink-black bg-ink-green px-4 py-3 h-[50px] flex items-center gap-2 shrink-0">
+              <section className="border-2 border-ink-black flex flex-col min-h-0 flex-1 basis-0" style={{ boxShadow: '4px 4px 0 color-mix(in srgb, color-mix(in srgb, var(--theme-primary-text) 60%, transparent) 60%, transparent)', backgroundColor: 'var(--theme-background)' }}>
+                <div className="border-b-2 border-ink-black bg-ink-red px-4 py-3 h-[50px] flex items-center gap-2 shrink-0 text-paper">
                   <Check size={16} />
-                  <h4 className="font-display text-base uppercase text-ink-black">Terminé</h4>
-                  <span className="ml-auto font-mono text-sm font-bold text-ink-black opacity-80 tabular-nums shrink-0">
+                  <h4 className="font-display text-base uppercase text-paper">Terminé</h4>
+                  <span className="ml-auto font-mono text-sm font-bold text-paper tabular-nums shrink-0">
                     {selectedDone.length}
                   </span>
                 </div>
-                <div className="px-4 py-2 space-y-1 flex-1 min-h-0 overflow-y-auto scrollbar-hide" style={{ scrollbarWidth: 'none' }}>
+                <div className="px-4 py-2 space-y-3 flex-1 min-h-0 overflow-y-auto scrollbar-hide" style={{ scrollbarWidth: 'none' }}>
                   {selectedDone.length === 0 ? (
                     <div className="flex items-center justify-center py-6 text-ink-black opacity-70">
                       <p className="font-display text-sm text-center">Aucune tâche complétée</p>
@@ -648,7 +767,7 @@ function CalendarView({ tasks, allTasks, goals, onEditTask, onNewTask, onChangeT
                       <div key={task.id} className="py-0 text-ink-black opacity-75">
                         <button onClick={() => onEditTask(task)} className="w-full text-left pr-1">
                           <div className="flex items-start mt-0.5 gap-2">
-                            <span className={`inline-block h-4 w-4 min-h-4 min-w-4 shrink-0 ml-0.5 rounded-full border border-ink-black ${PRIORITY_STYLES[task.priority]}`} />
+                            <span className={`inline-block h-4 w-4 min-h-4 min-w-4 shrink-0 ml-0.5 rounded-full border border-ink-black ${PRIORITY_STYLES[task.priority]}`} style={{ backgroundColor: PRIORITY_DOT_COLORS[task.priority] }} />
                             <p className="font-display text-sm ml-1 leading-tight whitespace-normal break-words line-through">{task.title}</p>
                           </div>
                         </button>
@@ -666,6 +785,8 @@ function CalendarView({ tasks, allTasks, goals, onEditTask, onNewTask, onChangeT
                   onEditMedication={med => setMedicationModal({ open: true, medication: med })}
                   onDeleteMedication={handleDeleteMedication}
                   onMarkTaken={handleMarkMedicationTaken}
+                  onMarkMissed={handleMarkMedicationMissed}
+                  onClearTaken={handleClearMedicationTaken}
                   textOnly
                 />
               </div>

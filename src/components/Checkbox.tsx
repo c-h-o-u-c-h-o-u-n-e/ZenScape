@@ -21,7 +21,7 @@ export default function Checkbox({ checked, onChange, label, id, className = '',
         className={`w-6 h-6 border-2 border-ink-black flex items-center justify-center transition-all duration-100 flex-shrink-0 active:bg-ink-red ${
           checked ? 'bg-ink-red' : 'bg-paper'
         }`}
-        style={{ boxShadow: '2px 2px 0 #1a1a1a' }}
+        style={{ boxShadow: '2px 2px 0 color-mix(in srgb, color-mix(in srgb, var(--theme-primary-text) 60%, transparent) 60%, transparent)' }}
       >
         {checked && <Check size={12} className="text-paper" />}
       </button>

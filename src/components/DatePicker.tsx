@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { ChevronDown, ChevronLeft, ChevronRight } from '../lib/icons';
+import { useUserPreferences } from '../lib/userPreferences';
 
 interface Props {
   value: string;
@@ -12,7 +13,8 @@ interface Props {
 
 const MONTHS = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
   'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'];
-const DAYS = ['D', 'L', 'M', 'M', 'J', 'V', 'S'];
+const DAYS_SUNDAY = ['D', 'L', 'M', 'M', 'J', 'V', 'S'];
+const DAYS_MONDAY = ['L', 'M', 'M', 'J', 'V', 'S', 'D'];
 
 function parseDate(val: string): Date | null {
   if (!val) return null;
@@ -32,6 +34,7 @@ function toYMD(year: number, month: number, day: number): string {
 }
 
 function DatePicker({ value, onChange, placeholder = 'Choisir une date', className = '', openAbove = false, alignRight = false }: Props) {
+  const [preferences] = useUserPreferences();
   const today = new Date();
   const selected = parseDate(value);
 
@@ -72,7 +75,8 @@ function DatePicker({ value, onChange, placeholder = 'Choisir une date', classNa
     setOpen(false);
   }
 
-const firstDay = new Date(viewYear, viewMonth, 1).getDay();
+const jsFirstDay = new Date(viewYear, viewMonth, 1).getDay();
+  const firstDay = preferences.weekStartsOn === 'monday' ? (jsFirstDay + 6) % 7 : jsFirstDay;
   const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
   const cells: (number | null)[] = [
     ...Array(firstDay).fill(null),
@@ -96,7 +100,7 @@ const firstDay = new Date(viewYear, viewMonth, 1).getDay();
       <button
         type="button"
         onClick={openPicker}
-        className="retro-input bg-paper flex items-center justify-between gap-2 cursor-pointer select-none w-full text-left"
+        className="retro-input flex items-center justify-between gap-2 cursor-pointer select-none w-full text-left"
         style={{ paddingRight: '10px' }}
       >
         <span className={`font-mono text-xs truncate ${!value ? 'text-ink-black/40' : ''}`}>
@@ -110,7 +114,7 @@ const firstDay = new Date(viewYear, viewMonth, 1).getDay();
       {open && (
         <div
           className={`absolute z-[200] bg-paper border-2 border-ink-black p-3 min-w-[240px] ${alignRight ? 'right-0' : 'left-0'} ${openAbove ? 'bottom-full mb-2' : 'top-full mt-2'}`}
-          style={{ boxShadow: '4px 4px 0 #1a1a1a' }}
+          style={{ boxShadow: '4px 4px 0 color-mix(in srgb, color-mix(in srgb, var(--theme-primary-text) 60%, transparent) 60%, transparent)' }}
         >
           {/* Month nav */}
           <div className="flex items-center justify-between mb-3">
@@ -127,7 +131,7 @@ const firstDay = new Date(viewYear, viewMonth, 1).getDay();
 
           {/* Day headers */}
           <div className="grid grid-cols-7 mb-1 border-b border-ink-black/20 pb-1">
-            {DAYS.map(d => (
+            {(preferences.weekStartsOn === 'monday' ? DAYS_MONDAY : DAYS_SUNDAY).map(d => (
               <div key={d} className="text-center text-xs font-bold uppercase opacity-50 py-0.5">{d}</div>
             ))}
           </div>

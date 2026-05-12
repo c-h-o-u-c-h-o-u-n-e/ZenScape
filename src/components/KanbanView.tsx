@@ -19,10 +19,10 @@ interface Props {
   onRefresh: () => void;
 }
 
-const COLUMNS: { status: TaskStatus; headerColor: string; bodyColor: string; textColor: string; Icon: React.ComponentType<{ size?: number }> }[] = [
-  { status: 'todo', headerColor: 'bg-ink-orange', bodyColor: 'bg-ink-orange/60', textColor: 'text-black', Icon: List },
-  { status: 'in_progress', headerColor: 'bg-ink-blue', bodyColor: 'bg-ink-blue/60', textColor: 'text-paper', Icon: Progress },
-  { status: 'done', headerColor: 'bg-ink-green', bodyColor: 'bg-ink-green/60', textColor: 'text-paper', Icon: Check },
+const COLUMNS: { status: TaskStatus; headerColor: string; textColor: string; Icon: React.ComponentType<{ size?: number }> }[] = [
+  { status: 'todo', headerColor: 'bg-ink-red', textColor: 'text-paper', Icon: List },
+  { status: 'in_progress', headerColor: 'bg-ink-red', textColor: 'text-paper', Icon: Progress },
+  { status: 'done', headerColor: 'bg-ink-red', textColor: 'text-paper', Icon: Check },
 ];
 
 export default function KanbanView({ tasks, goals, columnLabels, onEditTask, onDeleteTask, onArchiveTask, onNewTask, onDropGoal, onRefresh }: Props) {
@@ -98,8 +98,6 @@ export default function KanbanView({ tasks, goals, columnLabels, onEditTask, onD
     setDragOverCol(null);
   }
 
-  const activeTasks = tasks.filter(t => !t.archived);
-
   function sortTasks(colTasks: Task[], status: TaskStatus): Task[] {
     if (status === 'todo') {
       return colTasks.sort((a, b) => {
@@ -140,23 +138,22 @@ export default function KanbanView({ tasks, goals, columnLabels, onEditTask, onD
   return (
     <div className="grid grid-cols-3 gap-5 flex-1 min-h-0" style={{ gridTemplateRows: 'minmax(0, 1fr)' }}>
       {COLUMNS.map(col => {
-        const colTasks = sortTasks(activeTasks.filter(t => t.status === col.status), col.status);
+        const columnSourceTasks = col.status === 'done'
+          ? tasks
+          : tasks.filter(t => !t.archived);
+        const colTasks = sortTasks(columnSourceTasks.filter(t => t.status === col.status), col.status);
         const isOver = dragOverCol === col.status;
         const label = columnLabels[col.status];
         const isDoneCol = col.status === 'done';
         const Icon = col.Icon;
-        const titleColorClass = col.status === 'in_progress' ? 'text-paper' : 'text-ink-black';
-        const iconColorClass = col.status === 'done'
-          ? 'text-ink-black'
-          : col.status === 'in_progress'
-            ? 'text-paper'
-            : 'text-ink-black';
+        const titleColorClass = 'text-paper';
+        const iconColorClass = 'text-paper';
 
         return (
           <div
             key={col.status}
             className={`flex flex-col border-2 border-ink-black transition-colors duration-100 ${isOver ? 'drag-over' : ''}`}
-            style={{ boxShadow: '4px 4px 0 #1a1a1a' }}
+            style={{ boxShadow: '4px 4px 0 color-mix(in srgb, color-mix(in srgb, var(--theme-primary-text) 60%, transparent) 60%, transparent)' }}
             onDragOver={e => onDragOver(e, col.status)}
             onDragLeave={onDragLeave}
             onDrop={e => onDrop(e, col.status)}
@@ -167,10 +164,10 @@ export default function KanbanView({ tasks, goals, columnLabels, onEditTask, onD
               <h3 className={`font-display text-base uppercase flex-1 truncate ${titleColorClass}`}>
                 {label}
               </h3>
-              <span className="ml-auto font-mono text-sm font-bold text-ink-black opacity-80 tabular-nums shrink-0">{colTasks.length}</span>
+              <span className="ml-auto font-mono text-sm font-bold text-paper tabular-nums shrink-0">{colTasks.length}</span>
             </div>
 
-            <div className={`flex-1 p-3 overflow-y-auto scrollbar-hide ${col.bodyColor}`} style={{ minHeight: '0', scrollbarWidth: 'none' }}>
+            <div className="flex-1 p-3 overflow-y-auto scrollbar-hide" style={{ minHeight: '0', scrollbarWidth: 'none', backgroundColor: 'var(--theme-surface)' }}>
               {colTasks.map(task => (
                 <TaskCard
                   key={task.id}
@@ -190,7 +187,10 @@ export default function KanbanView({ tasks, goals, columnLabels, onEditTask, onD
               ))}
 
               {colTasks.length === 0 && !isOver && (
-                <div className="h-24 border-2 border-dashed border-ink-black/70 flex items-center justify-center">
+                <div
+                  className="h-24 border-2 border-dashed border-ink-black flex items-center justify-center"
+                  style={{ borderColor: 'color-mix(in srgb, var(--theme-primary-text) 70%, transparent)' }}
+                >
                   <p className="font-mono text-sm opacity-70">Déposer ici</p>
                 </div>
               )}

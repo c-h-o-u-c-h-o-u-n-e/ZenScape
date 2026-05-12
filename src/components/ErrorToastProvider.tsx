@@ -57,7 +57,7 @@ export function ErrorToastProvider({ children }: { children: React.ReactNode }) 
           >
             <div
               className="border-2 border-ink-black bg-ink-red text-paper font-mono text-sm px-4 py-3"
-              style={{ boxShadow: '4px 4px 0 #1a1a1a' }}
+              style={{ boxShadow: '4px 4px 0 color-mix(in srgb, color-mix(in srgb, var(--theme-primary-text) 60%, transparent) 60%, transparent)' }}
               onClick={dismiss}
               role="button"
               tabIndex={0}

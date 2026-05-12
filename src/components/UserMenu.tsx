@@ -103,9 +103,15 @@ export default function UserMenu({ user, onProfileClick, onThemeClick }: Props) 
           <button
             onClick={handleProfileClick}
             className="w-full flex items-center gap-2 px-3 py-2 text-left text-xs font-bold border-b border-ink-black transition-colors"
-            style={{ backgroundColor: menuBg }}
-            onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = menuBaseColor)}
-            onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = menuBg)}
+            style={{ backgroundColor: menuBg, color: 'var(--theme-primary-text)' }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = menuBaseColor;
+              e.currentTarget.style.color = '#ffffff';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = menuBg;
+              e.currentTarget.style.color = 'var(--theme-primary-text)';
+            }}
           >
             <UserIcon size={14} />
             Profil
@@ -113,9 +119,15 @@ export default function UserMenu({ user, onProfileClick, onThemeClick }: Props) 
           <button
             onClick={handleThemeClick}
             className="w-full flex items-center gap-2 px-3 py-2 text-left text-xs font-bold border-b border-ink-black transition-colors"
-            style={{ backgroundColor: menuBg }}
-            onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = menuBaseColor)}
-            onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = menuBg)}
+            style={{ backgroundColor: menuBg, color: 'var(--theme-primary-text)' }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = menuBaseColor;
+              e.currentTarget.style.color = '#ffffff';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = menuBg;
+              e.currentTarget.style.color = 'var(--theme-primary-text)';
+            }}
           >
             <Palette size={14} />
             Thèmes
@@ -123,9 +135,15 @@ export default function UserMenu({ user, onProfileClick, onThemeClick }: Props) 
           <button
             onClick={handleLogout}
             className="w-full flex items-center gap-2 px-3 py-2 text-left text-xs font-bold transition-colors"
-            style={{ backgroundColor: menuBg }}
-            onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = menuBaseColor)}
-            onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = menuBg)}
+            style={{ backgroundColor: menuBg, color: 'var(--theme-primary-text)' }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = menuBaseColor;
+              e.currentTarget.style.color = '#ffffff';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = menuBg;
+              e.currentTarget.style.color = 'var(--theme-primary-text)';
+            }}
           >
             <LogOut size={14} />
             Déconnexion

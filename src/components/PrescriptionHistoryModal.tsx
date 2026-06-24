@@ -40,6 +40,8 @@ export default function PrescriptionHistoryModal({ user, onClose }: Props) {
   const [intakes, setIntakes] = useState<MedicationIntake[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedMedicationId, setSelectedMedicationId] = useState<string | null>(null);
+  const [resetting, setResetting] = useState(false);
+  const [showResetConfirm, setShowResetConfirm] = useState(false);
 
   useEffect(() => {
     async function fetchHistory() {
@@ -65,6 +67,14 @@ export default function PrescriptionHistoryModal({ user, onClose }: Props) {
 
     fetchHistory();
   }, [user.id]);
+
+  async function handleResetStats() {
+    setResetting(true);
+    await supabase.from('medication_intakes').delete().eq('user_id', user.id);
+    setIntakes([]);
+    setResetting(false);
+    setShowResetConfirm(false);
+  }
 
   const statsByMedication = useMemo<MedicationStats[]>(() => {
     const intakesByMedication = intakes.reduce<Record<string, MedicationIntake[]>>((acc, intake) => {
@@ -217,8 +227,47 @@ export default function PrescriptionHistoryModal({ user, onClose }: Props) {
       >
         <div className="flex items-center justify-between p-5 border-b-4 border-ink-black bg-ink-red text-paper shrink-0">
           <h2 className="font-display text-lg uppercase">Bilan médical</h2>
-          <ModalCloseButton onClose={onClose} className="text-paper p-1" />
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setShowResetConfirm(true)}
+              className="retro-btn bg-paper text-ink-red text-xs font-bold px-3 py-1.5"
+              title="Réinitialiser toutes les statistiques"
+            >
+              Réinitialiser les stats
+            </button>
+            <ModalCloseButton onClose={onClose} className="text-paper p-1" />
+          </div>
         </div>
+
+        {showResetConfirm && (
+          <div className="fixed inset-0 z-[60] flex items-center justify-center bg-ink-black/50">
+            <div
+              className="border-2 border-ink-black bg-paper p-6 max-w-sm w-full mx-4"
+              style={{ boxShadow: '6px 6px 0 rgba(26,26,26,0.6)' }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <p className="font-display text-base uppercase mb-2">Réinitialiser les stats ?</p>
+              <p className="text-sm font-bold opacity-70 mb-5">
+                Toutes les prises enregistrées seront supprimées définitivement. Les prescriptions resteront intactes.
+              </p>
+              <div className="flex gap-3 justify-end">
+                <button
+                  onClick={() => setShowResetConfirm(false)}
+                  className="retro-btn bg-paper text-ink-black text-xs font-bold px-4 py-2"
+                >
+                  Annuler
+                </button>
+                <button
+                  onClick={handleResetStats}
+                  disabled={resetting}
+                  className="retro-btn bg-ink-red text-paper text-xs font-bold px-4 py-2"
+                >
+                  {resetting ? 'Suppression...' : 'Réinitialiser'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         <div
           className="relative z-20 p-6 space-y-5 flex-1 overflow-y-auto scrollbar-hide"

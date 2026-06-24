@@ -82,7 +82,7 @@ export default function Auth() {
             <button
               type="submit"
               disabled={loading}
-              className="retro-btn bg-ink-red text-paper text-sm font-bold mt-2"
+              className="retro-btn bg-ink-red text-paper text-sm font-bold mt-2 w-full"
             >
               {loading ? 'Connexion en cours...' : mode === 'login' ? 'Me connecter' : 'Créer mon compte'}
             </button>

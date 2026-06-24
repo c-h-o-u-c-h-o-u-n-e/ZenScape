@@ -130,7 +130,7 @@
   */
 
   .retro-btn {
-    @apply font-display uppercase border-2 border-ink-black px-4 py-8 transition-all duration-100;
+    @apply font-display uppercase border-2 border-ink-black px-4 py-4 transition-all duration-100;
 
     /*
       Taille figée pour éviter les écarts entre navigateurs/profils

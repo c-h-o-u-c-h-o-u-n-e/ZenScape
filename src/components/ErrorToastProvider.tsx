@@ -3,25 +3,39 @@ import { AnimatePresence, motion } from 'framer-motion';
 
 type ErrorToastContextValue = {
   showError: (message: string) => void;
+  showSuccess: (message: string) => void;
 };
 
 const ErrorToastContext = createContext<ErrorToastContextValue | undefined>(undefined);
 
 export function ErrorToastProvider({ children }: { children: React.ReactNode }) {
-  const [message, setMessage] = useState<string | null>(null);
+  const [toast, setToast] = useState<{ message: string; type: 'error' | 'success' } | null>(null);
   const timeoutRef = useRef<number | null>(null);
 
   const showError = useCallback((nextMessage: string) => {
-    setMessage(nextMessage);
+    setToast({ message: nextMessage, type: 'error' });
 
     if (timeoutRef.current) {
       window.clearTimeout(timeoutRef.current);
     }
 
     timeoutRef.current = window.setTimeout(() => {
-      setMessage(null);
+      setToast(null);
       timeoutRef.current = null;
     }, 5000);
+  }, []);
+
+  const showSuccess = useCallback((nextMessage: string) => {
+    setToast({ message: nextMessage, type: 'success' });
+
+    if (timeoutRef.current) {
+      window.clearTimeout(timeoutRef.current);
+    }
+
+    timeoutRef.current = window.setTimeout(() => {
+      setToast(null);
+      timeoutRef.current = null;
+    }, 4000);
   }, []);
 
   const dismiss = useCallback(() => {
@@ -29,7 +43,7 @@ export function ErrorToastProvider({ children }: { children: React.ReactNode }) 
       window.clearTimeout(timeoutRef.current);
       timeoutRef.current = null;
     }
-    setMessage(null);
+    setToast(null);
   }, []);
 
   useEffect(() => {
@@ -40,14 +54,14 @@ export function ErrorToastProvider({ children }: { children: React.ReactNode }) 
     };
   }, []);
 
-  const value = useMemo(() => ({ showError }), [showError]);
+  const value = useMemo(() => ({ showError, showSuccess }), [showError, showSuccess]);
 
   return (
     <ErrorToastContext.Provider value={value}>
       {children}
 
       <AnimatePresence>
-        {message && (
+        {toast && (
           <motion.div
             className="fixed top-4 left-0 right-0 z-[3000] flex justify-center px-4"
             initial={{ opacity: 0, y: -12 }}
@@ -56,8 +70,12 @@ export function ErrorToastProvider({ children }: { children: React.ReactNode }) 
             transition={{ duration: 0.3 }}
           >
             <div
-              className="border-2 border-ink-black bg-ink-red text-paper font-mono text-sm px-4 py-3"
-              style={{ boxShadow: '4px 4px 0 color-mix(in srgb, color-mix(in srgb, var(--theme-primary-text) 60%, transparent) 60%, transparent)' }}
+              className="border-2 border-ink-black font-mono text-sm px-4 py-3"
+              style={{
+                backgroundColor: toast.type === 'success' ? 'var(--priority-low-bg)' : 'var(--priority-urgent-bg)',
+                color: '#1a1a1a',
+                boxShadow: '4px 4px 0 color-mix(in srgb, color-mix(in srgb, var(--theme-primary-text) 60%, transparent) 60%, transparent)',
+              }}
               onClick={dismiss}
               role="button"
               tabIndex={0}
@@ -68,7 +86,7 @@ export function ErrorToastProvider({ children }: { children: React.ReactNode }) 
                 }
               }}
             >
-              {message}
+              {toast.message}
             </div>
           </motion.div>
         )}

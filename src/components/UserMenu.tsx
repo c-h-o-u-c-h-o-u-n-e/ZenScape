@@ -1,16 +1,21 @@
 import { useState, useRef, useEffect } from 'react';
 import { User } from '@supabase/supabase-js';
-import { LogOut, User as UserIcon, ChevronDown, Palette } from '../lib/icons';
+import { LogOut, User as UserIcon, ChevronDown, Palette, Capsule, ListCheck, MapPin, Download, Upload } from '../lib/icons';
 import { supabase } from '../lib/supabase';
 import { createPortal } from 'react-dom';
 
 interface Props {
   user: User;
   onProfileClick: () => void;
+  onPreferencesClick: () => void;
   onThemeClick: () => void;
+  onPrescriptionHistoryClick: () => void;
+  onAddressBookClick: () => void;
+  onExportDataClick: () => void;
+  onImportDataClick: () => void;
 }
 
-export default function UserMenu({ user, onProfileClick, onThemeClick }: Props) {
+export default function UserMenu({ user, onProfileClick, onPreferencesClick, onThemeClick, onPrescriptionHistoryClick, onAddressBookClick, onExportDataClick, onImportDataClick }: Props) {
   const [open, setOpen] = useState(false);
   const triggerBg = 'var(--theme-cta)';
   const menuBaseColor = triggerBg;
@@ -52,6 +57,31 @@ export default function UserMenu({ user, onProfileClick, onThemeClick }: Props) 
     onThemeClick();
   };
 
+  const handlePreferencesClick = () => {
+    setOpen(false);
+    onPreferencesClick();
+  };
+
+  const handlePrescriptionHistoryClick = () => {
+    setOpen(false);
+    onPrescriptionHistoryClick();
+  };
+
+  const handleAddressBookClick = () => {
+    setOpen(false);
+    onAddressBookClick();
+  };
+
+  const handleExportDataClick = () => {
+    setOpen(false);
+    onExportDataClick();
+  };
+
+  const handleImportDataClick = () => {
+    setOpen(false);
+    onImportDataClick();
+  };
+
   return (
     <div className="relative" ref={menuRef}>
       <button
@@ -65,7 +95,7 @@ export default function UserMenu({ user, onProfileClick, onThemeClick }: Props) 
 
           if (triggerRef.current) {
             const rect = triggerRef.current.getBoundingClientRect();
-            const estimatedMenuHeight = 140;
+            const estimatedMenuHeight = 320;
             const spaceBelowViewport = window.innerHeight - rect.bottom;
             const openUp = spaceBelowViewport < estimatedMenuHeight;
 
@@ -83,14 +113,14 @@ export default function UserMenu({ user, onProfileClick, onThemeClick }: Props) 
         style={{ appearance: 'none', backgroundColor: triggerBg, boxShadow: open ? '1px 1px 0 color-mix(in srgb, var(--theme-primary-text) 60%, transparent)' : '3px 3px 0 color-mix(in srgb, var(--theme-primary-text) 60%, transparent)', transform: open ? 'translate(1px, 1px)' : 'translate(0, 0)' }}
         title="User menu"
       >
-        {user.email?.toUpperCase()}
+        {'Centre d’administration'.toUpperCase()}
         <ChevronDown size={14} className={`transition-transform duration-200 ${open ? 'rotate-180' : ''}`} />
       </button>
 
       {open && menuPosition && createPortal(
         <div
           ref={menuPortalRef}
-          className="fixed min-w-[150px] border-2 border-ink-black z-[9999]"
+          className="fixed min-w-[180px] border-2 border-ink-black z-[9999]"
           style={{
             boxShadow: '4px 4px 0 color-mix(in srgb, var(--theme-primary-text) 60%, transparent)',
             top: menuPosition.top !== undefined ? `${menuPosition.top}px` : 'auto',
@@ -114,7 +144,23 @@ export default function UserMenu({ user, onProfileClick, onThemeClick }: Props) 
             }}
           >
             <UserIcon size={14} />
-            Profil
+             Profil utilisateur
+          </button>
+          <button
+            onClick={handlePreferencesClick}
+            className="w-full flex items-center gap-2 px-3 py-2 text-left text-xs font-bold border-b border-ink-black transition-colors"
+            style={{ backgroundColor: menuBg, color: 'var(--theme-primary-text)' }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = menuBaseColor;
+              e.currentTarget.style.color = '#ffffff';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = menuBg;
+              e.currentTarget.style.color = 'var(--theme-primary-text)';
+            }}
+          >
+            <ListCheck size={14} />
+            Préférences
           </button>
           <button
             onClick={handleThemeClick}
@@ -131,6 +177,70 @@ export default function UserMenu({ user, onProfileClick, onThemeClick }: Props) 
           >
             <Palette size={14} />
             Thèmes
+          </button>
+          <button
+            onClick={handlePrescriptionHistoryClick}
+            className="w-full flex items-center gap-2 px-3 py-2 text-left text-xs font-bold border-b border-ink-black transition-colors"
+            style={{ backgroundColor: menuBg, color: 'var(--theme-primary-text)' }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = menuBaseColor;
+              e.currentTarget.style.color = '#ffffff';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = menuBg;
+              e.currentTarget.style.color = 'var(--theme-primary-text)';
+            }}
+          >
+            <Capsule size={14} />
+            Bilan médical
+          </button>
+          <button
+            onClick={handleAddressBookClick}
+            className="w-full flex items-center gap-2 px-3 py-2 text-left text-xs font-bold border-b border-ink-black transition-colors"
+            style={{ backgroundColor: menuBg, color: 'var(--theme-primary-text)' }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = menuBaseColor;
+              e.currentTarget.style.color = '#ffffff';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = menuBg;
+              e.currentTarget.style.color = 'var(--theme-primary-text)';
+            }}
+          >
+            <MapPin size={14} />
+            Carnet d'adresses
+          </button>
+          <button
+            onClick={handleExportDataClick}
+            className="w-full flex items-center gap-2 px-3 py-2 text-left text-xs font-bold border-b border-ink-black transition-colors"
+            style={{ backgroundColor: menuBg, color: 'var(--theme-primary-text)' }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = menuBaseColor;
+              e.currentTarget.style.color = '#ffffff';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = menuBg;
+              e.currentTarget.style.color = 'var(--theme-primary-text)';
+            }}
+          >
+            <Download size={14} />
+            Exporter les données
+          </button>
+          <button
+            onClick={handleImportDataClick}
+            className="w-full flex items-center gap-2 px-3 py-2 text-left text-xs font-bold border-b border-ink-black transition-colors"
+            style={{ backgroundColor: menuBg, color: 'var(--theme-primary-text)' }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = menuBaseColor;
+              e.currentTarget.style.color = '#ffffff';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = menuBg;
+              e.currentTarget.style.color = 'var(--theme-primary-text)';
+            }}
+          >
+            <Upload size={14} />
+            Importer les données
           </button>
           <button
             onClick={handleLogout}

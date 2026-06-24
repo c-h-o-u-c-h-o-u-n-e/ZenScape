@@ -7,6 +7,7 @@ interface CompletedCardProps {
   tasks: Task[];
   goals: Goal[];
   onEditTask: (task: Task) => void;
+  onDuplicateTask: (task: Task) => void;
   onDeleteTask: (taskId: string) => void;
   onArchiveTask: (taskId: string, archived: boolean) => void;
   onChangeTaskStatus: (taskId: string, status: TaskStatus) => void;
@@ -16,6 +17,7 @@ export default function CompletedCard({
   tasks,
   goals,
   onEditTask,
+  onDuplicateTask,
   onDeleteTask,
   onArchiveTask,
   onChangeTaskStatus,
@@ -54,6 +56,7 @@ export default function CompletedCard({
                 goalColor={goalColor}
                 goalName={goal?.title}
                 onEdit={onEditTask}
+                onDuplicate={onDuplicateTask}
                 onDelete={onDeleteTask}
                 onArchive={onArchiveTask}
                 onChangeStatus={onChangeTaskStatus}

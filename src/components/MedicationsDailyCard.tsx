@@ -191,6 +191,22 @@ export default function MedicationsDailyCard({
     setExpandedMeds(newSet);
   };
 
+  const handleMedicationStatusCycle = (medicationId: string) => {
+    const currentStatus = medicationStatuses[medicationId] ?? null;
+
+    if (currentStatus === null) {
+      onMarkTaken(medicationId);
+      return;
+    }
+
+    if (currentStatus === 'taken') {
+      onMarkMissed(medicationId);
+      return;
+    }
+
+    onClearTaken(medicationId);
+  };
+
   const timeOrder = { morning: 0, afternoon: 1, evening: 2, bedtime: 3 };
   const sortedMedications = [...medications].sort((a, b) => {
     const orderA = timeOrder[a.time_of_day as keyof typeof timeOrder] ?? 999;
@@ -261,7 +277,7 @@ export default function MedicationsDailyCard({
                                 type="button"
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  onMarkTaken(medication.id);
+                                  handleMedicationStatusCycle(medication.id);
                                 }}
                                 className="shrink-0 self-start px-3 py-2 border-2 border-ink-black text-xs font-bold uppercase inline-flex items-center"
                                 style={{
@@ -269,7 +285,7 @@ export default function MedicationsDailyCard({
                                   color: 'var(--theme-background)',
                                   boxShadow: '2px 2px 0 color-mix(in srgb, color-mix(in srgb, var(--theme-primary-text) 60%, transparent) 60%, transparent)',
                                 }}
-                                title="Enregistrer la prise"
+                                title="Changer le statut de la prise"
                             >
                               {isMissed ? 'Manqué' : isTaken ? 'Pris' : 'Enregistrer la prise'}
                             </button>
@@ -375,14 +391,14 @@ export default function MedicationsDailyCard({
 
                             <div className="flex items-center gap-2 flex-shrink-0">
                               <button
-                                  onClick={() => onMarkTaken(medication.id)}
+                                  onClick={() => handleMedicationStatusCycle(medication.id)}
                                   className="shrink-0 self-start px-3 py-2 border-2 border-ink-black text-xs font-bold uppercase inline-flex items-center"
                                   style={{
                                     backgroundColor: 'var(--theme-cta)',
                                     color: 'var(--theme-background)',
                                     boxShadow: '2px 2px 0 color-mix(in srgb, color-mix(in srgb, var(--theme-primary-text) 60%, transparent) 60%, transparent)',
                                   }}
-                                  title="Enregistrer la prise"
+                                  title="Changer le statut de la prise"
                               >
                                 {isMissed ? 'Manqué' : medicationStatus === 'taken' ? 'Pris' : 'Enregistrer la prise'}
                               </button>

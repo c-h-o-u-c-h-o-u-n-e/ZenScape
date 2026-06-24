@@ -143,23 +143,26 @@ export default function ArchivesModal({ goal, archivedTasks, hasActiveArchiveFil
   const menuTask = filteredAndSorted.find(t => t.id === menuOpenTaskId) ?? null;
 
   return (
-    <div className="fixed inset-0 bg-ink-black/70 flex items-center justify-center z-[1000] p-4">
-      <div
-        className="w-full max-w-2xl bg-paper border-2 border-ink-black flex flex-col"
-        style={{ boxShadow: '8px 8px 0 color-mix(in srgb, color-mix(in srgb, var(--theme-primary-text) 60%, transparent) 60%, transparent)', maxHeight: '85vh' }}
+    <>
+      <div className="fixed inset-0 z-[1000] bg-ink-black/70" onClick={onClose} />
+
+      <aside
+        className="fixed right-0 top-0 bottom-0 w-full max-w-[560px] bg-paper border-l-4 border-ink-black flex flex-col z-[1001] transform transition-transform duration-300 ease-in-out"
+        style={{
+          transform: 'translateX(0)',
+          boxShadow: '8px 8px 0 color-mix(in srgb, color-mix(in srgb, var(--theme-primary-text) 60%, transparent) 60%, transparent)',
+        }}
+        onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div
-          className="flex items-center justify-between px-5 py-4 border-b-4 border-ink-black shrink-0"
-          style={{ backgroundColor: color.bg, color: color.fg }}
-        >
+        <div className="flex items-center justify-between px-5 py-4 border-b-4 border-ink-black bg-ink-red text-paper shrink-0">
           <div className="flex items-center gap-3">
             <div>
               <p className="font-mono text-[10px] uppercase opacity-60 tracking-widest">Archives</p>
               <h2 className="font-display text-lg uppercase leading-tight">{goal.title}</h2>
             </div>
           </div>
-          <ModalCloseButton onClose={onClose} size={22} className="p-1" />
+          <ModalCloseButton onClose={onClose} size={22} className="p-1 text-paper" />
         </div>
 
         {/* Filters */}
@@ -278,6 +281,11 @@ export default function ArchivesModal({ goal, archivedTasks, hasActiveArchiveFil
                   >
                     <div className="flex-1 min-w-0 pr-8">
                       <p className="font-mono font-bold text-sm leading-tight">{task.title}</p>
+                      {task.location && (
+                        <p className="font-mono text-[10px] opacity-80 mt-1">
+                          {task.location}
+                        </p>
+                      )}
                       {calDate && (
                         <p className="font-mono text-[10px] opacity-70 mt-1">
                           Terminé le {formatCompletedAt(getCompletionDateTime(task).toISOString())}
@@ -347,7 +355,7 @@ export default function ArchivesModal({ goal, archivedTasks, hasActiveArchiveFil
             Fermer
           </button>
         </div>
-      </div>
+      </aside>
 
       {menuOpenTaskId && menuTask && menuPosition && createPortal(
         <div
@@ -397,6 +405,6 @@ export default function ArchivesModal({ goal, archivedTasks, hasActiveArchiveFil
         </div>,
         document.body
       )}
-    </div>
+    </>
   );
 }

@@ -11,6 +11,20 @@ export default function LocationInput({ value, onChange, suggestions }: Props) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
+  function formatPhoneWithLabel(nextValue: string): string {
+    const trimmed = nextValue.trim();
+    if (!trimmed) return nextValue;
+
+    const hasSeparator = trimmed.includes(' - ');
+    const phoneOnlyRegex = /^\+?[\d\s().-]{7,}$/;
+
+    if (!hasSeparator && phoneOnlyRegex.test(trimmed)) {
+      return `${trimmed} - `;
+    }
+
+    return nextValue;
+  }
+
   const filtered = suggestions.filter(s =>
     s.toLowerCase().includes(value.toLowerCase()) && s !== value
   );
@@ -40,9 +54,11 @@ export default function LocationInput({ value, onChange, suggestions }: Props) {
           type="text"
           value={value}
           onChange={e => {
-            onChange(e.target.value);
-            if (e.target.value) setOpen(true);
+            const nextValue = e.target.value;
+            onChange(nextValue);
+            if (nextValue) setOpen(true);
           }}
+          onBlur={e => onChange(formatPhoneWithLabel(e.target.value))}
           onFocus={() => value && setOpen(true)}
           className="retro-input w-full"
           placeholder="Entrer un emplacement..."

@@ -1,11 +1,13 @@
 import { useEffect, useRef, useState } from 'react';
 import { ChevronLeft, ChevronRight, X } from '../lib/icons';
-import { Task, Filters, TaskPriority } from '../types';
+import { Task, Filters, TaskPriority, Goal } from '../types';
 import ModalCloseButton from './ModalCloseButton';
+import { getGoalColor } from '../lib/goalColors';
 
 interface Props {
   filters: Filters;
   tasks: Task[];
+  goals: Goal[];
   onChange: (f: Filters) => void;
 }
 
@@ -27,7 +29,7 @@ const PRIORITIES: TaskPriority[] = ['low', 'medium', 'high', 'urgent'];
 const FILTER_BUTTON_CLASS = 'retro-btn h-[34px] px-3 py-0 text-sm font-bold font-display uppercase inline-flex items-center';
 const TAG_CHIP_CLASS = 'retro-btn retro-btn-no-press h-[34px] px-3 py-0 text-sm font-bold font-display uppercase inline-flex items-center';
 
-export default function FilterBar({ filters, tasks, onChange }: Props) {
+export default function FilterBar({ filters, tasks, goals, onChange }: Props) {
   const [tagsSidebarOpen, setTagsSidebarOpen] = useState(false);
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
   const [hasOverflow, setHasOverflow] = useState(false);
@@ -36,11 +38,17 @@ export default function FilterBar({ filters, tasks, onChange }: Props) {
   const allTags = [...new Set(tasks.flatMap(t => t.tags))].sort((a, b) =>
     a.localeCompare(b, 'fr', { sensitivity: 'base' })
   );
+  const activeGoalIds = filters.goalIds ?? [];
+  const activeGoals = activeGoalIds
+    .map(goalId => goals.find(g => g.id === goalId))
+    .filter((goal): goal is Goal => Boolean(goal));
+  const hasActiveGoals = activeGoals.length > 0;
   const activeTags = filters.tags ?? [];
   const hasActiveTags = activeTags.length > 0;
   const [showTagsSection, setShowTagsSection] = useState(hasActiveTags);
   const [tagsSectionVisible, setTagsSectionVisible] = useState(hasActiveTags);
   const [exitingTags, setExitingTags] = useState<Set<string>>(new Set());
+  const [exitingGoals, setExitingGoals] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     if (hasActiveTags) {
@@ -67,6 +75,19 @@ export default function FilterBar({ filters, tasks, onChange }: Props) {
     });
   }, [activeTags]);
 
+  useEffect(() => {
+    setExitingGoals(prev => {
+      const next = new Set<string>();
+      for (const goalId of prev) {
+        if (activeGoals.some(goal => goal.id === goalId)) next.add(goalId);
+      }
+      if (next.size === prev.size && [...next].every(goalId => prev.has(goalId))) {
+        return prev;
+      }
+      return next;
+    });
+  }, [activeGoals]);
+
   function handleRemoveTag(tag: string) {
     if (exitingTags.has(tag)) return;
 
@@ -80,6 +101,24 @@ export default function FilterBar({ filters, tasks, onChange }: Props) {
       setExitingTags(prev => {
         const next = new Set(prev);
         next.delete(tag);
+        return next;
+      });
+    }, 300);
+  }
+
+  function handleRemoveGoal(goalId: string) {
+    if (exitingGoals.has(goalId)) return;
+
+    setExitingGoals(prev => new Set(prev).add(goalId));
+
+    window.setTimeout(() => {
+      const currentGoalIds = filters.goalIds ?? [];
+      const nextGoalIds = currentGoalIds.filter(id => id !== goalId);
+      onChange({ ...filters, goalIds: nextGoalIds });
+
+      setExitingGoals(prev => {
+        const next = new Set(prev);
+        next.delete(goalId);
         return next;
       });
     }, 300);
@@ -106,7 +145,7 @@ export default function FilterBar({ filters, tasks, onChange }: Props) {
     const onResize = () => updateScrollButtons();
     window.addEventListener('resize', onResize);
     return () => window.removeEventListener('resize', onResize);
-  }, [activeTags.length, filters.priority]);
+  }, [activeTags.length, filters.priority, activeGoals.length]);
 
   return (
     <>
@@ -142,6 +181,40 @@ export default function FilterBar({ filters, tasks, onChange }: Props) {
               </button>
             );
           })}
+
+            {hasActiveGoals && (
+              <div className="flex items-center gap-2 ml-12">
+                <span className="text-[11px] font-bold opacity-90 shrink-0 mr-2 whitespace-nowrap">
+                  Filtre de catégorie actif :
+                </span>
+
+                {activeGoals.map(goal => {
+                  const goalColor = getGoalColor(goal.id, goal.color);
+                  const isExiting = exitingGoals.has(goal.id);
+                  return (
+                    <button
+                      type="button"
+                      key={`active-goal-${goal.id}`}
+                      onClick={() => handleRemoveGoal(goal.id)}
+                      className={`${TAG_CHIP_CLASS} gap-2.5 shrink-0 transition-opacity duration-300`}
+                      style={{
+                        backgroundColor: goalColor.bg,
+                        color: goalColor.fg,
+                        boxShadow: '2px 2px 0 color-mix(in srgb, color-mix(in srgb, var(--theme-primary-text) 60%, transparent) 60%, transparent)',
+                        opacity: isExiting ? 0 : 1,
+                      }}
+                      title="Désactiver ce filtre de catégorie"
+                      aria-label={`Désactiver le filtre de catégorie ${goal.title}`}
+                    >
+                      <span>{goal.title}</span>
+                      <span className="inline-flex items-center justify-center" aria-hidden="true">
+                        <X size={12} strokeWidth={3} />
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
 
             {showTagsSection && (
               <div

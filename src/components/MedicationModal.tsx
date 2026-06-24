@@ -368,7 +368,7 @@ export default function MedicationModal({ medication, userId, defaultStartDate, 
               disabled={loading}
               className="retro-btn flex-1 py-3 bg-[var(--theme-background)] text-ink-black hover:bg-ink-red hover:text-paper transition-colors"
             >
-              {loading ? 'Enregistrement...' : medication ? 'Mettre à jour' : 'Comfirmer'}
+              {medication ? 'Mettre à jour' : 'Comfirmer'}
             </button>
           </div>
         </form>

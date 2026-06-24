@@ -10,6 +10,33 @@
   font-display: swap;
 }
 
+@font-face {
+  font-family: 'Poppins';
+  src: url('/fonts/Poppins-Medium.ttf') format('truetype');
+  font-weight: 400 900;
+  font-style: normal;
+  font-display: swap;
+  size-adjust: 125%;
+}
+
+@font-face {
+  font-family: 'Quicksand';
+  src: url('/fonts/Quicksand-VariableFont.ttf') format('truetype');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+  size-adjust: 130%;
+}
+
+@font-face {
+  font-family: 'Saira';
+  src: url('/fonts/Saira-VariableFont.ttf') format('truetype');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+  size-adjust: 130%;
+}
+
 @layer base {
   :root {
     --theme-background: #CFCFCF;
@@ -17,6 +44,8 @@
     --theme-cta: #545454;
     --theme-surface: #7D7D7D;
     --theme-accent: #A3B4C2;
+    --danger-delete-text: #B33939;
+    --app-font-family: 'KGDarkSide', sans-serif;
   }
 
   * {
@@ -24,12 +53,12 @@
   }
 
   html {
-    font-size: 14px;
+    font-size: calc(14px * var(--app-font-scale, 1));
   }
 
   body {
     background-color: var(--theme-background);
-    font-family: 'KGDarkSide', sans-serif;
+    font-family: var(--app-font-family);
     color: var(--theme-primary-text);
 
     background-image:
@@ -114,6 +143,10 @@
     box-shadow: 2px 2px 0 color-mix(in srgb, var(--theme-primary-text) 60%, transparent);
   }
 
+  .danger-delete-text {
+    color: var(--danger-delete-text);
+  }
+
   .retro-btn:active {
     transform: translate(3px, 3px);
 
@@ -140,7 +173,7 @@
 
     background-color: var(--theme-background);
 
-    font-family: 'KGDarkSide', sans-serif;
+    font-family: var(--app-font-family);
 
     box-shadow: 4px 4px 0 color-mix(in srgb, var(--theme-primary-text) 60%, transparent);
   }

@@ -12,8 +12,10 @@ interface Props {
   goals: Goal[];
   columnLabels: Record<TaskStatus, string>;
   onEditTask: (task: Task) => void;
+  onDuplicateTask: (task: Task) => void;
   onDeleteTask: (taskId: string) => void;
   onArchiveTask: (taskId: string, archived: boolean) => void;
+  onChangeTaskStatus: (taskId: string, status: TaskStatus) => void;
   onNewTask: (status: TaskStatus) => void;
   onDropGoal: (goalId: string, status: TaskStatus) => void;
   onRefresh: () => void;
@@ -25,7 +27,7 @@ const COLUMNS: { status: TaskStatus; headerColor: string; textColor: string; Ico
   { status: 'done', headerColor: 'bg-ink-red', textColor: 'text-paper', Icon: Check },
 ];
 
-export default function KanbanView({ tasks, goals, columnLabels, onEditTask, onDeleteTask, onArchiveTask, onNewTask, onDropGoal, onRefresh }: Props) {
+export default function KanbanView({ tasks, goals, columnLabels, onEditTask, onDuplicateTask, onDeleteTask, onArchiveTask, onChangeTaskStatus, onNewTask, onDropGoal, onRefresh }: Props) {
   const [draggedId, setDraggedId] = useState<string | null>(null);
   const [dragOverCol, setDragOverCol] = useState<TaskStatus | null>(null);
 
@@ -69,6 +71,7 @@ export default function KanbanView({ tasks, goals, columnLabels, onEditTask, onD
             goal_id: task.goal_id,
             user_id: task.user_id,
             title: task.title,
+            notes: task.notes,
             location: task.location,
             status: 'todo',
             priority: task.priority,
@@ -175,12 +178,10 @@ export default function KanbanView({ tasks, goals, columnLabels, onEditTask, onD
                   goalColor={getGoalColor(task.goal_id, goals.find(g => g.id === task.goal_id)?.color)}
                   goalName={goals.find(g => g.id === task.goal_id)?.title}
                   onEdit={onEditTask}
+                  onDuplicate={onDuplicateTask}
                   onDelete={onDeleteTask}
                   onArchive={isDoneCol ? onArchiveTask : undefined}
-                  onChangeStatus={async (taskId, status) => {
-                    await supabase.from('tasks').update({ status, updated_at: getEstDate().toISOString() }).eq('id', taskId);
-                    onRefresh();
-                  }}
+                  onChangeStatus={onChangeTaskStatus}
                   draggable
                   onDragStart={onDragStart}
                 />

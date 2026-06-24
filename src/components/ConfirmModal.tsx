@@ -49,7 +49,7 @@ export default function ConfirmModal({ title, message, confirmLabel = 'Confirmer
               ref={confirmRef}
               type="button"
               onClick={onConfirm}
-              className={`retro-btn bg-transparent text-sm transition-colors ${danger ? 'text-ink-red hover:bg-ink-red hover:text-paper' : 'text-ink-black hover:bg-ink-red hover:text-paper'}`}
+              className={`retro-btn bg-transparent text-sm hover:bg-ink-red hover:text-paper transition-colors ${danger ? 'danger-delete-text' : 'text-ink-black'}`}
             >
               {confirmLabel}
             </button>

@@ -8,6 +8,7 @@ interface PlanningCardProps {
   tasks: Task[];
   goals: Goal[];
   onEditTask: (task: Task) => void;
+  onDuplicateTask: (task: Task) => void;
   onDeleteTask: (taskId: string) => void;
   onArchiveTask: (taskId: string, archived: boolean) => void;
   onChangeTaskStatus: (taskId: string, status: TaskStatus) => void;
@@ -17,6 +18,7 @@ export default function PlanningCard({
   tasks,
   goals,
   onEditTask,
+  onDuplicateTask,
   onDeleteTask,
   onArchiveTask,
   onChangeTaskStatus,
@@ -80,6 +82,7 @@ export default function PlanningCard({
           goalColor={goalColor}
           goalName={goal?.title}
           onEdit={onEditTask}
+          onDuplicate={onDuplicateTask}
           onDelete={onDeleteTask}
           onArchive={onArchiveTask}
           onChangeStatus={onChangeTaskStatus}
@@ -113,7 +116,7 @@ export default function PlanningCard({
             {scheduledTasks.map(task => renderTask(task, true))}
 
             {scheduledTasks.length > 0 && unscheduledTasks.length > 0 && (
-              <div className="w-full mb-2 border-t-2 border-ink-black" />
+              <div className="w-full mt-2 mb-4 border-t-2 border-ink-black" />
             )}
 
             {unscheduledTasks.map(task => renderTask(task, false))}

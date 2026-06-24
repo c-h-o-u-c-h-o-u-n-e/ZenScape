@@ -28,8 +28,8 @@ export default function Auth() {
     <div className="min-h-screen bg-paper flex flex-col items-center justify-center p-8">
       <div className="w-full max-w-md">
         <img
-          src="/images/logo.png"
-          alt="TaskFlow"
+          src="./images/logo.png"
+          alt="ZenScape"
           className="mx-auto mb-8 w-full max-w-xs"
         />
 

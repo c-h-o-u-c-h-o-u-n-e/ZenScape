@@ -14,6 +14,7 @@ interface DailyViewProps {
   tasks: Task[];
   goals: Goal[];
   onEditTask: (task: Task) => void;
+  onDuplicateTask: (task: Task) => void;
   onDeleteTask: (taskId: string) => void;
   onArchiveTask: (taskId: string, archived: boolean) => void;
   onChangeTaskStatus: (taskId: string, status: TaskStatus) => void;
@@ -23,6 +24,7 @@ export default function DailyView({
                                     tasks,
                                     goals,
                                     onEditTask,
+                                    onDuplicateTask,
                                     onDeleteTask,
                                     onArchiveTask,
                                     onChangeTaskStatus,
@@ -262,6 +264,7 @@ export default function DailyView({
                   tasks={dayTasks}
                   goals={goals}
                   onEditTask={onEditTask}
+                  onDuplicateTask={onDuplicateTask}
                   onDeleteTask={onDeleteTask}
                   onArchiveTask={onArchiveTask}
                   onChangeTaskStatus={onChangeTaskStatus}
@@ -274,6 +277,7 @@ export default function DailyView({
                   tasks={completedDayTasks}
                   goals={goals}
                   onEditTask={onEditTask}
+                  onDuplicateTask={onDuplicateTask}
                   onDeleteTask={onDeleteTask}
                   onArchiveTask={onArchiveTask}
                   onChangeTaskStatus={onChangeTaskStatus}

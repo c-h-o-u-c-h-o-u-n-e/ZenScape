@@ -3,7 +3,6 @@ import { Check } from '../lib/icons';
 import { supabase } from '../lib/supabase';
 import { getEstDate } from '../lib/timezone';
 import { Goal } from '../types';
-import DatePicker from './DatePicker';
 import { fgForBg } from '../lib/goalColors';
 import { useErrorToast } from './ErrorToastProvider';
 import ModalCloseButton from './ModalCloseButton';
@@ -19,8 +18,6 @@ const CUSTOM_COLORS = Array.from({ length: 32 }, (_, i) => `var(--goal-color-${i
 
 export default function GoalModal({ goal, userId, onClose, onSaved }: Props) {
   const [title, setTitle] = useState('');
-  const [startDate, setStartDate] = useState('');
-  const [endDate, setEndDate] = useState('');
   const [status, setStatus] = useState<'active' | 'completed' | 'archived'>('active');
   const [color, setColor] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -29,8 +26,6 @@ export default function GoalModal({ goal, userId, onClose, onSaved }: Props) {
   useEffect(() => {
     if (goal) {
       setTitle(goal.title);
-      setStartDate(goal.start_date ?? '');
-      setEndDate(goal.end_date ?? '');
       setStatus(goal.status);
       setColor(goal.color ?? null);
     }
@@ -43,8 +38,6 @@ export default function GoalModal({ goal, userId, onClose, onSaved }: Props) {
     const payload = {
       title,
       status,
-      start_date: startDate || null,
-      end_date: endDate || null,
       color: color || null,
       updated_at: getEstDate().toISOString(),
     };
@@ -83,28 +76,36 @@ export default function GoalModal({ goal, userId, onClose, onSaved }: Props) {
 
 
   return (
-    <div className="fixed inset-0 bg-ink-black/60 flex items-center justify-center z-[1000] p-4">
-      <div className="retro-card w-full max-w-lg bg-paper" style={{ boxShadow: '8px 8px 0 color-mix(in srgb, color-mix(in srgb, var(--theme-primary-text) 60%, transparent) 60%, transparent)' }}>
-        <div className="flex items-center justify-between p-5 border-b-4 border-ink-black bg-ink-red text-paper">
+    <>
+      <div className="fixed inset-0 z-[1000] bg-ink-black/60" onClick={onClose} />
+
+      <aside
+        className="fixed right-0 top-0 bottom-0 w-full max-w-[560px] bg-paper transform transition-transform duration-300 ease-in-out z-[1001] flex flex-col"
+        style={{
+          transform: 'translateX(0)',
+          borderLeft: '4px solid #1a1a1a',
+          boxShadow: '8px 8px 0 color-mix(in srgb, color-mix(in srgb, var(--theme-primary-text) 60%, transparent) 60%, transparent)',
+        }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between p-5 border-b-4 border-ink-black bg-ink-red text-paper shrink-0">
           <h2 className="font-display text-lg uppercase">{goal ? 'Modifier la catégorie' : 'Nouvelle catégorie'}</h2>
           <ModalCloseButton onClose={onClose} className="text-paper" />
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6 flex flex-col gap-5" style={{ backgroundColor: 'var(--theme-surface)' }}>
+        <form
+          id="goal-modal-form"
+          onSubmit={handleSubmit}
+          className="flex-1 overflow-y-auto p-6 flex flex-col gap-5"
+          style={{
+            backgroundColor: 'var(--theme-surface)',
+            scrollbarWidth: 'none',
+            msOverflowStyle: 'none',
+          }}
+        >
           <div>
             <label htmlFor="goal-title" className="font-bold text-xs uppercase block mb-2 tracking-wide">Titre *</label>
             <input id="goal-title" name="title" type="text" value={title} onChange={e => setTitle(e.target.value)} className="retro-input" required placeholder="" />
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="font-bold text-xs uppercase block mb-2 tracking-wide">Date de début</label>
-              <DatePicker value={startDate} onChange={setStartDate} placeholder="Date de début" />
-            </div>
-            <div>
-              <label className="font-bold text-xs uppercase block mb-2 tracking-wide">Date de fin</label>
-              <DatePicker value={endDate} onChange={setEndDate} placeholder="Date de fin" />
-            </div>
           </div>
 
           <div>
@@ -146,7 +147,10 @@ export default function GoalModal({ goal, userId, onClose, onSaved }: Props) {
             </div>
 
           </div>
-          <div className="flex gap-3 pt-2">
+        </form>
+
+        <div className="px-6 pb-6 pt-6 border-t-4 border-ink-black shrink-0" style={{ backgroundColor: 'var(--theme-surface)' }}>
+          <div className="flex gap-3">
             <button
               type="button"
               onClick={onClose}
@@ -156,14 +160,15 @@ export default function GoalModal({ goal, userId, onClose, onSaved }: Props) {
             </button>
             <button
               type="submit"
+              form="goal-modal-form"
               disabled={loading}
               className="retro-btn flex-1 py-3 bg-[var(--theme-background)] text-ink-black hover:bg-ink-red hover:text-paper transition-colors"
             >
-              {loading ? 'Enregistrement...' : 'Confirmer'}
+              Confirmer
             </button>
           </div>
-        </form>
-      </div>
-    </div>
+        </div>
+      </aside>
+    </>
   );
 }

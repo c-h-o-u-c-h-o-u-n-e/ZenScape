@@ -17,6 +17,7 @@ export {
   User,
   LogOut,
   Pen,
+  Copy,
   Trash2 as Trash,
   FolderDown,
   FolderOpen as FolderUp,
@@ -25,6 +26,7 @@ export {
   TrendingUp as Progress,
   GripVertical as Drag,
   Pill as Capsule,
+  MapPin,
   Tablets,
   Droplet as Cream,
   Droplet as Gel,
@@ -36,4 +38,6 @@ export {
   Droplet as Syrup,
   Pill as Suppository,
   Droplet as OralSuspension,
+  Download,
+  Upload,
 } from 'lucide-react';

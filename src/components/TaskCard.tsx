@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { MoreVertical, List, Progress, Check, Drag, Pen, Archive, Trash } from '../lib/icons';
+import { MoreVertical, List, Progress, Check, Drag, Pen, Copy, Archive, Trash } from '../lib/icons';
 import { Task, TaskPriority, RecurrenceRule, TaskStatus } from '../types';
 import { GoalColor, getMenuBgFromCardColor } from '../lib/goalColors';
 import { createPortal } from 'react-dom';
@@ -10,6 +10,7 @@ interface Props {
   goalColor: GoalColor;
   goalName?: string;
   onEdit: (task: Task) => void;
+  onDuplicate: (task: Task) => void;
   onDelete: (taskId: string) => void;
   onArchive?: (taskId: string, archived: boolean) => void;
   onChangeStatus?: (taskId: string, status: TaskStatus) => void;
@@ -74,7 +75,7 @@ const STATUS_ICONS = {
   done: Check,
 } as const;
 
-function TaskCard({ task, goalColor, goalName, onEdit, onDelete, onArchive, onChangeStatus, draggable = false, onDragStart }: Props) {
+function TaskCard({ task, goalColor, goalName, onEdit, onDuplicate, onDelete, onArchive, onChangeStatus, draggable = false, onDragStart }: Props) {
   const [preferences] = useUserPreferences(task.user_id);
   const isOverdue = task.due_date && task.status !== 'done' && new Date(task.due_date + 'T00:00:00') < new Date();
   const isDone = task.status === 'done';
@@ -120,7 +121,7 @@ function TaskCard({ task, goalColor, goalName, onEdit, onDelete, onArchive, onCh
 
             const rect = (e.currentTarget as HTMLButtonElement).getBoundingClientRect();
             const cardRect = cardRef.current?.getBoundingClientRect();
-            const estimatedMenuHeight = onArchive ? 116 : 84;
+            const estimatedMenuHeight = onArchive ? 150 : 118;
             const spaceBelowViewport = window.innerHeight - rect.bottom;
             const openUp = spaceBelowViewport < estimatedMenuHeight;
 
@@ -149,6 +150,9 @@ function TaskCard({ task, goalColor, goalName, onEdit, onDelete, onArchive, onCh
           <p className="text-[9px] uppercase font-bold opacity-50 tracking-wide truncate">{goalName}</p>
         )}
         <p className={`font-mono font-bold text-sm leading-tight ${isDone ? 'line-through' : ''}`}>{task.title}</p>
+        {task.notes && (
+          <p className="text-[10px] font-mono whitespace-pre-wrap opacity-80">{task.notes}</p>
+        )}
         {task.location && (
           <p className="text-[10px] font-mono opacity-75">{task.location}</p>
         )}
@@ -233,6 +237,21 @@ function TaskCard({ task, goalColor, goalName, onEdit, onDelete, onArchive, onCh
           >
             <Pen size={14} />
             Modifier
+          </button>
+
+          <button
+            onClick={() => {
+              setMenuOpen(false);
+              setMenuPosition(null);
+              onDuplicate(task);
+            }}
+            className="w-full px-3 py-2 text-left text-xs font-bold border-b border-ink-black transition-colors flex items-center gap-2"
+            style={{ backgroundColor: menuBg }}
+            onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = goalColor.bg)}
+            onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = menuBg)}
+          >
+            <Copy size={14} />
+            Dupliquer
           </button>
 
           {onArchive && (

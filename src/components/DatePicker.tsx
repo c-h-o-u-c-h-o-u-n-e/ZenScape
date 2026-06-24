@@ -83,6 +83,9 @@ const jsFirstDay = new Date(viewYear, viewMonth, 1).getDay();
     ...Array.from({ length: daysInMonth }, (_, i) => i + 1),
   ];
   while (cells.length % 7 !== 0) cells.push(null);
+  // Garde toujours 6 rangées pour éviter les sauts de hauteur
+  // quand on change de mois (35 vs 42 cellules).
+  while (cells.length < 42) cells.push(null);
 
   const isSelectedDay = (day: number) =>
     selected &&
@@ -117,11 +120,11 @@ const jsFirstDay = new Date(viewYear, viewMonth, 1).getDay();
           style={{ boxShadow: '4px 4px 0 color-mix(in srgb, color-mix(in srgb, var(--theme-primary-text) 60%, transparent) 60%, transparent)' }}
         >
           {/* Month nav */}
-          <div className="flex items-center justify-between mb-3">
+          <div className="grid grid-cols-[32px_1fr_32px] items-center mb-3 min-h-[28px]">
             <button type="button" onClick={prevMonth} className="p-1.5 hover:text-ink-red transition-colors">
               <ChevronLeft size={16} />
             </button>
-            <span className="font-display text-xs uppercase tracking-wide">
+            <span className="font-display text-xs uppercase tracking-wide text-center whitespace-nowrap leading-none">
               {MONTHS[viewMonth]} {viewYear}
             </span>
             <button type="button" onClick={nextMonth} className="p-1.5 hover:text-ink-red transition-colors">
@@ -166,7 +169,7 @@ const jsFirstDay = new Date(viewYear, viewMonth, 1).getDay();
             <button
               type="button"
               onClick={() => { onChange(toYMD(today.getFullYear(), today.getMonth(), today.getDate())); setOpen(false); }}
-              className="text-xs uppercase font-bold text-ink-blue hover:text-ink-red transition-colors tracking-wide"
+              className="text-xs uppercase font-bold text-ink-black hover:text-ink-red transition-colors tracking-wide"
             >
               Aujourd'hui
             </button>

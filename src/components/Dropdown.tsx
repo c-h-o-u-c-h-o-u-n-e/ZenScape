@@ -20,6 +20,7 @@ interface Props {
 export default function Dropdown({ value, onChange, options, placeholder = 'Select...', className = '', accentTrigger = false }: Props) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
 
   const selected = options.find(o => o.value === value);
@@ -45,7 +46,32 @@ export default function Dropdown({ value, onChange, options, placeholder = 'Sele
     if (!open) return;
     const selectedIndex = options.findIndex(o => o.value === value);
     setHighlightedIndex(selectedIndex >= 0 ? selectedIndex : 0);
-  }, [open, options, value]);
+  }, [open]);
+
+  useEffect(() => {
+    if (!open) return;
+
+    requestAnimationFrame(() => {
+      menuRef.current?.focus();
+    });
+  }, [open]);
+
+  useEffect(() => {
+    if (!open || highlightedIndex < 0) return;
+
+    const menu = menuRef.current;
+    const highlightedEl = menu?.querySelector<HTMLButtonElement>(`button[data-option-index="${highlightedIndex}"]`);
+    highlightedEl?.scrollIntoView({ block: 'nearest' });
+  }, [open, highlightedIndex]);
+
+  function moveHighlight(direction: 'up' | 'down') {
+    if (options.length === 0) return;
+    setHighlightedIndex(prev => {
+      const current = prev < 0 ? 0 : prev;
+      if (direction === 'down') return (current + 1) % options.length;
+      return (current - 1 + options.length) % options.length;
+    });
+  }
 
   const triggerBg = accentTrigger && selected?.accent ? selected.accent : '';
 
@@ -61,12 +87,7 @@ export default function Dropdown({ value, onChange, options, placeholder = 'Sele
               setOpen(true);
               return;
             }
-            if (options.length === 0) return;
-            setHighlightedIndex(prev => {
-              const current = prev < 0 ? 0 : prev;
-              if (e.key === 'ArrowDown') return (current + 1) % options.length;
-              return (current - 1 + options.length) % options.length;
-            });
+            moveHighlight(e.key === 'ArrowDown' ? 'down' : 'up');
             return;
           }
 
@@ -96,31 +117,54 @@ export default function Dropdown({ value, onChange, options, placeholder = 'Sele
 
       {open && (
         <div
+          ref={menuRef}
+          tabIndex={-1}
+          onKeyDown={(e) => {
+            if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+              e.preventDefault();
+              moveHighlight(e.key === 'ArrowDown' ? 'down' : 'up');
+              return;
+            }
+
+            if (e.key === 'Enter' && highlightedIndex >= 0 && options[highlightedIndex]) {
+              e.preventDefault();
+              handleSelect(options[highlightedIndex].value);
+              return;
+            }
+
+            if (e.key === 'Escape') {
+              e.preventDefault();
+              setOpen(false);
+              setHighlightedIndex(-1);
+            }
+          }}
           className="absolute z-[200] top-full left-0 right-0 mt-2 bg-paper border-2 border-ink-black overflow-y-auto"
           style={{ boxShadow: '4px 4px 0 color-mix(in srgb, color-mix(in srgb, var(--theme-primary-text) 60%, transparent) 60%, transparent)', maxHeight: '200px', scrollbarWidth: 'none', msOverflowStyle: 'none' }}
         >
-          {options.map(opt => {
+          {options.map((opt, idx) => {
             const isSelected = opt.value === value;
-            const optionIndex = options.findIndex(o => o.value === opt.value);
-            const isHighlighted = optionIndex === highlightedIndex;
+            const isHighlighted = idx === highlightedIndex;
             return (
               <button
                 key={opt.value}
                 type="button"
+                data-option-index={idx}
                 onClick={() => handleSelect(opt.value)}
+                onMouseEnter={() => setHighlightedIndex(idx)}
                 className={`w-full text-left px-3 py-2.5 font-mono text-xs flex items-center justify-between gap-2 transition-colors duration-75 border-b last:border-b-0 ${
-                  isSelected
-                    ? 'bg-ink-black text-paper'
-                    : isHighlighted
-                      ? 'bg-ink-black/12'
+                  isHighlighted
+                    ? 'bg-ink-black/18'
+                    : isSelected
+                      ? 'bg-ink-black text-paper'
                       : 'hover:bg-ink-black/8'
-                } ${opt.accent && !isSelected ? opt.accent : ''}`}
+                } ${opt.accent && !isSelected && !isHighlighted ? opt.accent : ''}`}
+                aria-selected={isHighlighted}
                 style={{ borderColor: 'color-mix(in srgb, var(--theme-primary-text) 70%, transparent)' }}
               >
                 <span className="truncate">{opt.label}</span>
                 <span className="shrink-0 inline-flex items-center gap-2">
-                  {opt.rightLabel && <span className="opacity-80">{opt.rightLabel}</span>}
                   {isSelected && <Check size={12} className="shrink-0" />}
+                  {opt.rightLabel && <span className="opacity-80">{opt.rightLabel}</span>}
                 </span>
               </button>
             );

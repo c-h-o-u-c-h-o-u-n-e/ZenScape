@@ -61,7 +61,24 @@ function addOneDay(dateStr: string): string {
 
 function isEndTimeEarlier(start: string, end: string): boolean {
   if (!start || !end) return false;
-  return end < start;
+  const startHour = parseInt(start.split(':')[0], 10);
+  const endHour = parseInt(end.split(':')[0], 10);
+
+  if (Number.isNaN(startHour) || Number.isNaN(endHour)) return false;
+  return endHour < startHour;
+}
+
+function isPhoneMissingName(value: string): boolean {
+  const trimmed = value.trim();
+  if (!trimmed) return false;
+
+  const phoneOnlyRegex = /^\+?[\d\s().-]{7,}$/;
+  const phoneWithTrailingNameRegex = /^\+?[\d\s().-]{7,}\s-\s.+$/;
+  const nameWithPhoneRegex = /^.+\s\/\s\+?[\d\s().-]{7,}$/;
+
+  return phoneOnlyRegex.test(trimmed)
+    || (trimmed.includes(' - ') && !phoneWithTrailingNameRegex.test(trimmed))
+    || (trimmed.includes(' / ') && !nameWithPhoneRegex.test(trimmed));
 }
 
 export default function TaskModal({ task, goals, columnLabels, defaultGoalId, defaultStatus, defaultDate, userId, onClose, onSaved }: Props) {
@@ -73,6 +90,7 @@ export default function TaskModal({ task, goals, columnLabels, defaultGoalId, de
 
   const [goalId, setGoalId] = useState('');
   const [title, setTitle] = useState('');
+  const [notes, setNotes] = useState('');
   const [location, setLocation] = useState('');
   const [status, setStatus] = useState<TaskStatus>('todo');
   const [priority, setPriority] = useState<TaskPriority>('medium');
@@ -134,6 +152,7 @@ export default function TaskModal({ task, goals, columnLabels, defaultGoalId, de
     if (task) {
       setGoalId(task.goal_id);
       setTitle(task.title);
+      setNotes(task.notes ?? '');
       setLocation(task.location ?? '');
       setStatus(task.status);
       setPriority(task.priority);
@@ -177,6 +196,7 @@ export default function TaskModal({ task, goals, columnLabels, defaultGoalId, de
     } else {
       if (defaultGoalId) setGoalId(defaultGoalId);
       else setGoalId('');
+      setNotes('');
       if (defaultStatus) setStatus(defaultStatus);
       if (defaultDate) {
         setStartDate(defaultDate);
@@ -198,6 +218,10 @@ export default function TaskModal({ task, goals, columnLabels, defaultGoalId, de
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!goalId) { showError('Veuillez sélectionner une catégorie'); return; }
+    if (isPhoneMissingName(location)) {
+      showError('Un nom est requis après le numéro de téléphone dans le champ d’emplacement.');
+      return;
+    }
     setLoading(true);
 
     const tags = tagsInput.split(',').map(t => t.trim()).filter(Boolean);
@@ -218,6 +242,7 @@ export default function TaskModal({ task, goals, columnLabels, defaultGoalId, de
     const payload = {
       goal_id: goalId,
       title,
+      notes: notes.trim() || null,
       location,
       status,
       priority,
@@ -246,6 +271,7 @@ export default function TaskModal({ task, goals, columnLabels, defaultGoalId, de
               goal_id: goalId,
               user_id: userId,
               title,
+              notes: notes.trim() || null,
               location,
               status: 'todo',
               priority,
@@ -317,17 +343,33 @@ export default function TaskModal({ task, goals, columnLabels, defaultGoalId, de
   };
 
   return (
-    <div className="fixed inset-0 bg-ink-black/60 flex items-center justify-center z-[1000] p-4">
-      <div
-        className="retro-card w-full max-w-lg bg-paper flex flex-col"
-        style={{ boxShadow: '8px 8px 0 color-mix(in srgb, color-mix(in srgb, var(--theme-primary-text) 60%, transparent) 60%, transparent)', maxHeight: '92vh' }}
+    <>
+      <div className="fixed inset-0 z-[1000] bg-ink-black/60" onClick={onClose} />
+
+      <aside
+        className="fixed right-0 top-0 bottom-0 w-full max-w-[560px] bg-paper transform transition-transform duration-300 ease-in-out z-[1001] flex flex-col"
+        style={{
+          transform: 'translateX(0)',
+          borderLeft: '4px solid #1a1a1a',
+          boxShadow: '8px 8px 0 color-mix(in srgb, color-mix(in srgb, var(--theme-primary-text) 60%, transparent) 60%, transparent)',
+        }}
+        onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between p-5 border-b-4 border-ink-black bg-ink-red text-paper shrink-0">
           <h2 className="font-display text-lg uppercase">{task ? 'Modifier la tâche' : 'Nouvelle tâche'}</h2>
           <ModalCloseButton onClose={onClose} className="text-paper" />
         </div>
 
-        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 flex flex-col gap-4" style={{ backgroundColor: 'var(--theme-surface)' }}>
+        <form
+          id="task-modal-form"
+          onSubmit={handleSubmit}
+          className="flex-1 overflow-y-auto p-6 flex flex-col gap-4"
+          style={{
+            backgroundColor: 'var(--theme-surface)',
+            scrollbarWidth: 'none',
+            msOverflowStyle: 'none',
+          }}
+        >
 
           <div>
             <label className="font-bold text-xs uppercase block mb-2 tracking-wide">Catégorie *</label>
@@ -348,8 +390,24 @@ export default function TaskModal({ task, goals, columnLabels, defaultGoalId, de
           </div>
 
           <div>
+            <label htmlFor="task-notes" className="font-bold text-xs uppercase block mb-2 tracking-wide">Notes</label>
+            <textarea
+              id="task-notes"
+              name="notes"
+              value={notes}
+              onChange={e => setNotes(e.target.value)}
+              className="retro-input min-h-[56px] resize-none"
+              rows={2}
+            />
+          </div>
+
+          <div>
             <label className="font-bold text-xs uppercase block mb-2 tracking-wide">Emplacement</label>
-            <LocationInput value={location} onChange={setLocation} suggestions={locationSuggestions} />
+            <LocationInput
+              value={location}
+              onChange={setLocation}
+              suggestions={locationSuggestions}
+            />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
@@ -451,7 +509,7 @@ export default function TaskModal({ task, goals, columnLabels, defaultGoalId, de
           </div>
 
           {/* Recurrence */}
-          <div className="border-t-2 border-ink-black/15 pt-4 flex flex-col gap-3">
+          <div className="border-t-2 border-ink-black pt-4 flex flex-col gap-3">
             <label className="font-bold text-xs uppercase tracking-wide">Récurrence</label>
 
             <div className="flex items-center gap-2">
@@ -495,7 +553,10 @@ export default function TaskModal({ task, goals, columnLabels, defaultGoalId, de
               />
             </div>
           </div>
-          <div className="flex gap-3 pt-2">
+        </form>
+
+        <div className="px-6 pb-6 pt-6 border-t-4 border-ink-black shrink-0" style={{ backgroundColor: 'var(--theme-surface)' }}>
+          <div className="flex gap-3">
             <button
               type="button"
               onClick={onClose}
@@ -505,15 +566,15 @@ export default function TaskModal({ task, goals, columnLabels, defaultGoalId, de
             </button>
             <button
               type="submit"
+              form="task-modal-form"
               disabled={loading}
               className="retro-btn flex-1 py-3 bg-[var(--theme-background)] text-ink-black hover:bg-ink-red hover:text-paper transition-colors"
             >
-              {loading ? 'Enregistrement...' : 'Confirmer'}
+              Confirmer
             </button>
           </div>
-
-        </form>
-      </div>
-    </div>
+        </div>
+      </aside>
+    </>
   );
 }

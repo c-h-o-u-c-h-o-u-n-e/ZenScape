@@ -83,7 +83,7 @@ export default function ThemeModal({ open, selectedTheme = DEFAULT_THEME, onSele
           </div>
         </div>
 
-        <div className="p-4 border-t-2 border-ink-black" style={{ backgroundColor: 'var(--theme-background)' }}>
+        <div className="px-6 pb-6 pt-6 border-t-4 border-ink-black" style={{ backgroundColor: 'var(--theme-surface)' }}>
           <button onClick={onClose} className="retro-btn w-full bg-transparent text-ink-black hover:bg-ink-red hover:text-paper transition-colors">
             Fermer
           </button>

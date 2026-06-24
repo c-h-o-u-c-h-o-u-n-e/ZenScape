@@ -1,6 +1,5 @@
 import { ChevronLeft, ChevronRight } from '../lib/icons';
 import { getEstDateString } from '../lib/timezone';
-import { useUserPreferences } from '../lib/userPreferences';
 
 interface DailyViewHeaderProps {
   date: string;
@@ -11,7 +10,6 @@ export default function DailyViewHeader({
                                           date,
                                           onDateChange,
                                         }: DailyViewHeaderProps) {
-  useUserPreferences();
   const dateObj = new Date(date + 'T00:00:00');
 
   const todayObj = new Date(getEstDateString() + 'T00:00:00');
@@ -73,13 +71,15 @@ export default function DailyViewHeader({
           style={{ boxShadow: '4px 4px 0 color-mix(in srgb, color-mix(in srgb, var(--theme-primary-text) 60%, transparent) 60%, transparent)' }}
       >
         <div className="flex items-center justify-between gap-4">
-          <button
-              onClick={handlePrevDay}
-              className="retro-btn p-3 text-ink-black bg-paper"
-              title="Jour précédent"
-          >
-            <ChevronLeft size={24} />
-          </button>
+          <div className="flex items-center gap-3 shrink-0">
+            <button
+                onClick={handlePrevDay}
+                className="retro-btn p-3 text-ink-black bg-paper"
+                title="Jour précédent"
+            >
+              <ChevronLeft size={24} />
+            </button>
+          </div>
 
           <div className="text-center flex-1 min-w-0">
             <h2 className="font-display text-sm uppercase text-paper opacity-90 leading-none">

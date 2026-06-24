@@ -1,5 +1,5 @@
 /*
-  # Goal-O-Matic: Goals and Tasks Schema
+  # TaskFlow: Goals and Tasks Schema
 
   ## Tables
   - `goals` — User-owned goals with title, description, status, dates, and archive flag

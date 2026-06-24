@@ -35,6 +35,7 @@ export interface Task {
   goal_id: string;
   user_id: string;
   title: string;
+  notes: string | null;
   location: string;
   status: TaskStatus;
   priority: TaskPriority;
@@ -81,6 +82,41 @@ export interface MedicationIntake {
   status: 'taken' | 'missed';
   intake_date: string;
   created_at: string;
+}
+
+// User Profile types
+export interface User {
+  id: string;
+  email: string;
+  created_at: string;
+  updated_at: string;
+}
+
+// User Preferences types
+export type TimeFormatPreference = '24h' | '12h';
+export type WeekStartPreference = 'monday' | 'sunday';
+export type TimezonePreference = string;
+export type FontPreference =
+  | 'kg-dark-side'
+  | 'poppins'
+  | 'quicksand'
+  | 'saira';
+
+export interface UserPreferences {
+  id: string;
+  user_id: string;
+  timeFormat: TimeFormatPreference;
+  weekStartsOn: WeekStartPreference;
+  timezone: TimezonePreference;
+  weatherCity: string;
+  weatherLatitude?: number | null;
+  weatherLongitude?: number | null;
+  fontFamily: FontPreference;
+  searchIncludeArchivedTasks: boolean;
+  archiveModalApplyTagFilters: boolean;
+  autoArchiveCompletedTasksAtMidnight: boolean;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface Filters {

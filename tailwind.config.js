@@ -16,10 +16,10 @@ export default {
         'ink-gold': 'var(--theme-accent)',
       },
       fontFamily: {
-        display: ['KGDarkSide', 'sans-serif'],
-        mono: ['KGDarkSide', 'sans-serif'],
-        kgdarkside: ['KGDarkSide', 'sans-serif'],
-        sans: ['KGDarkSide', 'sans-serif'],
+        display: ['var(--app-font-family)', 'sans-serif'],
+        mono: ['var(--app-font-family)', 'sans-serif'],
+        kgdarkside: ['var(--app-font-family)', 'sans-serif'],
+        sans: ['var(--app-font-family)', 'sans-serif'],
       },
       boxShadow: {
         'press': '4px 4px 0 var(--theme-primary-text)',

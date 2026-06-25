@@ -277,6 +277,12 @@ export default function PrescriptionHistoryModal({ user, onClose }: Props) {
             <p className="font-display text-base uppercase opacity-70">Chargement des statistiques...</p>
           ) : (
             <>
+              <div className="flex items-center gap-2 text-ink-black">
+                <span className="w-4 h-px" style={{ backgroundColor: 'var(--theme-primary-text)' }} />
+                <p className="text-md uppercase font-bold whitespace-nowrap">Statistiques</p>
+                <span className="flex-1 h-px" style={{ backgroundColor: 'var(--theme-primary-text)' }} />
+              </div>
+
               <section className="grid grid-cols-2 md:grid-cols-3 gap-3">
                 <StatCard label="Prescriptions" value={globalStats.medicationCount} icon={<Capsule size={14} />} />
                 <StatCard label="Jours suivis" value={globalStats.activeDays} icon={<Capsule size={14} />} />
